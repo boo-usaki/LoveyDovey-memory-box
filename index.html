@@ -1567,6 +1567,8 @@ const getPending = () => (state.evp && state.evp.data) || null;
 function setPending(p) { state.evp = { at: Date.now(), data: p ? JSON.parse(JSON.stringify(p)) : null }; }
 function newerPending(a, b) { return ((b && b.at) || 0) > ((a && a.at) || 0) ? b : a; }
 function hashStr(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+const stableJSON = v => JSON.stringify(v, (k, x) => x && typeof x === "object" && !Array.isArray(x)
+  ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
 function evCanonical(e) {
   const f = {}; for (const k of Object.keys(e.fields || {}).sort()) f[k] = evItems(e.fields[k]).join("\n");
   return [e.companion, e.cat, e.date || "", (e.keywords || "").trim(), JSON.stringify(f)].join("\u0001");
@@ -2890,7 +2892,7 @@ function pushSettings() {
           if ((local.lastDate || "") > (c.lastDate || "")) c.lastDate = local.lastDate;
           if (!c.userName && local.userName) c.userName = local.userName;
           if (!(c.promptEdits || []).length && (local.promptEdits || []).length) c.promptEdits = local.promptEdits;
-          if (JSON.stringify(c) !== JSON.stringify(d.companions.find(x => x.name === c.name))) needsPush = true;
+          if (stableJSON(c) !== stableJSON(d.companions.find(x => x.name === c.name))) needsPush = true;
           return c;
         });
         for (const local of state.companions) {
