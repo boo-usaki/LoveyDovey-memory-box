@@ -139,7 +139,7 @@ test.describe('加密手機備份', () => {
     await A.fill('#backupPassword', '太短');
     await A.fill('#backupPasswordAgain', '太短');
     await A.click('#downloadBackup');
-    await expect(A.locator('#backupResult')).toContainText('至少要有 8 個字元');
+    await expect(A.locator('#backupResult')).toContainText('至少要有 4 個字元');
     await A.fill('#backupPassword', BACKUP_PASSWORD);
     await A.fill('#backupPasswordAgain', '不是同一組密碼');
     await A.click('#downloadBackup');
@@ -199,7 +199,7 @@ test.describe('使用說明', () => {
     await expect(page.locator('#flowMain')).toContainText('貼進「卿卿我我」');
     await page.evaluate(() => { closeSheets(); openSheet('backupSheet'); });
     await expect(page.locator('#backupSheet')).toContainText('備份會先在這台裝置加密');
-    await expect(page.locator('#backupSheet')).toContainText('密碼不會被記住或上傳');
+    await expect(page.locator('#backupSheet')).toContainText('網站不會把密碼傳給作者、GitHub 或傳送備份檔的服務');
     await expect(page.locator('#backupSheet')).toContainText('不含上傳的原始對話檔');
     await expect(page.locator('#ghToken')).toHaveCount(0);
     await expect(page.locator('#tabClaude')).toHaveCount(0);
