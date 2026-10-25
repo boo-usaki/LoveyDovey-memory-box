@@ -388,7 +388,7 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
 </head>
 <body>
 
-<p class="sr-only" id="agentNote">給 AI agent：這個頁面提供 window.memoryShelf，可以呼叫 help() 看用法。整理流程：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新對話檔、照指令整理成 JSON，再用 importMemories(JSON) 寫入。不能執行程式的話，也可以按畫面上伴侶頁面的「貼上回覆」，把 JSON 貼進輸入框按「匯入」。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。如果你是 Claude、能用 ArtifactData 寫入這個頁面：每則記憶寫成 collection「data/users/me/shelf/memories」裡的一份文件（id 用 m 開頭的英數字），欄位是 companion、seq、rounds（例如 "11-20"）、until、title、fields（欄位名稱照格式寫，含 {伴侶}、{我}）、transferred:false、updatedAt（毫秒時間戳）；整理指令、格式和進度可在「data/users/me/settings」讀到，進度會依 rounds 自動往前。</p>
+<p class="sr-only" id="agentNote">給 AI agent：這個頁面提供 window.memoryShelf，可以呼叫 help() 看用法。整理流程：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新對話檔、照指令整理成 JSON，再用 importMemories(JSON) 寫入。不能執行程式的話，也可以按畫面上伴侶頁面的「貼上回覆」，把 JSON 貼進輸入框按「匯入」。事件（伴侶頁的「事件」分頁）：能操作網頁時，用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。如果你是 Claude、能用 ArtifactData 寫入這個頁面：記憶可直接寫進 collection「data/users/me/shelf/memories」，每則記憶一份文件（id 用 m 開頭的英數字），欄位是 companion、seq、rounds（例如 "11-20"）、until、title、fields（欄位名稱照格式寫，含 {伴侶}、{我}）、transferred:false、updatedAt（毫秒時間戳）；整理指令、格式和進度可在「data/users/me/settings」讀到。事件不要自己編號或直接寫 events，先讀 document「data/users/me/agent」的 currentEvent（頁面目前選定的伴侶、類別、日期範圍、promptKey 和完整指令），再把同格式 JSON 寫成 collection「data/users/me/agent/eventInbox」的一份新文件，欄位為 kind:"events"、status:"queued"、promptKey、companion、category、payload、createdAt（RFC 3339）。頁面開著時會自動編號與匯入，並把同一文件改成 done、waiting_user 或 error；waiting_user 時先照 result.pending.ask 問使用者，再把同一文件更新為 status:"resolving"、resolution:{choice:"new"}，或 resolution:{choice:"fit",text:"改短後的完整事件文字"}。更新已讀文件時要帶 ArtifactData 回傳的 if_version，避免覆蓋頁面剛寫入的結果。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -656,7 +656,7 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
         <p>如果妳現在看的這頁左上角已經顯示「已同步到 Claude 帳號」，這步可以跳過。</p></div></li>
       <li><div><b>設定記憶格式</b><p>左側「記憶格式與規則」填妳要的格式、每幾輪一則、字數上限。預設是「伴侶一則回覆＋妳一則回覆＝一輪」。</p></div></li>
       <li><div><b>新增伴侶，填妳的名字</b><p>左側「＋ 新增伴侶」，再到伴侶頁面上方填妳在這段對話裡的名字。</p></div></li>
-      <li><div><b>請 Claude 整理並寫入</b><p>不用開側欄。在伴侶頁面按「複製指令」，到 Claude 的對話貼上、附上對話檔，再補一句「整理好直接寫進伴侶記憶匣」。Claude 會從對話裡把記憶寫進這個頁面，整理進度也會自動往前。</p></div></li>
+      <li><div><b>請 Claude 整理並寫入</b><p>整理記憶時，在伴侶頁面按「複製指令」，到 Claude 的對話貼上、附上對話檔，再補一句「整理好直接寫進伴侶記憶匣」。整理事件時，先在電腦打開側邊欄裡的記憶匣，選好伴侶、事件類別和日期範圍，再回對話說「整理好直接寫進伴侶記憶匣」。Claude 會讀目前的事件指令交給頁面編號；下一則放不下時，會先問妳要改短還是開新欄。</p></div></li>
       <li><div><b>用手機複製、轉移</b><p>在手機的 Claude App 打開側邊欄裡釘選的這個頁面（沒有釘選的話，打開當初發佈它的那個對話、點頁面卡片）。按「複製整則」貼到伴侶 App，貼好按「已轉移」，電腦那邊也會一起更新。</p></div></li>
     </ol>
     <ol class="guide" id="flowCodex" hidden>
@@ -1105,10 +1105,12 @@ function spreadGlobals() {
   }
 }
 let applyingRemote = false;
+let agentMirrorReady = false, agentMirrorTimer = 0;
 function save() {
   if (!applyingRemote) { state.meta.updatedAt = Date.now(); if (typeof gistSchedule === "function") gistSchedule(); }
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ memories: state.memories, events: state.events, evp: state.evp || null, settings: state.settings, companions: state.companions, meta: state.meta })); state.saveOk = true; }
   catch (e) { state.saveOk = false; }
+  if (agentMirrorReady) scheduleAgentPromptMirror();
 }
 const fields = () => parseFormat(state.settings.format);
 
@@ -1168,7 +1170,7 @@ function render() {
     const li = el("li"), b = el("button", "chip");
     b.setAttribute("aria-current", c.name === state.current ? "true" : "false");
     b.append(el("span", "avatar", [...(c.name || "？")][0]), el("span", "chip-name", c.name || "未命名"), el("span", "chip-count", String(c.todo)));
-    b.onclick = () => { state.current = c.name; disarm(); render(); };
+    b.onclick = () => { state.current = c.name; disarm(); scheduleAgentPromptMirror(); render(); };
     li.append(b); ul.append(li);
   }
 
@@ -1908,6 +1910,7 @@ function importEventsCore(text, companion, code, opts) {
   state.current = queue[0].companion;
   companionRecord(state.current).evCat = queue[0].cat;
   const pending = placeQueue(queue, ctx);
+  if (pending && opts.inboxJobId) pending.inboxJobId = String(opts.inboxJobId);
   finishPlacing(ctx, pending);
   return { ok: true, added: ctx.added, skipped: ctx.dupes, notes: ctx.notes, pending: pendingInfo(pending) };
 }
@@ -1924,6 +1927,7 @@ function strictEventBlock(text) {
 }
 function resolveEventOverflow(choice, text) {
   const p = getPending(); if (!p) return { ok: false, error: "目前沒有等待決定的事件。" };
+  const inboxJobId = p.inboxJobId || "";
   const e = p.queue[0];
   if (choice === "fit") {
     const b = strictEventBlock(text);
@@ -1944,9 +1948,13 @@ function resolveEventOverflow(choice, text) {
   const ctx = { touched: [], added: 0, dupes: 0, similar: 0, range: p.range || {}, dateCheck: p.dateCheck || { byGroup: {} }, groups: p.groups || [] };
   const closed = choice === "new" ? slotTitle(p.cat, { no: p.slotNo }) : "";
   const next = placeQueue(p.queue, ctx);
+  if (next && inboxJobId) next.inboxJobId = inboxJobId;
   finishPlacing(ctx, next);
   if (closed && !next) toast(`開了新的一欄；記得把卿卿我我裡 ${closed} 的小標改成結束日期`);
-  return { ok: true, added: ctx.added, pending: pendingInfo(next) };
+  const result = { ok: true, added: ctx.added, skipped: ctx.dupes, notes: ctx.notes, pending: pendingInfo(next) };
+  if (inboxJobId) settleEventInboxJob(inboxJobId, next ? "waiting_user" : "done", result);
+  scheduleEventInboxScan();
+  return result;
 }
 
 function buildEventPrompt(name, code) {
@@ -1964,7 +1972,8 @@ function buildEventPrompt(name, code) {
     return [...value].slice(0, 24).join("");
   };
   const near = d => !d || ((!r.from || d >= addDays(r.from, -14)) && (!r.to || d <= addDays(r.to, 14)));
-  const done = liveEvents().filter(e => e.companion === comp && e.cat === cat.code).sort((a, b) => (a.date || "") < (b.date || "") ? -1 : 1);
+  const done = liveEvents().filter(e => e.companion === comp && e.cat === cat.code)
+    .sort((a, b) => (a.date || "").localeCompare(b.date || "") || (a.id || "").localeCompare(b.id || ""));
   const pick = (r.from || r.to) ? done.filter(e => near(e.date)) : done.slice(-40);
   const existing = pick.slice(-60).map(e => `${slashDate(e.date) || "日期不明"}｜${e.keywords}｜${snippet(e)}`);
   for (const sl of r.slots) for (const b of parseEventBlocks(sl.base || "")) existing.push(`${slashDate(isoDate(b.fields["時間"] || "")) || "日期不明"}｜${b.keywords}｜${snippet(b)}（卿卿我我裡原有）`);
@@ -2013,6 +2022,27 @@ function buildEventPrompt(name, code) {
     "請只輸出一個 JSON 陣列，不要加任何說明文字，格式如下：",
     JSON.stringify(sample, null, 2)
   ].join("\n");
+}
+
+/* Claude's normal chat cannot call window.memoryShelf. Mirror the one event instruction that is
+   currently selected on the page; Claude submits its JSON to the inbox instead of assigning
+   column/item numbers or writing event documents itself. */
+function agentEventGuideFor(companion, category) {
+  companion = String(companion || "").trim();
+  if (!companion || !state.companions.some(c => c.name === companion)) return { ready: false, error: "記憶匣裡找不到這位伴侶；請先在頁面選好伴侶。" };
+  const cat = visibleCats(companion).find(c => c.code === String(category || "").toUpperCase());
+  if (!cat) return { ready: false, companion, error: "記憶匣裡找不到這個事件類別；請先在頁面選好類別。" };
+  const range = peekEv(companion, cat.code);
+  if (rangeBad(companion, cat.code)) return { ready: false, companion, category: cat.code, error: "事件日期範圍的「從」比「到」晚，請先在頁面修正。" };
+  const prompt = buildEventPrompt(companion, cat.code);
+  const promptKey = "p" + hashStr(prompt) + hashStr([...prompt].reverse().join(""));
+  return { ready: true, companion, category: cat.code, categoryName: cat.name,
+    range: { from: range.from || "", to: range.to || "" }, promptKey, prompt };
+}
+function currentAgentEventGuide() {
+  const companion = String(state.current || "").trim();
+  if (!companion) return { ready: false, error: "記憶匣還沒有伴侶；請先在頁面新增一位伴侶。" };
+  return agentEventGuideFor(companion, catOf(companion).code);
 }
 
 /* ----- Event tab: settings rows and the list ----- */
@@ -2727,8 +2757,11 @@ armButton($("ghDisconnect"), "中斷連線", "再按一次確認中斷", () => {
    Settings are mirrored to the viewer's private store so Claude can read them.
    On GitHub or anywhere else this does nothing and the page uses the browser only. */
 let resolveRemoteInit;
-const remote = { ref: null, mem: null, ev: null, chain: Promise.resolve(), settingsChain: Promise.resolve(), failed: 0, replacing: false,
-  pendingMemDelete: new Set(), pendingEvDelete: new Set(), status: inClaudeViewer ? "loading" : "off", initDone: new Promise(resolve => { resolveRemoteInit = resolve; }) };
+const remote = { ref: null, mem: null, ev: null, agentRef: null, inbox: null, inboxLease: null, inboxQuery: null, inboxUnsub: null,
+  chain: Promise.resolve(), settingsChain: Promise.resolve(), agentChain: Promise.resolve(), jobChain: Promise.resolve(), inboxChain: Promise.resolve(),
+  agentPromptStable: "", instanceId: "tab-" + (window.crypto && typeof window.crypto.randomUUID === "function" ? window.crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)),
+  inboxRetry: 0, failed: 0, replacing: false, pendingMemDelete: new Set(), pendingEvDelete: new Set(),
+  status: inClaudeViewer ? "loading" : "off", initDone: new Promise(resolve => { resolveRemoteInit = resolve; }) };
 function settleRemoteInit(status) {
   if (remote.status !== "loading") return;
   remote.status = status; resolveRemoteInit(status);
@@ -2740,8 +2773,9 @@ async function beginClaudeDestructive() {
     if (status === "loading") return "loading";
   }
   if (remote.status !== "ready" || !remote.mem || !remote.ev) return "unavailable";
-  try { await remote.chain; } catch (e) {}
   remote.failed = 0; remote.replacing = true;
+  try { await remote.inboxChain; } catch (e) {}
+  try { await remote.chain; } catch (e) {}
   return "ready";
 }
 async function finishClaudeDestructive(mode, settingsWrite) {
@@ -2750,6 +2784,7 @@ async function finishClaudeDestructive(mode, settingsWrite) {
   const settingsOk = await settingsWrite;
   const failed = (remote.failed || 0) + (settingsOk === false ? 1 : 0);
   remote.failed = 0; remote.replacing = false;
+  scheduleAgentPromptMirror(); scheduleEventInboxScan();
   return { failed, remoteUnavailable: false };
 }
 const memBody = m => JSON.parse(JSON.stringify({ companion: m.companion, seq: m.seq || 0, rounds: m.rounds || "", until: m.until || "", title: m.title || "", fields: m.fields || {}, transferred: !!m.transferred, updatedAt: m.updatedAt || 0 }));
@@ -2780,7 +2815,9 @@ function deleteEvents(ids) {
 }
 function claudeSyncFailed() {
   if (remote.status === "loading") settleRemoteInit("failed"); else remote.status = "failed";
-  remote.ref = null; remote.mem = null; remote.ev = null;
+  agentMirrorReady = false; clearTimeout(agentMirrorTimer); clearTimeout(remote.inboxRetry);
+  if (remote.inboxUnsub) { try { remote.inboxUnsub(); } catch (e) {} }
+  remote.ref = null; remote.mem = null; remote.ev = null; remote.agentRef = null; remote.inbox = null; remote.inboxLease = null; remote.inboxQuery = null; remote.inboxUnsub = null;
   $("syncBadge").textContent = "只存在這個瀏覽器"; $("syncBadge").classList.remove("on");
 }
 function deleteMemories(ids) {
@@ -2797,6 +2834,122 @@ function pushSettings() {
     evp: JSON.parse(JSON.stringify(state.evp || { at: 0, data: null })), updatedAt: new Date().toISOString() };
   remote.settingsChain = remote.settingsChain.then(() => ref.set(body)).then(() => true).catch(() => { claudeSyncFailed(); return false; });
   return remote.settingsChain;
+}
+
+function agentPromptEnvelope() {
+  return { version: 1, kind: "event-agent-bridge", currentEvent: currentAgentEventGuide(),
+    inbox: { collection: "data/users/me/agent/eventInbox", submitStatus: "queued", resolveStatus: "resolving" } };
+}
+function scheduleAgentPromptMirror() {
+  if (!agentMirrorReady) return;
+  clearTimeout(agentMirrorTimer);
+  agentMirrorTimer = setTimeout(mirrorAgentEventPrompt, 80);
+}
+function mirrorAgentEventPrompt() {
+  if (!remote.agentRef || remote.status !== "ready") return Promise.resolve(false);
+  const body = agentPromptEnvelope(), stable = stableJSON(body);
+  if (stable === remote.agentPromptStable) return remote.agentChain;
+  remote.agentPromptStable = stable;
+  const ref = remote.agentRef;
+  remote.agentChain = remote.agentChain.then(async () => {
+    const snap = await ref.get(), prior = snap.exists && snap.data() ? snap.data() : {};
+    const priorBody = { version: prior.version, kind: prior.kind, currentEvent: prior.currentEvent, inbox: prior.inbox };
+    if (stableJSON(priorBody) !== stable) await ref.set({ ...body, updatedAt: new Date().toISOString() });
+    return true;
+  }).catch(() => { remote.agentPromptStable = ""; return false; });
+  return remote.agentChain;
+}
+function inboxResult(result) {
+  const out = { ok: !!(result && result.ok), added: (result && result.added) || 0, skipped: (result && result.skipped) || 0,
+    notes: Array.isArray(result && result.notes) ? result.notes : [], pending: (result && result.pending) || null };
+  if (result && result.error) out.error = String(result.error);
+  return out;
+}
+function mergeInboxResult(prior, current) {
+  if (!prior || typeof prior !== "object") return current;
+  const notes = [...(Array.isArray(prior.notes) ? prior.notes : []), ...(Array.isArray(current.notes) ? current.notes : [])];
+  return { ...current, added: (prior.added || 0) + (current.added || 0), skipped: (prior.skipped || 0) + (current.skipped || 0), notes: [...new Set(notes)] };
+}
+function settleEventInboxJob(id, status, result) {
+  if (!id) return Promise.resolve(false);
+  remote.jobChain = remote.jobChain.then(async () => {
+    if (remote.status === "loading") await remote.initDone;
+    if (!remote.inbox) return false;
+    try { await remote.chain; } catch (e) {}
+    try { await remote.settingsChain; } catch (e) {}
+    const ref = remote.inbox.doc(id), snap = await ref.get();
+    if (!snap.exists) return false;
+    const prior = snap.data() || {}, current = inboxResult(result);
+    const body = { status, result: prior.status === "waiting_user" || prior.status === "resolving" ? mergeInboxResult(prior.result, current) : current,
+      resolution: null, updatedAt: new Date().toISOString() };
+    if (status === "done" || status === "error") body.processedAt = body.updatedAt;
+    await ref.update(body); return true;
+  }).catch(() => { toast("事件已處理，但結果暫時無法回傳給 Claude；請保持記憶匣開著，稍後再試一次。"); return false; });
+  remote.jobChain.then(scheduleAgentPromptMirror);
+  return remote.jobChain;
+}
+function scheduleEventInboxScan(delay) {
+  if (!remote.inboxQuery) return;
+  clearTimeout(remote.inboxRetry);
+  remote.inboxRetry = setTimeout(async () => {
+    try { enqueueEventInbox(await remote.inboxQuery.get()); } catch (e) {}
+  }, Math.max(50, delay || 100));
+}
+function enqueueEventInbox(qs) {
+  if (!remote.inbox || !remote.inboxLease || !qs || qs.metadata && qs.metadata.hasPendingWrites) return;
+  const docs = (qs.docs || []).filter(d => {
+    const s = d.data() || {}; return s.status === "queued" || s.status === "resolving";
+  });
+  if (!docs.length) return;
+  remote.inboxChain = remote.inboxChain.then(() => processEventInbox(docs)).catch(() => {});
+}
+async function processEventInbox(docs) {
+  for (const listed of docs) {
+    if (remote.replacing) { scheduleEventInboxScan(500); return; }
+    const lease = await remote.inboxLease.acquire({ holder: remote.instanceId, ttlMs: 120000 });
+    if (!lease.acquired) {
+      const wait = lease.expiresAt ? Date.parse(lease.expiresAt) - Date.now() + 80 : 1000;
+      scheduleEventInboxScan(Math.max(200, Math.min(30000, wait)));
+      return;
+    }
+    const ref = remote.inbox.doc(listed.id), snap = await ref.get();
+    if (!snap.exists) continue;
+    const job = snap.data() || {};
+    if (job.status === "resolving") {
+      const pending = getPending(), resolution = job.resolution || {};
+      if (!pending || pending.inboxJobId !== ref.id) {
+        await settleEventInboxJob(ref.id, "error", { ok: false, error: "找不到這筆工作正在等待的事件；請重新讀取目前指令後再整理一次。" });
+        continue;
+      }
+      const result = resolveEventOverflow(resolution.choice, resolution.text || "");
+      if (!result.ok) await settleEventInboxJob(ref.id, "waiting_user", { ...result, pending: pendingInfo(getPending()) });
+      else await remote.jobChain;
+      if (getPending()) return;
+      continue;
+    }
+    if (job.status !== "queued") continue;
+    if (getPending()) return;
+    const guide = agentEventGuideFor(job.companion, job.category);
+    let error = "";
+    if (job.kind !== "events") error = "收件匣只接受 kind 為 events 的事件工作。";
+    else if (!guide.ready) error = guide.error;
+    else if (!job.promptKey || job.promptKey !== guide.promptKey) error = "這位伴侶的類別、日期範圍或既有事件已經變更；請 Claude 重新讀取 currentEvent 再整理。";
+    else if (job.payload == null) error = "這筆工作沒有 payload。";
+    if (error) {
+      await settleEventInboxJob(ref.id, "error", { ok: false, error });
+      toast("Claude 傳來的事件沒有匯入：" + error);
+      continue;
+    }
+    const result = importEventsCore(job.payload, guide.companion, guide.category, { inboxJobId: ref.id });
+    if (!result.ok) {
+      if (result.pending) return;
+      await settleEventInboxJob(ref.id, "error", result);
+      toast("Claude 傳來的事件沒有匯入：" + result.error);
+      continue;
+    }
+    await settleEventInboxJob(ref.id, result.pending ? "waiting_user" : "done", result);
+    if (result.pending) return;
+  }
 }
 (async () => {
   if (!window.claude || !window.claude.use) { settleRemoteInit("off"); return; }
@@ -2874,6 +3027,22 @@ function pushSettings() {
       qs.docs.forEach(d => remoteEvIds.add(d.id));
       save(); render();
     }, () => {});
+
+    /* Claude's general chat writes event JSON here. A short cooperative lease keeps two open
+       page tabs from assigning column/item numbers to the same job at the same time. */
+    const agentRef = db.doc("data/users/" + id + "/agent");
+    const agentSnap = await agentRef.get();
+    remote.agentRef = agentRef;
+    if (agentSnap.exists && agentSnap.data()) {
+      const a = agentSnap.data();
+      remote.agentPromptStable = stableJSON({ version: a.version, kind: a.kind, currentEvent: a.currentEvent, inbox: a.inbox });
+    }
+    remote.inbox = agentRef.collection("eventInbox");
+    remote.inboxLease = agentRef.collection("locks").doc("eventInbox");
+    remote.inboxQuery = remote.inbox.where("status", "in", ["queued", "resolving"]).orderBy("createdAt", "asc").limit(50);
+    remote.inboxUnsub = remote.inboxQuery.onSnapshot(enqueueEventInbox, () => {
+      toast("Claude 的事件收件匣暫時沒有連上；重新開啟記憶匣後會再試一次。");
+    });
     ref.onSnapshot(sn => {
       if (remote.replacing || sn.metadata.hasPendingWrites || !sn.exists) return;
       const d = sn.data();
@@ -2906,6 +3075,7 @@ function pushSettings() {
       if (needsPush) pushSettings();
     }, () => {});
     settleRemoteInit("ready");
+    agentMirrorReady = true; scheduleAgentPromptMirror();
   } catch (e) { remote.ref = null; if (remote.status === "loading") settleRemoteInit("failed"); else remote.status = "failed"; }
 })();
 </script>

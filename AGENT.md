@@ -91,3 +91,66 @@
   }
 ]
 ```
+
+---
+
+## 在 Claude 一般對話裡直接寫事件
+
+這一段只給能使用這份 Artifact 的 ArtifactData 的 Claude。能操作瀏覽器頁面的 agent，請繼續使用上面的 `window.memoryShelf`，不要繞收件匣。
+
+使用者先在電腦打開 Claude 側邊欄裡的記憶匣，選好伴侶、事件類別和日期範圍。頁面會把**目前這一份**事件指令鏡像到 document：
+
+`data/users/me/agent`
+
+1. 讀取 `currentEvent`。`ready` 必須是 `true`；整理時完整遵守 `currentEvent.prompt`，不要自己從 settings 拼另一份指令。
+2. 用 `currentEvent.promptKey`、`companion`、`category` 原樣建立一筆工作。不要自己編 `[FIR-05-03]`，也不要直接寫 `shelf/events`。
+3. 在 collection `data/users/me/agent/eventInbox` 建立一份 id 唯一的新文件：
+
+```json
+{
+  "kind": "events",
+  "status": "queued",
+  "promptKey": "照 currentEvent.promptKey 原樣填入",
+  "companion": "照 currentEvent.companion 原樣填入",
+  "category": "照 currentEvent.category 原樣填入",
+  "payload": [
+    {
+      "companion": "伴侶名字",
+      "category": "FIR",
+      "date": "2026-02-13",
+      "keywords": "關鍵字1、關鍵字2",
+      "fields": {
+        "時間": "2026/02/13 晚上",
+        "地點": "……",
+        "細節": ["……", "名字：「……」"]
+      }
+    }
+  ],
+  "createdAt": "2026-10-25T10:00:00.000Z"
+}
+```
+
+4. 頁面開著時會接手編號、判斷重複、推進日期範圍，再更新同一份工作文件：
+   - `done`：已完成；把 `result.added`、`result.skipped` 和 `result.notes` 告訴使用者。
+   - `error`：沒有匯入；照 `result.error` 說明，重新讀取 `data/users/me/agent` 後再決定是否重送。
+   - `waiting_user`：下一則放不下。照 `result.pending.ask` 問使用者，不可自行決定。
+5. 使用者選「開新欄」後，把同一份工作更新為：
+
+```json
+{ "status": "resolving", "resolution": { "choice": "new" }, "updatedAt": "RFC 3339 時間" }
+```
+
+使用者選「改短」後，先照 `result.pending.room` 精簡，再更新為：
+
+```json
+{
+  "status": "resolving",
+  "resolution": {
+    "choice": "fit",
+    "text": "改短後的完整事件文字；第一行保留標題行"
+  },
+  "updatedAt": "RFC 3339 時間"
+}
+```
+
+更新一份已經讀過的工作文件時，帶上 ArtifactData 回傳的 `if_version`。若版本衝突，重新讀取後再處理，不要覆蓋頁面剛寫入的結果。
