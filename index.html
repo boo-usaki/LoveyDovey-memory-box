@@ -1153,7 +1153,9 @@ function renderPendingBar() {
   const p = typeof getPending === "function" ? getPending() : null, bar = $("evPendingBar");
   const here = p && state.current === p.companion && state.tab === "event" && state.view === "todo" && catOf(p.companion).code === p.cat;
   bar.hidden = !p || here;
-  if (p) $("evPendingText").textContent = `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」在等妳決定（擠進 ${slotTitle(p.cat, { no: p.slotNo })} 或開新欄），處理完才能再匯入事件。`;
+  if (p) $("evPendingText").textContent = p.reason === "item"
+    ? `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」超過每則字數上限，改短後才能繼續匯入。`
+    : `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」在等妳決定（擠進 ${slotTitle(p.cat, { no: p.slotNo })} 或開新欄），處理完才能再匯入事件。`;
 }
 function render() {
   renderPendingBar();
@@ -1565,10 +1567,14 @@ const getPending = () => (state.evp && state.evp.data) || null;
 function setPending(p) { state.evp = { at: Date.now(), data: p ? JSON.parse(JSON.stringify(p)) : null }; }
 function newerPending(a, b) { return ((b && b.at) || 0) > ((a && a.at) || 0) ? b : a; }
 function hashStr(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function evCanonical(e) {
+  const f = {}; for (const k of Object.keys(e.fields || {}).sort()) f[k] = evItems(e.fields[k]).join("\n");
+  return [e.companion, e.cat, e.date || "", (e.keywords || "").trim(), JSON.stringify(f)].join("\u0001");
+}
 /* Same content → same id on every device, so importing one AI reply on two devices merges into one. */
 function evFingerprint(e) {
-  const f = {}; for (const k of Object.keys(e.fields || {}).sort()) f[k] = evItems(e.fields[k]).join("\n");
-  return "e" + hashStr([e.companion, e.cat, e.date || "", (e.keywords || "").trim(), JSON.stringify(f)].join("\u0001"));
+  const s = evCanonical(e);
+  return "e" + hashStr(s) + hashStr([...s].reverse().join(""));
 }
 
 function parseCats(text) {
@@ -1769,9 +1775,10 @@ function parseEventImport(text, fallbackCat) {
       const src = x.fields && typeof x.fields === "object" ? x.fields : {};
       const fields = {};
       for (const [k, v] of Object.entries(src)) fields[k] = Array.isArray(v) ? v.map(s => String(s).trim()).filter(Boolean).join("\n") : String(v == null ? "" : v).trim();
-      const time = fields["時間"] || x.time || "";
+      const time = fields["時間"] || x.time || "", rawDate = x.date || x["日期"] || "";
+      const explicitDate = isoDate(rawDate), timeDate = isoDate(time);
       return { companion: String(x.companion || x["伴侶"] || "").trim(), cat: String(x.category || x.code || x["代號"] || fallbackCat || "").toUpperCase(),
-        keywords: String(x.keywords || x["關鍵字"] || x.title || "").trim(), date: isoDate(x.date || x["日期"] || time), fields,
+        keywords: String(x.keywords || x["關鍵字"] || x.title || "").trim(), date: explicitDate || timeDate, dateIssue: rawDate && !explicitDate ? "invalid" : "", fields,
         transferred: typeof x.transferred === "boolean" ? x.transferred : undefined };
     }) };
   }
@@ -1780,35 +1787,59 @@ function parseEventImport(text, fallbackCat) {
   return { items: blocks.map(b => ({ companion: "", cat: b.cat || fallbackCat, keywords: b.keywords, date: isoDate(b.fields["時間"] || ""), fields: b.fields })) };
 }
 
+function checkEventDates(groups, range) {
+  const result = { outside: 0, missing: 0, mismatch: 0, invalid: 0, byGroup: {} };
+  for (const [key, list] of groups) {
+    const rg = range[key] || {}, group = { safe: true, max: "" };
+    for (const e of list) {
+      const timeDate = isoDate((e.fields || {})["時間"] || "");
+      if (e.dateIssue === "invalid") { result.invalid++; group.safe = false; }
+      else if (!e.date) { result.missing++; group.safe = false; }
+      else if (timeDate && timeDate !== e.date) { result.mismatch++; group.safe = false; }
+      else if ((rg.from && e.date < rg.from) || (rg.to && e.date > rg.to)) { result.outside++; group.safe = false; }
+      else if (e.date > group.max) group.max = e.date;
+    }
+    result.byGroup[key] = group;
+  }
+  return result;
+}
+
+function advanceEventRanges(ctx) {
+  for (const g of ctx.groups) {
+    const key = g.companion + "\u0000" + g.cat, checked = (ctx.dateCheck.byGroup || {})[key];
+    if (!checked || !checked.safe) continue;
+    const r = evRec(g.companion, g.cat);
+    if (r.to) { if (!r.from || r.from <= r.to) r.from = addDays(r.to, 1); r.to = ""; r.rangeAt = Date.now(); }
+    else if (checked.max && (!r.from || r.from <= checked.max)) { r.from = addDays(checked.max, 1); r.rangeAt = Date.now(); }
+  }
+}
+
 /* Place small events one by one. Stops and asks when the next one would overflow the column,
    including when a single event is longer than a whole column. */
 function placeQueue(queue, ctx) {
   const lim = slotLimit();
   while (queue.length) {
     const e = queue[0], comp = e.companion, cat = e.cat, r = evRec(comp, cat);
-    let id = evFingerprint(e);
-    const twin = state.events.find(x => x.id === id);
+    const canonical = evCanonical(e), twin = state.events.find(x => evCanonical(x) === canonical);
     if (twin && !twin.deleted) { ctx.dupes++; queue.shift(); continue; }
-    if (twin) id = id + "-" + Date.now().toString(36);   /* re-adding something that was deleted */
+    const id = twin ? twin.id : evFingerprint(e);
     if (liveEvents().some(x => x.companion === comp && x.cat === cat && x.keywords === e.keywords && (x.date || "") === (e.date || ""))) ctx.similar++;
     const slot = openSlot(comp, cat);
     const probe = { ...e, slot: slot.no, idx: nextIdx(comp, cat, slot) };
     const used = charCount(slotBody(comp, cat, slot)), need = charCount(eventText(probe));
     const room = used ? Math.max(0, lim - used - 2) : lim;
-    if (need > room) return { companion: comp, cat, slotNo: slot.no, room, need, empty: !used, queue, groups: ctx.groups, range: ctx.range };
+    if (need > itemLimit()) return { reason: "item", companion: comp, cat, slotNo: slot.no, room, max: itemLimit(), need, empty: !used, queue, groups: ctx.groups, range: ctx.range, dateCheck: ctx.dateCheck };
+    if (need > room) return { reason: "slot", companion: comp, cat, slotNo: slot.no, room, max: room, need, empty: !used, queue, groups: ctx.groups, range: ctx.range, dateCheck: ctx.dateCheck };
     if (!slot.start) slot.start = e.date || todayIso();
     const ne = { id, companion: comp, cat, slot: slot.no, idx: probe.idx, keywords: e.keywords, date: e.date || "", fields: e.fields,
       transferred: !!e.transferred, updatedAt: Date.now() };
     slot.hw = Math.max(slot.hw || 0, ne.idx); slot.updatedAt = Date.now();
-    state.events.push(ne); ctx.touched.push(ne); ctx.added++;
-    if (need > itemLimit()) ctx.long++;
-    const rg = (ctx.range || {})[comp + "\u0000" + cat] || {};
-    const inRange = e.date && (!rg.from || e.date >= rg.from) && (!rg.to || e.date <= rg.to);
-    if (!inRange) ctx.outside++;
-    else if (!r.from || r.from <= e.date) r.from = addDays(e.date, 1);
+    if (twin) Object.assign(twin, ne, { deleted: false });
+    else state.events.push(ne);
+    ctx.touched.push(twin || ne); ctx.added++;
     queue.shift();
   }
-  for (const g of ctx.groups) { const r = evRec(g.companion, g.cat); if (r.to) { if (!r.from || r.from <= r.to) r.from = addDays(r.to, 1); r.to = ""; r.rangeAt = Date.now(); } }
+  advanceEventRanges(ctx);
   return null;
 }
 function finishPlacing(ctx, pending) {
@@ -1820,16 +1851,21 @@ function finishPlacing(ctx, pending) {
   const n = ctx.added, notes = [];
   if (ctx.dupes) notes.push(`${ctx.dupes} 則已經有一模一樣的，略過`);
   if (ctx.similar) notes.push(`${ctx.similar} 則和已有事件同一天、同關鍵字，另外新增了，重複的話可以刪掉`);
-  if (ctx.outside) notes.push(`${ctx.outside} 則日期在整理範圍外或沒有日期，請檢查一下`);
-  if (ctx.long) notes.push(`${ctx.long} 則超過每則字數上限`);
+  const dc = ctx.dateCheck || {};
+  if (dc.outside) notes.push(`${dc.outside} 則日期在整理範圍外，整理進度沒有往後移`);
+  if (dc.missing) notes.push(`${dc.missing} 則沒有日期，整理進度沒有往後移`);
+  if (dc.invalid) notes.push(`${dc.invalid} 則 date 格式不正確，整理進度沒有往後移`);
+  if (dc.mismatch) notes.push(`${dc.mismatch} 則 date 和「時間」欄的日期不一致，整理進度沒有往後移`);
   if (ctx.moved) notes.push(ctx.moved);
   ctx.notes = notes;
   if (pending) toast(`${n ? `匯入 ${n} 則，` : ""}下一則放不下，請選擇怎麼處理`);
   else toast(`匯入 ${n} 則事件` + (notes.length ? "（" + notes.join("；") + "）" : ""));
 }
-const pendingInfo = p => p ? { companion: p.companion, category: p.cat, column: slotTitle(p.cat, { no: p.slotNo }), room: p.room, need: p.need,
-  keywords: p.queue[0].keywords, waiting: p.queue.length - 1, canOpenNew: !p.empty,
-  ask: p.empty
+const pendingInfo = p => p ? { companion: p.companion, category: p.cat, column: slotTitle(p.cat, { no: p.slotNo }), room: p.reason === "item" ? p.max : p.room, need: p.need,
+  keywords: p.queue[0].keywords, waiting: p.queue.length - 1, canOpenNew: p.reason !== "item" && !p.empty,
+  ask: p.reason === "item"
+    ? `「${p.queue[0].keywords}」有 ${p.need} 字，超過每則上限 ${p.max} 字，只能先改短。請先問使用者要怎麼精簡，再呼叫 resolveEventOverflow("fit", 改短的文字)。`
+    : p.empty
     ? `「${p.queue[0].keywords}」有 ${p.need} 字，比一整欄的上限 ${p.room} 字還長，只能改短。請先問使用者要怎麼精簡，再呼叫 resolveEventOverflow("fit", 改短的文字)。`
     : `「${p.queue[0].keywords}」有 ${p.need} 字，但 ${slotTitle(p.cat, { no: p.slotNo })} 只剩 ${p.room} 字。請先問使用者：要改短一點擠進這欄（resolveEventOverflow("fit", 改短的文字)），還是開新的一欄（resolveEventOverflow("new")）？` } : null;
 
@@ -1861,7 +1897,8 @@ function importEventsCore(text, companion, code, opts) {
     queue.push(...list);
     const r = peekEv(list[0].companion, list[0].cat); range[k] = { from: r.from || "", to: r.to || "" };
   }
-  const ctx = { touched: [], added: 0, dupes: 0, similar: 0, outside: 0, long: 0, range, groups: [...groups.values()].map(l => ({ companion: l[0].companion, cat: l[0].cat })) };
+  const dateCheck = checkEventDates(groups, range);
+  const ctx = { touched: [], added: 0, dupes: 0, similar: 0, range, dateCheck, groups: [...groups.values()].map(l => ({ companion: l[0].companion, cat: l[0].cat })) };
   const moved = [];
   if (otherNames.size) moved.push(`回覆裡寫的伴侶是「${[...otherNames].join("、")}」，已照目前選的放進 ${name}`);
   if (otherCats.size) moved.push(`回覆裡寫的類別是 ${[...otherCats].join("、")}，已照目前選的放進 ${catByCode(target).name}`);
@@ -1892,15 +1929,17 @@ function resolveEventOverflow(choice, text) {
     const r = evRec(p.companion, p.cat), slot = r.slots.find(s => s.no === p.slotNo) || { no: p.slotNo };
     const cand = { ...e, keywords: b.keywords || e.keywords, fields: b.fields };
     const need = charCount(eventText({ ...cand, slot: p.slotNo, idx: nextIdx(p.companion, p.cat, slot) }));
-    if (need > p.room) return { ok: false, error: `還是太長：${need} 字，這欄只剩 ${p.room} 字。原本的內容沒有變。`, need, room: p.room };
+    const max = p.reason === "item" ? p.max : p.room;
+    if (need > max) return { ok: false, error: `還是太長：${need} 字，這次最多 ${max} 字。原本的內容沒有變。`, need, room: max };
     e.keywords = cand.keywords; e.fields = cand.fields;
   } else if (choice === "new") {
+    if (p.reason === "item") return { ok: false, error: "這一則超過每則字數上限，開新欄也不能解決，只能先改短。" };
     if (p.empty) return { ok: false, error: "這一則比一整欄還長，開新欄也放不下，只能改短。" };
     const r = evRec(p.companion, p.cat), slot = r.slots.find(s => s.no === p.slotNo && !s.closed);
     if (slot) closeSlot(p.companion, p.cat, slot);
     const ns = newSlot(r); ns.start = e.date || todayIso();
   } else return { ok: false, error: "choice 要是 \"fit\" 或 \"new\"。" };
-  const ctx = { touched: [], added: 0, dupes: 0, similar: 0, outside: 0, long: 0, range: p.range || {}, groups: p.groups || [] };
+  const ctx = { touched: [], added: 0, dupes: 0, similar: 0, range: p.range || {}, dateCheck: p.dateCheck || { byGroup: {} }, groups: p.groups || [] };
   const closed = choice === "new" ? slotTitle(p.cat, { no: p.slotNo }) : "";
   const next = placeQueue(p.queue, ctx);
   finishPlacing(ctx, next);
@@ -1916,12 +1955,17 @@ function buildEventPrompt(name, code) {
   const range = r.from && r.to ? `只整理 ${slashDate(r.from)} 到 ${slashDate(r.to)}（含）之間的對話，範圍外的不要整理。`
     : r.from ? `只整理 ${slashDate(r.from)}（含）之後的對話，前面的不要整理。`
     : r.to ? `只整理 ${slashDate(r.to)}（含）之前的對話。` : "整理整個對話檔。";
-  const snippet = x => { const f = Object.values(x.fields || {}).map(v => evItems(v)[0] || "").find(Boolean) || ""; return [...f].slice(0, 18).join(""); };
+  const snippet = x => {
+    const entries = Object.entries(x.fields || {}), useful = entries.filter(([k]) => !/時間|日期/.test(k));
+    const preferred = useful.filter(([k]) => /細節|經過|場景|概要|內容|紀錄|描述|對話|過程/.test(k));
+    const value = preferred.concat(useful.filter(x => !preferred.includes(x))).map(([, v]) => evItems(v)[0] || "").find(Boolean) || "（沒有摘要）";
+    return [...value].slice(0, 24).join("");
+  };
   const near = d => !d || ((!r.from || d >= addDays(r.from, -14)) && (!r.to || d <= addDays(r.to, 14)));
   const done = liveEvents().filter(e => e.companion === comp && e.cat === cat.code).sort((a, b) => (a.date || "") < (b.date || "") ? -1 : 1);
   const pick = (r.from || r.to) ? done.filter(e => near(e.date)) : done.slice(-40);
   const existing = pick.slice(-60).map(e => `${slashDate(e.date) || "日期不明"}｜${e.keywords}｜${snippet(e)}`);
-  for (const sl of r.slots) for (const b of parseEventBlocks(sl.base || "")) existing.push(`${slashDate(isoDate(b.fields["時間"] || "")) || "日期不明"}｜${b.keywords}｜（卿卿我我裡原有）`);
+  for (const sl of r.slots) for (const b of parseEventBlocks(sl.base || "")) existing.push(`${slashDate(isoDate(b.fields["時間"] || "")) || "日期不明"}｜${b.keywords}｜${snippet(b)}（卿卿我我裡原有）`);
   const kind = useCodes() ? `${cat.code}｜${cat.name}` : cat.name;
   const rules = [
     comp ? `伴侶的名字是「${comp}」。` : "伴侶的名字請看檔名或對話內容。",
@@ -2035,26 +2079,29 @@ function overflowCard(p) {
   const e = p.queue[0], c = el("article", "card panel overflow");
   const slot = (peekEv(p.companion, p.cat).slots.find(s => s.no === p.slotNo)) || { no: p.slotNo };
   const text = eventText({ ...e, slot: p.slotNo, idx: nextIdx(p.companion, p.cat, slot) });
-  c.append(el("span", "latin", p.empty ? "Too long" : "Almost full"), el("h2", null, p.empty ? "這一則比一整欄還長" : `${slotTitle(p.cat, slot)} 快滿了`),
-    el("p", "muted", p.empty
+  const itemTooLong = p.reason === "item", mustShorten = itemTooLong || p.empty, max = itemTooLong ? p.max : p.room;
+  c.append(el("span", "latin", mustShorten ? "Too long" : "Almost full"), el("h2", null, itemTooLong ? "這一則超過每則字數上限" : (p.empty ? "這一則比一整欄還長" : `${slotTitle(p.cat, slot)} 快滿了`)),
+    el("p", "muted", itemTooLong
+      ? `「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，每則最多 ${p.max} 字，需要先改短。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 則等著。` : "")
+      : p.empty
       ? `「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，一欄最多 ${p.room} 字，開新欄也放不下，需要改短。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 則等著。` : "")
       : `下一則「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，這欄只剩 ${p.room} 字。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 則等著。` : "")));
   const ta = el("textarea", "mono"); ta.rows = Math.min(14, text.split("\n").length + 1); ta.value = text; ta.hidden = true;
   const cnt = el("span", "count");
   const act = el("div", "row-actions");
-  const shorten = el("button", "btn primary", p.empty ? "改短" : "改短一點，擠進這欄");
+  const shorten = el("button", "btn primary", mustShorten ? "改短" : "改短一點，擠進這欄");
   const neu = el("button", "btn", "開新的一欄");
-  const fit = el("button", "btn primary", p.empty ? "放進這欄" : "擠進這欄");
+  const fit = el("button", "btn primary", mustShorten ? "使用改短版本" : "擠進這欄");
   const cancel = el("button", "btn", "取消");
   const ask = el("button", "btn", "複製精簡指令");
-  const upd = () => { const n = charCount(ta.value); cnt.textContent = `${n} / ${p.room} 字`; cnt.classList.toggle("over", n > p.room); fit.disabled = n > p.room; };
+  const upd = () => { const n = charCount(ta.value); cnt.textContent = `${n} / ${max} 字`; cnt.classList.toggle("over", n > max); fit.disabled = n > max; };
   shorten.onclick = () => { act.replaceChildren(cnt, cancel, ask, fit); ta.hidden = false; upd(); ta.focus(); };
-  cancel.onclick = () => { ta.hidden = true; act.replaceChildren(...(p.empty ? [shorten] : [shorten, neu])); };
+  cancel.onclick = () => { ta.hidden = true; act.replaceChildren(...(mustShorten ? [shorten] : [shorten, neu])); };
   ta.addEventListener("input", upd);
-  ask.onclick = () => copyText(`請把下面這則事件精簡到 ${p.room} 字以內（包含標題行、欄位名稱、標點），格式和欄位都不要變，重要的對話盡量保留，只回傳精簡後的內容：\n\n${ta.value}`, ask, "複製精簡指令");
+  ask.onclick = () => copyText(`請把下面這則事件精簡到 ${max} 字以內（包含標題行、欄位名稱、標點），格式和欄位都不要變，重要的對話盡量保留，只回傳精簡後的內容：\n\n${ta.value}`, ask, "複製精簡指令");
   fit.onclick = () => { const r = resolveEventOverflow("fit", ta.value); if (!r.ok) toast(r.error); };
   neu.onclick = () => { const r = resolveEventOverflow("new"); if (!r.ok) toast(r.error); };
-  act.append(...(p.empty ? [shorten] : [shorten, neu]));
+  act.append(...(mustShorten ? [shorten] : [shorten, neu]));
   c.append(ta, act);
   return c;
 }
@@ -2583,15 +2630,20 @@ const backupJSON = () => JSON.stringify({ app: "companion-memory-shelf", version
   memories: state.memories, events: state.events, companions: state.companions.map(c => { const x = JSON.parse(JSON.stringify(c)); return x; }),
   settings: state.settings, evp: state.evp || null }, null, 2);
 /* Restoring replaces everything; old devices and the cloud copy are told to drop what came before. */
-function restoreBackup(text) {
+async function restoreBackup(text) {
   let data;
   try { data = JSON.parse(stripFence(String(text || ""))); } catch (e) { return "讀不懂這份備份，請確認是完整複製的內容。"; }
   if (Array.isArray(data)) {   /* older backups were just a list of memories */
     const r = importCore(data, state.current || ""); return r.ok ? `這是舊版的備份（只有記憶），已匯入 ${r.added + (r.replaced || 0)} 則記憶。` : r.error;
   }
   if (!data || data.app !== "companion-memory-shelf" || !Array.isArray(data.memories)) return "這看起來不是伴侶記憶匣的備份。";
+  const cloud = await beginClaudeDestructive();
+  if (cloud === "loading") return "Claude 同步還在準備，資料沒有變動。請稍後再按一次還原。";
   const now = Date.now();
-  deleteMemories(state.memories.map(m => m.id)); deleteEvents(state.events.map(e => e.id));
+  if (cloud === "ready") {
+    deleteMemories([...state.memories.map(m => m.id), ...remote.pendingMemDelete]);
+    deleteEvents([...state.events.map(e => e.id), ...remote.pendingEvDelete]);
+  }
   state.meta.clearedAt = now;
   const stamp = x => Object.assign(x, { updatedAt: now + 1 });
   state.memories = data.memories.filter(m => m && m.id).map(stamp);
@@ -2602,8 +2654,15 @@ function restoreBackup(text) {
   }
   if (data.settings) state.settings = Object.assign(state.settings, migrate(data.settings));
   state.evp = { at: now, data: data.evp && data.evp.data ? data.evp.data : null };
-  save(); pushSettings(); syncMemories(state.memories); syncEvents(state.events); render();
-  return `已還原：${state.memories.length} 則記憶、${liveEvents().length} 則事件。`;
+  save();
+  const settingsWrite = pushSettings();
+  if (cloud === "ready") { syncMemories(state.memories); syncEvents(state.events); }
+  render();
+  const result = await finishClaudeDestructive(cloud, settingsWrite);
+  const base = `已還原：${state.memories.length} 則記憶、${liveEvents().length} 則事件。`;
+  if (result.failed) return `${base} 但 Claude 帳號有 ${result.failed} 筆資料沒能完成取代，重新開啟時可能回來；請稍後再還原一次。`;
+  if (result.remoteUnavailable) return `${base} 目前無法寫入 Claude 帳號，只還原了這個瀏覽器；重新開啟時帳號裡的舊資料可能回來。`;
+  return base;
 }
 $("copyBackup").onclick = e => copyText(backupJSON(), e.currentTarget, "複製備份內容");
 if (inClaudeViewer) { $("downloadBackup").hidden = true; $("downloadPrompt").hidden = true; }
@@ -2615,7 +2674,10 @@ function saveFile(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 $("openRestore").onclick = () => { $("restoreBox").hidden = !$("restoreBox").hidden; if (!$("restoreBox").hidden) $("restoreText").focus(); };
-armButton($("doRestore"), "用這份備份取代目前資料", "再按一次確認還原", () => { $("backupResult").textContent = restoreBackup($("restoreText").value); $("restoreText").value = ""; });
+armButton($("doRestore"), "用這份備份取代目前資料", "再按一次確認還原", async () => {
+  $("backupResult").textContent = inClaudeViewer ? "正在確認 Claude 帳號並還原…" : "正在還原…";
+  $("backupResult").textContent = await restoreBackup($("restoreText").value); $("restoreText").value = "";
+});
 $("restoreFile").onchange = e => {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
   const rd = new FileReader(); rd.onload = () => { $("restoreText").value = String(rd.result || ""); $("backupResult").textContent = "讀好了，確認沒問題就按「用這份備份取代目前資料」。"; };
@@ -2624,12 +2686,20 @@ $("restoreFile").onchange = e => {
 $("downloadBackup").onclick = () => saveFile(`伴侶記憶備份-${new Date().toISOString().slice(0, 10)}.json`, backupJSON(), "application/json");
 $("downloadPrompt").onclick = () => saveFile("AGENT.md", sheetPrompt() + "\n", "text/markdown");
 
-armButton($("clearAll"), "清除全部記憶與事件", "再按一次確認全部清除", () => {
-  deleteMemories(state.memories.map(m => m.id)); deleteEvents(state.events.map(e => e.id));
+armButton($("clearAll"), "清除全部記憶與事件", "再按一次確認全部清除", async () => {
+  $("backupResult").textContent = inClaudeViewer ? "正在確認 Claude 帳號並清除…" : "正在清除…";
+  const cloud = await beginClaudeDestructive();
+  if (cloud === "loading") { $("backupResult").textContent = "Claude 同步還在準備，資料沒有變動。請稍後再按一次清除。"; return; }
+  if (cloud === "ready") {
+    deleteMemories([...state.memories.map(m => m.id), ...remote.pendingMemDelete]);
+    deleteEvents([...state.events.map(e => e.id), ...remote.pendingEvDelete]);
+  }
   state.meta.clearedAt = Date.now();
-  state.memories = []; state.events = []; setPending(null); state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; c.ev = {}; }); save(); render(); pushSettings();
-  $("backupResult").textContent = "已清除全部記憶和事件，整理進度也歸零了。";
-  reportRemoteClear();
+  state.memories = []; state.events = []; setPending(null); state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; c.ev = {}; }); save(); render();
+  const result = await finishClaudeDestructive(cloud, pushSettings());
+  if (result.failed) $("backupResult").textContent = `這個瀏覽器已清除，但 Claude 帳號裡還有 ${result.failed} 筆沒刪成功，重新開啟時可能回來。請稍後再按一次清除。`;
+  else if (result.remoteUnavailable) $("backupResult").textContent = "這個瀏覽器已清除，但目前無法寫入 Claude 帳號；重新開啟時帳號裡的資料可能回來。";
+  else $("backupResult").textContent = "已清除全部記憶和事件，整理進度也歸零了。";
 });
 
 render();
@@ -2654,58 +2724,88 @@ armButton($("ghDisconnect"), "中斷連線", "再按一次確認中斷", () => {
 /* ---------- Claude sync (only when opened inside Claude) ----------
    Settings are mirrored to the viewer's private store so Claude can read them.
    On GitHub or anywhere else this does nothing and the page uses the browser only. */
-const remote = { ref: null, busy: false, again: false, mem: null, chain: Promise.resolve() };
+let resolveRemoteInit;
+const remote = { ref: null, mem: null, ev: null, chain: Promise.resolve(), settingsChain: Promise.resolve(), failed: 0, replacing: false,
+  pendingMemDelete: new Set(), pendingEvDelete: new Set(), status: inClaudeViewer ? "loading" : "off", initDone: new Promise(resolve => { resolveRemoteInit = resolve; }) };
+function settleRemoteInit(status) {
+  if (remote.status !== "loading") return;
+  remote.status = status; resolveRemoteInit(status);
+}
+async function beginClaudeDestructive() {
+  if (!inClaudeViewer || remote.status === "off" || remote.status === "readonly") return remote.status;
+  if (remote.status === "loading") {
+    const status = await Promise.race([remote.initDone, new Promise(resolve => setTimeout(() => resolve("loading"), 8000))]);
+    if (status === "loading") return "loading";
+  }
+  if (remote.status !== "ready" || !remote.mem || !remote.ev) return "unavailable";
+  try { await remote.chain; } catch (e) {}
+  remote.failed = 0; remote.replacing = true;
+  return "ready";
+}
+async function finishClaudeDestructive(mode, settingsWrite) {
+  if (mode !== "ready") return { failed: 0, remoteUnavailable: inClaudeViewer && mode !== "off" && mode !== "readonly" };
+  try { await remote.chain; } catch (e) {}
+  const settingsOk = await settingsWrite;
+  const failed = (remote.failed || 0) + (settingsOk === false ? 1 : 0);
+  remote.failed = 0; remote.replacing = false;
+  return { failed, remoteUnavailable: false };
+}
 const memBody = m => JSON.parse(JSON.stringify({ companion: m.companion, seq: m.seq || 0, rounds: m.rounds || "", until: m.until || "", title: m.title || "", fields: m.fields || {}, transferred: !!m.transferred, updatedAt: m.updatedAt || 0 }));
 /* One write at a time, in order, so a burst of imports never overlaps on the same card. */
 function syncMemories(list) {
   if (!remote.mem || !list.length) return;
-  for (const m of list) remote.chain = remote.chain.then(() => remote.mem && remote.mem.doc(m.id).set(memBody(m))).catch(claudeSyncFailed);
+  for (const m of list) remote.chain = remote.chain.then(() => remote.mem && remote.mem.doc(m.id).set(memBody(m))).catch(() => {
+    if (remote.replacing) remote.failed = (remote.failed || 0) + 1;
+    claudeSyncFailed();
+  });
 }
 const evBody = e => JSON.parse(JSON.stringify({ companion: e.companion, cat: e.cat, slot: e.slot || 0, idx: e.idx || 0, keywords: e.keywords || "", date: e.date || "",
   fields: e.fields || {}, transferred: !!e.transferred, deleted: !!e.deleted, updatedAt: e.updatedAt || 0 }));
 function syncEvents(list) {
   if (!remote.ev || !list.length) return;
-  for (const e of list) remote.chain = remote.chain.then(() => remote.ev && remote.ev.doc(e.id).set(evBody(e))).catch(claudeSyncFailed);
+  for (const e of list) remote.chain = remote.chain.then(() => remote.ev && remote.ev.doc(e.id).set(evBody(e))).catch(() => {
+    if (remote.replacing) remote.failed = (remote.failed || 0) + 1;
+    claudeSyncFailed();
+  });
 }
 function deleteEvents(ids) {
   if (!remote.ev || !ids.length) return;
-  for (const id of ids) remote.chain = remote.chain.then(() => remote.ev.doc(id).delete()).catch(() => { remote.failed = (remote.failed || 0) + 1; });
+  const collection = remote.ev;
+  for (const id of new Set(ids)) {
+    remote.pendingEvDelete.add(id);
+    remote.chain = remote.chain.then(() => collection.doc(id).delete()).then(() => remote.pendingEvDelete.delete(id)).catch(() => { remote.failed = (remote.failed || 0) + 1; });
+  }
 }
 function claudeSyncFailed() {
+  if (remote.status === "loading") settleRemoteInit("failed"); else remote.status = "failed";
   remote.ref = null; remote.mem = null; remote.ev = null;
   $("syncBadge").textContent = "只存在這個瀏覽器"; $("syncBadge").classList.remove("on");
 }
 function deleteMemories(ids) {
   if (!remote.mem || !ids.length) return;
-  for (const id of ids) remote.chain = remote.chain.then(() => remote.mem.doc(id).delete()).catch(() => { remote.failed = (remote.failed || 0) + 1; });
+  const collection = remote.mem;
+  for (const id of new Set(ids)) {
+    remote.pendingMemDelete.add(id);
+    remote.chain = remote.chain.then(() => collection.doc(id).delete()).then(() => remote.pendingMemDelete.delete(id)).catch(() => { remote.failed = (remote.failed || 0) + 1; });
+  }
 }
-/* After clearing inside Claude, say so if the account copy didn't fully go away. */
-async function reportRemoteClear() {
-  if (!remote.mem && !remote.ev) return;
-  remote.failed = 0;
-  try { await remote.chain; } catch (e) {}
-  const n = remote.failed || 0; remote.failed = 0;
-  if (n) $("backupResult").textContent = `這台裝置已清除，但 Claude 帳號裡還有 ${n} 筆沒刪成功（可能是網路不穩），重新打開頁面時它們可能會回來。請稍後再按一次「清除全部記憶與事件」。`;
-}
-async function pushSettings() {
-  if (!remote.ref) return;
-  if (remote.busy) { remote.again = true; return; }
-  remote.busy = true;
-  try { await remote.ref.set({ settings: JSON.parse(JSON.stringify(state.settings)), companions: JSON.parse(JSON.stringify(state.companions)), evp: JSON.parse(JSON.stringify(state.evp || { at: 0, data: null })), updatedAt: new Date().toISOString() }); }
-  catch (e) { claudeSyncFailed(); }
-  remote.busy = false;
-  if (remote.again) { remote.again = false; pushSettings(); }
+function pushSettings() {
+  if (!remote.ref) return Promise.resolve(false);
+  const ref = remote.ref, body = { settings: JSON.parse(JSON.stringify(state.settings)), companions: JSON.parse(JSON.stringify(state.companions)),
+    evp: JSON.parse(JSON.stringify(state.evp || { at: 0, data: null })), updatedAt: new Date().toISOString() };
+  remote.settingsChain = remote.settingsChain.then(() => ref.set(body)).then(() => true).catch(() => { claudeSyncFailed(); return false; });
+  return remote.settingsChain;
 }
 (async () => {
-  if (!window.claude || !window.claude.use) return;
+  if (!window.claude || !window.claude.use) { settleRemoteInit("off"); return; }
   try {
     const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
-    if (!db || !user) return;
+    if (!db || !user) { settleRemoteInit("unavailable"); return; }
     const id = await user.id();
-    if (!id) return;
+    if (!id) { settleRemoteInit("unavailable"); return; }
     /* Someone viewing another person's shared page can't save there; they stay on browser storage. */
     let canWrite = null; try { canWrite = await user.can("data.write"); } catch (e) {}
-    if (canWrite === false) return;
+    if (canWrite === false) { settleRemoteInit("readonly"); return; }
     const ref = db.doc("data/users/" + id + "/settings");
     const snap = await ref.get();
     if (snap.exists && snap.data() && snap.data().settings) {
@@ -2744,7 +2844,7 @@ async function pushSettings() {
     $("syncBadge").textContent = "已同步到 Claude 帳號"; $("syncBadge").classList.add("on");
     syncMemories(state.memories.filter(m => !remoteIds.has(m.id)));   /* first sync from this browser */
     mem.onSnapshot(qs => {
-      if (qs.metadata.hasPendingWrites) return;
+      if (remote.replacing || qs.metadata.hasPendingWrites) return;
       const byId = new Map(qs.docs.map(d => [d.id, { ...d.data(), id: d.id }]));
       const localOnly = state.memories.filter(m => !byId.has(m.id) && !remoteIds.has(m.id));
       state.memories = [...byId.values(), ...localOnly];
@@ -2765,7 +2865,7 @@ async function pushSettings() {
     syncEvents(state.events.filter(e => !remoteEvIds.has(e.id)));
     save(); render();
     evc.onSnapshot(qs => {
-      if (qs.metadata.hasPendingWrites) return;
+      if (remote.replacing || qs.metadata.hasPendingWrites) return;
       const byId = new Map(qs.docs.map(d => [d.id, { ...d.data(), id: d.id }]));
       const localOnly = state.events.filter(e => !byId.has(e.id) && !remoteEvIds.has(e.id));
       state.events = [...byId.values(), ...localOnly];
@@ -2773,23 +2873,38 @@ async function pushSettings() {
       save(); render();
     }, () => {});
     ref.onSnapshot(sn => {
-      if (sn.metadata.hasPendingWrites || !sn.exists) return;
+      if (remote.replacing || sn.metadata.hasPendingWrites || !sn.exists) return;
       const d = sn.data();
+      let needsPush = false;
       if (Array.isArray(d.companions)) {
-        const files = new Map(state.companions.map(c => [c.name, c.files || []]));
-        const localEv = new Map(state.companions.map(c => [c.name, c.ev]));
-        state.companions = JSON.parse(JSON.stringify(d.companions)).map(c => {
+        const localByName = new Map(state.companions.map(c => [c.name, c]));
+        const remoteNames = new Set(d.companions.map(c => c.name));
+        const merged = JSON.parse(JSON.stringify(d.companions)).map(c => {
+          const local = localByName.get(c.name);
+          if (!local) return c;
           const ids = new Set((c.files || []).map(f => f.id));
-          c.files = (c.files || []).concat((files.get(c.name) || []).filter(f => !ids.has(f.id)));
-          c.ev = mergeEvMeta(c.ev, localEv.get(c.name));
+          c.files = (c.files || []).concat((local.files || []).filter(f => !ids.has(f.id)));
+          c.ev = mergeEvMeta(c.ev, local.ev);
+          if (!c.evCat && local.evCat) c.evCat = local.evCat;
+          c.lastRound = Math.max(c.lastRound || 0, local.lastRound || 0);
+          if ((local.lastDate || "") > (c.lastDate || "")) c.lastDate = local.lastDate;
+          if (!c.userName && local.userName) c.userName = local.userName;
+          if (!(c.promptEdits || []).length && (local.promptEdits || []).length) c.promptEdits = local.promptEdits;
+          if (JSON.stringify(c) !== JSON.stringify(d.companions.find(x => x.name === c.name))) needsPush = true;
           return c;
         });
+        for (const local of state.companions) {
+          if (!remoteNames.has(local.name)) { merged.push(JSON.parse(JSON.stringify(local))); needsPush = true; }
+        }
+        state.companions = merged;
       }
       state.evp = newerPending(state.evp, d.evp);
       if (d.settings) state.settings = Object.assign(state.settings, migrate(JSON.parse(JSON.stringify(d.settings))));
       save(); render();
+      if (needsPush) pushSettings();
     }, () => {});
-  } catch (e) { remote.ref = null; }
+    settleRemoteInit("ready");
+  } catch (e) { remote.ref = null; if (remote.status === "loading") settleRemoteInit("failed"); else remote.status = "failed"; }
 })();
 </script>
 
