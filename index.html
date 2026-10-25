@@ -640,33 +640,36 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
       <div><span class="dash"></span><div class="latin">Guide</div><h3 id="guideTitle">使用說明</h3></div>
       <button class="x" data-close aria-label="關閉">×</button>
     </div>
-    <div class="seg guide-tabs" role="group" aria-label="用哪個 AI">
-      <button type="button" id="tabClaude" aria-pressed="true">用 Claude</button>
-      <button type="button" id="tabCodex" aria-pressed="false">用 Codex 或其他 AI</button>
+    <div class="step">
+      <div class="step-title">先看這裡</div>
+      <p>不需要懂程式。流程就是：新增伴侶 → 選「記憶」或「事件」→ 把對話交給 AI 整理 → 複製到伴侶 App。</p>
+      <p class="hint">先選妳現在從哪裡打開記憶匣；下方只會顯示需要做的步驟。</p>
+    </div>
+    <div class="seg guide-tabs" role="group" aria-label="從哪裡使用">
+      <button type="button" id="tabClaude" aria-pressed="true">Claude 側邊欄</button>
+      <button type="button" id="tabCodex" aria-pressed="false">公開網頁</button>
     </div>
     <ol class="guide" id="flowClaude">
-      <li><div><b>把頁面放進妳自己的 Claude 帳號（只要做一次）</b>
-        <p>資料會存在「頁面主人」的帳號裡，所以要用妳自己的那一份。打開別人分享的連結只能看，記憶存不進妳的帳號。</p>
+      <li><div><b>確認這是妳自己的記憶匣</b>
+        <p>左上角已經顯示「已同步到 Claude 帳號」就可以跳到下一步。還沒有的話，只要在電腦設定一次：</p>
         <ol class="sub">
-          <li>拿到頁面檔 index.html：<span id="dlSelfWrap">按這裡 <button class="linkish" id="dlSelf" type="button">下載頁面檔</button>，或</span>到 GitHub 上的 repository 點 index.html，再按右上角的下載按鈕。</li>
-          <li>在電腦開一個新的 Claude 對話，附上 index.html，然後說：<span class="say">「幫我把這個網頁發佈成我自己的 Artifact，要開啟資料庫（db）和使用者（user）功能，發佈好幫我釘選到側邊欄。」</span></li>
-          <li>Claude 做好會出現一張頁面卡片，點開後左上角顯示「已同步到 Claude 帳號」就成功了。</li>
-          <li>之後電腦、手機都從 Claude 的側邊欄打開這份就好。</li>
+          <li><span id="dlSelfWrap">按這裡 <button class="linkish" id="dlSelf" type="button">下載頁面檔</button>。</span></li>
+          <li>開一個新的 Claude 對話，附上剛才下載的 <code>index.html</code>。</li>
+          <li>整句貼給 Claude：<span class="say">「請把附件的 index.html 發佈成我自己的 Artifact，開啟 db 和 user 功能，完成後幫我釘選到側邊欄。」</span></li>
+          <li>點開 Claude 做好的頁面卡片。左上角出現「已同步到 Claude 帳號」就完成了。</li>
         </ol>
-        <p>如果妳現在看的這頁左上角已經顯示「已同步到 Claude 帳號」，這步可以跳過。</p></div></li>
-      <li><div><b>設定記憶格式</b><p>左側「記憶格式與規則」填妳要的格式、每幾輪一則、字數上限。預設是「伴侶一則回覆＋妳一則回覆＝一輪」。</p></div></li>
-      <li><div><b>新增伴侶，填妳的名字</b><p>左側「＋ 新增伴侶」，再到伴侶頁面上方填妳在這段對話裡的名字。</p></div></li>
-      <li><div><b>請 Claude 整理並寫入</b><p>不用開側欄。在伴侶頁面按「複製指令」，到 Claude 的對話貼上、附上對話檔，再補一句「整理好直接寫進伴侶記憶匣」。Claude 會從對話裡把記憶寫進這個頁面，整理進度也會自動往前。</p></div></li>
-      <li><div><b>用手機複製、轉移</b><p>在手機的 Claude App 打開側邊欄裡釘選的這個頁面（沒有釘選的話，打開當初發佈它的那個對話、點頁面卡片）。按「複製整則」貼到伴侶 App，貼好按「已轉移」，電腦那邊也會一起更新。</p></div></li>
+        <p class="hint">Artifact、db 和 user 是給 Claude 辨認的詞，照貼即可，不需要自己理解或設定。別人分享的 Claude 頁面只能試看；要保存資料，請建立自己的那一份。</p></div></li>
+      <li><div><b>新增伴侶</b><p>按左側「＋ 新增伴侶」，再填上妳在這段對話裡使用的名字。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
+      <li><div><b>選擇「記憶」或「事件」</b><p>記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情。事件模式要再選類別和日期範圍。</p></div></li>
+      <li><div><b>把對話交給 Claude</b><p>在伴侶頁按「複製指令」，回到 Claude 對話貼上指令、附上對話檔，再說「整理好直接寫進伴侶記憶匣」。Claude 會寫入頁面，整理進度也會自動接續。</p></div></li>
+      <li><div><b>複製到伴侶 App</b><p>在電腦或手機的 Claude 側邊欄打開這份記憶匣，按「複製整則」；事件則分別複製大標、小標和內文。貼好後按「已轉移」。</p></div></li>
     </ol>
     <ol class="guide" id="flowCodex" hidden>
-      <li><div><b>用 GitHub 上的網址打開這個頁面</b><p>agent 要能「看到並操作這個網頁」才能幫妳寫入，基本以 agent 側欄為主；如果 agent 有操作瀏覽器的功能（例如 Codex），也可以開在妳的慣用瀏覽器裡。</p></div></li>
-      <li><div><b>第一次使用：設定同步</b><p>左側「同步與備份」照教學連上妳的 GitHub（只要做一次），手機之後才看得到同樣的記憶。</p></div></li>
-      <li><div><b>設定記憶格式</b><p>左側「記憶格式與規則」填妳要的格式、每幾輪一則、字數上限。預設是「伴侶一則回覆＋妳一則回覆＝一輪」。</p></div></li>
-      <li><div><b>新增伴侶，填妳的名字</b><p>左側「＋ 新增伴侶」，再到伴侶頁面上方填妳在這段對話裡的名字。</p></div></li>
-      <li><div><b>上傳對話檔</b><p>伴侶頁面的第 1 步，檔案會標上上傳日期。</p></div></li>
-      <li><div><b>請 agent 整理並寫入</b><p>agent 看得到這個頁面，不用複製指令，直接跟它說「幫我整理〇〇的對話，寫進記憶匣」。它會自己讀整理指令和對話檔，整理完直接寫進來。</p></div></li>
-      <li><div><b>用手機複製、轉移</b><p>手機打開同一個網址，第一次到「同步與備份」貼上連線碼。之後按「複製整則」貼到伴侶 App，貼好按「已轉移」，電腦也會一起更新。</p></div></li>
+      <li><div><b>直接開始，或先設定同步</b><p>只在這個瀏覽器使用時，不用登入也不用設定同步。手機和電腦要共用同一份內容，才到左側「同步與備份」連上自己的 GitHub 私人儲存空間。</p></div></li>
+      <li><div><b>新增伴侶</b><p>按左側「＋ 新增伴侶」，再填上妳在這段對話裡使用的名字。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
+      <li><div><b>選擇「記憶」或「事件」</b><p>記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情。事件模式要再選類別和日期範圍。</p></div></li>
+      <li><div><b>上傳對話檔，交給 AI 整理</b><p>能操作網頁的 AI（例如 Codex）可以直接讀取並寫入，跟它說「幫我整理〇〇的對話，寫進記憶匣」即可。其他 AI 則按「複製指令」，整理完成後再按「貼上回覆」。</p></div></li>
+      <li><div><b>複製到伴侶 App</b><p>按「複製整則」；事件則分別複製大標、小標和內文。貼好後按「已轉移」。若已設定同步，手機第一次貼上連線碼後也能看到相同內容。</p></div></li>
     </ol>
     <div class="step">
       <div class="step-title">記憶卡片長這樣</div>
@@ -676,13 +679,11 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
     <div class="step">
       <div class="step-title">小提醒</div>
       <ul class="tips">
-        <li>記憶格式、每幾輪一則、字數上限，在左側「記憶格式與規則」改，所有伴侶共用。</li>
-        <li>妳的名字、接續方式、整理進度、AI 指令都跟著每位伴侶，各自獨立，都在伴侶頁面上方。</li>
+        <li>不調整任何設定也能使用。想換記憶格式、事件類別或字數，再到「記憶格式與規則」。</li>
+        <li>「記憶」適合依順序保存長對話；「事件」適合挑出關係進展、劇情或人物設定等重要事情。</li>
         <li>每次都匯出完整對話就選「用輪數」接續；每次只匯出新的一段就選「用日期」。</li>
-        <li>偶爾到「同步與備份」備份一份，比較安心。</li>
-        <li>伴侶頁右上角可以切換「記憶｜事件」。事件：選類別（FIR、EV、DIA…）和日期範圍，複製指令交給 AI，貼回來會接在目前的事件欄後面；下一則放不下時，會先問妳要改短擠進去，還是開新的一欄。</li>
-        <li>卿卿我我裡已經有寫到一半的事件欄，在事件分頁按「接著寫」，把那一欄的內文貼上就好。</li>
-        <li>事件的格式、要不要用代號、大標、小標、字數上限和類別清單，都在「記憶格式與規則」最下面的「事件格式」改。</li>
+        <li>事件欄快滿時，頁面會先問妳要改短還是開新欄，不會自己決定。</li>
+        <li>偶爾到「同步與備份」留一份備份；原始對話檔不會包含在同步或備份裡。</li>
       </ul>
     </div>
   </div>
