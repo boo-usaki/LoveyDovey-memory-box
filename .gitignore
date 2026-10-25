@@ -1,0 +1,6 @@
+# 測試工具安裝的套件與產生的檔案，不提交
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

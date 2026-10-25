@@ -1,0 +1,11 @@
+{
+  "name": "memory-box-tests",
+  "private": true,
+  "description": "伴侶記憶匣的自動測試（只用來檢查正式版 index.html，不是另一個網站）",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
