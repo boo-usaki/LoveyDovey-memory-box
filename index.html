@@ -683,7 +683,7 @@ if (window.claude) {
         <p><strong>這次對話能操作瀏覽器或電腦：</strong>Codex、Claude 或其他有這項能力的 AI 都可以直接完成。跟它說「打開伴侶記憶匣，幫我把〇〇的對話整理成記憶（或 FIR 事件），直接寫進去。」它會打開正式網站，讀取妳已上傳的對話檔，整理後寫進記憶匣；妳不用複製指令，也不用把 AI 回覆貼回來。</p>
         <p><strong>這次對話不能操作瀏覽器或電腦：</strong>按「複製指令」，連同對話檔一起交給 AI；它回覆後，按「貼上回覆」把整段回覆貼回記憶匣。</p>
         <p class="hint">事件會自動編號，接在目前的事件欄後面；放不下時，頁面會先問妳要改短還是開新欄。</p></div></li>
-      <li><div><b>在電腦下載手機備份</b><p>打開左側「手機備份」，設定一組備份密碼，再按「下載手機備份」。密碼不會被記住或上傳；備份檔會先加密，主要是防止不小心傳錯聊天室或群組時，沒有密碼的人直接看到內容。</p></div></li>
+      <li><div><b>在電腦下載手機備份</b><p>打開左側「手機備份」，設定一組至少 4 個字元、內容不限的備份密碼，再按「下載手機備份」。密碼只在這台裝置上用來加密或復原，不會被記住、上傳或寫進備份檔；備份檔會先加密，主要是防止不小心傳錯聊天室或群組時，沒有密碼的人直接看到內容。</p></div></li>
       <li><div><b>把備份傳到手機並復原</b><p>用自己信任的方式把檔案傳到手機。手機打開同一個正式網址，到「手機備份」選擇檔案，輸入同一組密碼後復原。電腦有新內容時，再重新下載和搬一次。</p></div></li>
       <li><div><b>在手機複製，貼進「卿卿我我」</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進「卿卿我我」。手機和電腦不會自動同步；手機上的「已轉移」狀態也不會傳回電腦。</p></div></li>
     </ol>
@@ -735,19 +735,19 @@ if (window.claude) {
     <div class="step">
       <div class="step-title"><span class="latin">01</span>在電腦下載備份</div>
       <p class="hint">記憶只存在目前這個瀏覽器。備份包含全部記憶、事件、事件欄、伴侶設定、格式和 AI 指令修改；不含上傳的原始對話檔。</p>
-      <p class="hint"><strong>備份會先在這台裝置加密，再下載成檔案。</strong>主要是防止檔案不小心傳錯聊天室或群組時，沒有密碼的人直接看到內容。密碼不會被記住或上傳；也不要把密碼和備份檔放在同一則訊息裡。忘記密碼時，只要電腦裡的原始資料還在，就能重新下載一份；如果只剩備份檔，沒有密碼就無法復原。</p>
+      <p class="hint"><strong>備份會先在這台裝置加密，再下載成檔案。</strong>主要是防止檔案不小心傳錯聊天室或群組時，沒有密碼的人直接看到內容。密碼只在這台裝置上使用，不會被記住、上傳或寫進備份檔；網站不會把密碼傳給作者、GitHub 或傳送備份檔的服務。忘記密碼時，只要電腦裡的原始資料還在，就能重新下載一份；如果只剩備份檔，沒有密碼就無法復原。</p>
       <div class="row">
-        <label for="backupPassword">設定備份密碼（至少 8 個字元）
-          <input type="password" id="backupPassword" autocomplete="off" minlength="8">
+        <label for="backupPassword">設定備份密碼（至少 4 個字元，內容不限）
+          <input type="password" id="backupPassword" autocomplete="off" minlength="4">
         </label>
         <label for="backupPasswordAgain">再輸入一次
-          <input type="password" id="backupPasswordAgain" autocomplete="off" minlength="6">
+          <input type="password" id="backupPasswordAgain" autocomplete="off" minlength="4">
         </label>
       </div>
       <div class="row-actions">
         <button class="btn primary" id="downloadBackup">下載手機備份</button>
       </div>
-      <p class="hint">下載後，用自己信任的方式把檔案傳到手機。即使透過通訊軟體或雲端硬碟傳送，檔案裡仍是加密內容；不要把密碼和檔案放在同一則訊息裡。</p>
+      <p class="hint">下載後，用自己信任的方式把檔案傳到手機。即使透過通訊軟體或雲端硬碟傳送，檔案裡仍是加密內容。</p>
     </div>
     <div class="step">
       <div class="step-title"><span class="latin">02</span>在手機復原</div>
@@ -2544,7 +2544,7 @@ $("restoreFile").onchange = e => {
 };
 $("downloadBackup").onclick = async () => {
   const password = $("backupPassword").value, again = $("backupPasswordAgain").value, button = $("downloadBackup");
-  if (password.length < 8) { $("backupResult").textContent = "備份密碼至少要有 8 個字元。"; $("backupPassword").focus(); return; }
+  if (password.length < 4) { $("backupResult").textContent = "備份密碼至少要有 4 個字元。"; $("backupPassword").focus(); return; }
   if (password !== again) { $("backupResult").textContent = "兩次輸入的密碼不一樣，請再確認。"; $("backupPasswordAgain").focus(); return; }
   button.disabled = true; $("backupResult").textContent = "正在加密備份…";
   try {
