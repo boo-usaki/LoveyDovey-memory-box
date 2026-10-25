@@ -1,0 +1,1768 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="author" content="Boo_usaki">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>伴侶記憶匣</title>
+<meta name="description" content="把和伴侶的對話整理成記憶卡片：自訂格式、交給 AI 整理、一鍵複製、標記已轉移。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: a light, airy archive — hairline-bordered panels, colour only in thin rules and soft pills; shelf on the left, memory cards on the right, shelf turns into a chip row on phones. */
+:root {
+  --bg: #FDF9FA;
+  --surface: #FFFEFE;
+  --sunk: #FAF1F4;
+  --ink: #3F3038;
+  --muted: #8E7B85;
+  --faint: #B4A3AC;
+  --line: #F1E4EA;
+  --berry: #E8B1C3;
+  --pink: #F8CEDE;
+  --pink-soft: #FBE6EE;
+  --pink-ink: #8A4A65;
+  --cream-soft: #FDF8EC;
+  --sky: #E2EEF0;
+  --sky-ink: #56717A;
+  --scrim: rgba(63, 48, 56, .28);
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --f-latin: "Jost", "Futura", "Avenir Next", "Noto Sans TC", sans-serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1C181B; --surface: #221D21; --sunk: #2A2328; --ink: #F2E7EC; --muted: #B3A0AA; --faint: #7F6F78;
+    --line: #362D33; --berry: #E8B1C3; --pink: #8E5A70; --pink-soft: #3A2A32; --pink-ink: #F5C9D8;
+    --cream-soft: #2E2A22; --sky: #283639; --sky-ink: #C2DCE1; --scrim: rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1C181B; --surface: #221D21; --sunk: #2A2328; --ink: #F2E7EC; --muted: #B3A0AA; --faint: #7F6F78;
+  --line: #362D33; --berry: #E8B1C3; --pink: #8E5A70; --pink-soft: #3A2A32; --pink-ink: #F5C9D8;
+  --cream-soft: #2E2A22; --sky: #283639; --sky-ink: #C2DCE1; --scrim: rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 14.5px; line-height: 1.8; letter-spacing: .02em;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+body.locked { overflow: hidden; }
+button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--berry); outline-offset: 2px; }
+
+.app {
+  max-width: 1040px; margin: 0 auto;
+  display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; align-items: start;
+}
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+
+.dash { display: block; width: 28px; height: 2px; border-radius: 2px; background: var(--pink); margin-bottom: 14px; }
+.dash.sky { background: var(--sky); }
+.eyebrow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+.latin { font-family: var(--f-latin); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--pink-ink); }
+
+/* Shelf */
+.shelf { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 32px); padding: 22px 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+.brand { padding: 0 6px; }
+.brand h2 { font-size: 19px; font-weight: 500; margin: 4px 0 0; letter-spacing: .06em; line-height: 1.4; }
+.brand p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.companions { display: flex; flex-direction: column; gap: 2px; list-style: none; margin: 0; padding: 0; }
+.chip {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 6px 10px 6px 6px; border: 1px solid transparent; border-radius: 12px; background: transparent; text-align: left;
+}
+.chip:hover { background: var(--sunk); }
+.chip[aria-current="true"] { background: var(--pink-soft); border-color: var(--pink); }
+.avatar {
+  flex: none; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 12.5px; font-weight: 500;
+  background: var(--sunk); color: var(--pink-ink); border: 1px solid var(--line);
+}
+.chip[aria-current="true"] .avatar { background: var(--surface); border-color: var(--pink); }
+.chip-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.chip-count { font-family: var(--f-latin); font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.tools { display: flex; flex-direction: column; gap: 6px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.tool {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 7px 12px; font-size: 13.5px;
+}
+.tool:hover { background: var(--sunk); }
+.tool .latin { margin-left: auto; font-size: 10px; color: var(--faint); }
+.tool.main-tool { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-ink); font-weight: 500; }
+.tool.main-tool:hover { background: var(--pink); }
+
+/* Main */
+.main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.head { padding: 22px 24px 18px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.head h1 { font-size: 21px; font-weight: 500; margin: 4px 0 0; line-height: 1.4; letter-spacing: .06em; }
+.stats { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); }
+.seg button { border: 0; background: transparent; padding: 3px 14px; border-radius: 999px; font-size: 13px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--pink-soft); color: var(--pink-ink); }
+
+.cards { display: flex; flex-direction: column; gap: 12px; }
+.card { padding: 20px 24px 14px; display: flex; flex-direction: column; gap: 12px; }
+.card.done { opacity: .65; }
+.card-top { display: flex; flex-direction: column; gap: 2px; }
+.card h2 { font-size: 17px; font-weight: 700; margin: 0; line-height: 1.5; letter-spacing: .04em; min-width: 0; }
+.tag-ex { font-size: 11px; color: var(--pink-ink); background: var(--pink-soft); padding: 0 9px; border-radius: 999px; line-height: 1.8; }
+
+dl.fields { margin: 0; display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 6px 18px; }
+dl.fields dt { font-size: 12.5px; color: var(--muted); padding-top: 1px; }
+dl.fields dd { margin: 0; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+.kw { display: flex; flex-wrap: wrap; gap: 6px; }
+.kw span { font-size: 12.5px; padding: 0 10px; border-radius: 999px; background: var(--cream-soft); color: var(--ink); line-height: 1.9; }
+dd.quote { padding-left: 14px; border-left: 2px solid var(--pink); }
+
+.actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--line); padding-block: 12px 0; }
+.count { margin-right: auto; align-self: center; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.count.over { color: var(--pink-ink); background: var(--pink-soft); padding: 0 10px; border-radius: 999px; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 4px 16px; border-radius: 999px; font-size: 13.5px; color: var(--muted); }
+.btn:hover { background: var(--sunk); color: var(--ink); }
+.btn.primary { background: var(--pink-soft); color: var(--pink-ink); border-color: var(--pink); font-weight: 500; }
+.btn.primary:hover { background: var(--pink); }
+.btn.copied { background: var(--sky); color: var(--sky-ink); border-color: transparent; }
+.btn.danger { color: var(--pink-ink); }
+.btn.danger.arm { background: var(--pink); color: var(--ink); border-color: var(--pink); }
+
+.empty { padding: 36px 24px; text-align: center; color: var(--muted); border-style: dashed; }
+.empty strong { display: block; font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.empty .btn { margin-top: 12px; }
+
+/* Sheets (import / format) */
+.sheet-wrap {
+  position: fixed; inset: 0; z-index: 30; background: var(--scrim);
+  display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.sheet {
+  width: min(680px, 100%); max-height: 100%; overflow-y: auto;
+  padding: 24px; display: flex; flex-direction: column; gap: 18px;
+}
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.sheet-head h3 { margin: 4px 0 0; font-size: 18px; font-weight: 500; letter-spacing: .06em; }
+.x { border: 0; background: transparent; font-size: 20px; line-height: 1; padding: 4px 8px; color: var(--muted); border-radius: 8px; }
+.x:hover { background: var(--sunk); }
+.step { display: flex; flex-direction: column; gap: 8px; }
+.step-title { display: flex; align-items: baseline; gap: 10px; font-weight: 500; }
+.step-title .latin { font-size: 10.5px; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+textarea, input[type="text"], input[type="number"] {
+  width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--bg);
+  padding: 10px 12px; font-size: 14px; line-height: 1.7; resize: vertical;
+}
+textarea.mono { font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; }
+.row > label { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+.row > label.full { flex-basis: 100%; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.file-btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.result { font-size: 13px; color: var(--pink-ink); margin: 0; min-height: 1.8em; }
+.fieldlist { display: flex; flex-wrap: wrap; gap: 6px; }
+.fieldlist span { font-size: 12px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); line-height: 1.9; }
+.fieldlist span i { font-style: normal; color: var(--faint); margin-left: 4px; }
+
+.add-row { display: flex; gap: 6px; }
+.add-row input { padding: 5px 10px; font-size: 13.5px; border-radius: 10px; }
+.add-btn { border: 1px dashed var(--line); background: transparent; border-radius: 12px; padding: 6px 12px; font-size: 13px; color: var(--muted); text-align: left; }
+.add-btn:hover { background: var(--sunk); color: var(--ink); }
+.head { flex-direction: column; align-items: stretch; }
+.head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.settings-box { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.set-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--muted); }
+.set-row > label, .set-label { min-width: 9.5em; }
+.set-row input[type="text"], .set-row input[type="number"], .set-row input[type="date"] { width: 12em; max-width: 100%; padding: 5px 10px; font-size: 13.5px; }
+.set-row label.inline { min-width: 0; display: inline-flex; align-items: center; gap: 8px; }
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; counter-reset: flow; }
+.flow-step { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); min-width: 0; }
+.flow-title { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.flow-title::before { counter-increment: flow; content: counter(flow); width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--pink-soft); color: var(--pink-ink); font-family: var(--f-latin); font-size: 12px; font-weight: 500; }
+.flow-step p { margin: 0; }
+.flow-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.flow .files { flex-direction: column; align-items: stretch; width: 100%; }
+.flow .files li { justify-content: space-between; }
+.list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 0 4px; }
+.list-title { display: flex; align-items: baseline; gap: 10px; }
+.cp { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--line); width: 100%; }
+.cp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cp-label { font-size: 12px; color: var(--muted); min-width: 4.5em; }
+.cp-progress { font-size: 14px; }
+.cp-progress b { font-weight: 500; color: var(--pink-ink); font-variant-numeric: tabular-nums; }
+.linkish { border: 0; background: transparent; padding: 0 2px; font-size: 12.5px; color: var(--pink-ink); text-decoration: underline; text-underline-offset: 3px; }
+.files { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.files li { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 2px 6px 2px 12px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); max-width: 100%; }
+.files .fdate { color: var(--pink-ink); font-variant-numeric: tabular-nums; }
+.files .fname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files button { border: 0; background: transparent; font-size: 12px; color: var(--muted); padding: 0 6px; border-radius: 999px; }
+.files button:hover { background: var(--sunk); color: var(--ink); }
+.files button.arm { background: var(--pink); color: var(--ink); }
+.edit-progress { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.edit-progress label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.edit-progress input { width: 9em; padding: 5px 10px; font-size: 13.5px; }
+.muted { color: var(--muted); font-size: 12.5px; }
+.credit { max-width: 1040px; margin: 40px auto 0; display: flex; flex-direction: column; align-items: center; }
+.credit .dash { margin-bottom: 10px; }
+.sync { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px !important; font-size: 11.5px !important; color: var(--muted); }
+.sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+.sync.on { color: var(--sky-ink); }
+.sync.on::before { background: #7FB9A6; }
+.guide.small { gap: 10px; }
+.guide .sub { margin: 6px 0 4px; padding-left: 1.3em; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.guide .sub li { display: list-item; }
+.guide .sub li::before { content: none; }
+.say { color: var(--ink); background: var(--cream-soft); border-radius: 6px; padding: 0 4px; }
+.guide.small b { font-size: 13.5px; }
+.sheet a { color: var(--pink-ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.guide-tabs { align-self: flex-start; }
+.agent-line { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+.agent-line code { flex: 1 1 260px; min-width: 0; font-family: var(--f-body); font-size: 13px; background: var(--cream-soft); border-radius: 10px; padding: 8px 12px; white-space: pre-wrap; }
+.card.sample { background: var(--bg); padding: 16px 18px; }
+.welcome { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 24px; text-align: center; }
+.welcome h2 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: .06em; }
+.welcome p { margin: 0; color: var(--muted); max-width: 32em; }
+.welcome .row-actions { margin-top: 12px; justify-content: center; }
+input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size: 13.5px; }
+.guide { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; counter-reset: g; }
+.guide li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: start; }
+.guide li::before { counter-increment: g; content: counter(g); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--pink-soft); color: var(--pink-ink); font-family: var(--f-latin); font-size: 13px; }
+.guide b { font-weight: 500; display: block; }
+.guide p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.tips { margin: 0; padding-left: 1.2em; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.name-box { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+.name-value { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 12px; background: var(--sunk); padding: 10px 12px; line-height: 1.7; }
+.name-value b { font-size: 14px; font-weight: 500; color: var(--ink); }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%) translateY(20px);
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface); color: var(--ink); border: 1px solid var(--pink); padding: 7px 10px 7px 18px; border-radius: 999px;
+  display: flex; align-items: center; gap: 12px; font-size: 13.5px;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 40; max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.toast button { border: 0; background: transparent; color: var(--pink-ink); font-weight: 700; padding: 2px 6px; }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .shelf { position: static; padding: 16px 14px 12px; gap: 12px; }
+  .companions { flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 2px; scrollbar-width: none; }
+  .companions::-webkit-scrollbar { display: none; }
+  .chip { width: auto; flex: none; padding: 4px 12px 4px 4px; border-radius: 999px; border-color: var(--line); }
+  .chip-name { overflow: visible; }
+  .tools { display: grid; grid-template-columns: 1fr 1fr; }
+  .tool { width: auto; flex: 1 1 auto; justify-content: center; }
+  .tool .latin { display: none; }
+  .head { padding: 18px 16px 14px; }
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .card { padding: 16px 16px 12px; }
+  .sheet { padding: 18px 16px; }
+  dl.fields { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  dl.fields dt { margin-top: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+/* Palette: 法式桃紅 — all white, sky-blue lines, rose-pink text, tinted page (always light) */
+:root[data-palette="peach"] {
+  --bg: #E9F5FC; --inner: #FFFFFF; --surface: #FFFFFF; --sunk: #FFFFFF; --ink: #E0407A; --muted: #EC6F9A; --faint: #F4A8C2;
+  --line: #74C3EE; --berry: #3AA9E4; --pink: #EC6F9A; --pink-soft: #FDE8F0; --pink-ink: #E0407A;
+  --cream-soft: #FFFFFF; --sky: #E4F3FC; --sky-ink: #2A93CC; --scrim: rgba(255, 255, 255, .72);
+  color-scheme: light;
+}
+:root[data-palette="peach"] .dash.sky { background: var(--berry); }
+:root[data-palette="peach"] .panel { --bg: var(--inner); }
+:root[data-palette="peach"] .kw span,
+:root[data-palette="peach"] .say,
+:root[data-palette="peach"] .agent-line code { box-shadow: inset 0 0 0 1px var(--line); }
+:root[data-palette="peach"] .sheet { box-shadow: 0 10px 40px rgba(47, 140, 190, .12); }
+:root[data-palette="peach"] .sheet-wrap { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+/* Palette: 午夜唱片 — deep navy, cream text, gold labels (always dark) */
+:root[data-palette="night"] {
+  --bg: #0C1A31; --surface: #1F2D45; --sunk: #182740; --ink: #F2ECDF; --muted: #B8B2A5; --faint: #7D8699;
+  --line: #36465F; --berry: #D6B677; --pink: #EDE4CF; --pink-soft: #2C3D59; --pink-ink: #D6B677;
+  --cream-soft: #293952; --sky: #2D4461; --sky-ink: #D3E3F0; --scrim: rgba(4, 10, 22, .62);
+  color-scheme: dark;
+}
+:root[data-palette="night"] .dash { height: 3px; width: 32px; }
+:root[data-palette="night"] .dash.sky { background: var(--pink); }
+:root[data-palette="night"] .panel { border-color: rgba(237, 228, 207, .14); }
+/* Palette: 芋泥啵啵 — Opal / Mauve Dune / Celeste / Twilight Violet */
+:root[data-palette="lilac"] {
+  --bg: #F5F2F7; --surface: #FFFFFF; --sunk: #FAF8FC; --ink: #45446C; --muted: #6F6E96; --faint: #A9A6C6;
+  --line: #E2DEEE; --berry: #8484A0; --pink: #BAB5CF; --pink-soft: #ECEAF8; --pink-ink: #45446C;
+  --cream-soft: #EFEDF9; --sky: #E7E6F6; --sky-ink: #45446C; --scrim: rgba(69, 68, 108, .14);
+  --inner: #FFFFFF;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette="lilac"]:not([data-theme="light"]) {
+    --bg: #24233A; --surface: #2C2B45; --sunk: #33324F; --ink: #EEE9EE; --muted: #BAB5CF; --faint: #8484A0;
+  --line: #3E3D5E; --berry: #BAB5CF; --pink: #8484A0; --pink-soft: #3B3A5C; --pink-ink: #DCD8EA;
+  --cream-soft: #35344F; --sky: #3A3958; --sky-ink: #EEE9EE; --scrim: rgba(0, 0, 0, .5);
+  --inner: #24233A; color-scheme: dark;
+  }
+}
+:root[data-palette="lilac"][data-theme="dark"] {
+  --bg: #24233A; --surface: #2C2B45; --sunk: #33324F; --ink: #EEE9EE; --muted: #BAB5CF; --faint: #8484A0;
+  --line: #3E3D5E; --berry: #BAB5CF; --pink: #8484A0; --pink-soft: #3B3A5C; --pink-ink: #DCD8EA;
+  --cream-soft: #35344F; --sky: #3A3958; --sky-ink: #EEE9EE; --scrim: rgba(0, 0, 0, .5);
+  --inner: #24233A; color-scheme: dark;
+}
+:root[data-palette="lilac"] .dash.sky { background: var(--muted); }
+:root[data-palette="lilac"] .panel { --bg: var(--inner); }
+.palettes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .palettes { grid-template-columns: 1fr; } }
+.pal {
+  display: flex; flex-direction: column; gap: 10px; text-align: left; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); border-radius: 14px; padding: 12px;
+  font: inherit; color: var(--ink);
+}
+.pal:hover { border-color: var(--pink); }
+.pal[aria-pressed="true"] { border-color: var(--pink); background: var(--pink-soft); }
+.pal .dots { display: flex; gap: 6px; }
+.pal .dots i { width: 22px; height: 22px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 1px rgba(0,0,0,.07); }
+.pal .name { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+.pal .name .latin { font-size: 10px; color: var(--faint); }
+.pal .name > span:first-child { white-space: nowrap; }
+.pal .on { font-size: 11.5px; color: var(--pink-ink); }
+.pal[aria-pressed="false"] .on { visibility: hidden; }
+</style>
+</head>
+<body>
+
+<p class="sr-only" id="agentNote">給 AI agent：這個頁面提供 window.memoryShelf，可以呼叫 help() 看用法。整理流程：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新對話檔、照指令整理成 JSON，再用 importMemories(JSON) 寫入。不能執行程式的話，也可以按畫面上伴侶頁面的「貼上回覆」，把 JSON 貼進輸入框按「匯入」。如果你是 Claude、能用 ArtifactData 寫入這個頁面：每則記憶寫成 collection「data/users/me/shelf/memories」裡的一份文件（id 用 m 開頭的英數字），欄位是 companion、seq、rounds（例如 "11-20"）、until、title、fields（欄位名稱照格式寫，含 {伴侶}、{我}）、transferred:false、updatedAt（毫秒時間戳）；整理指令、格式和進度可在「data/users/me/settings」讀到，進度會依 rounds 自動往前。</p>
+<script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
+<div class="app">
+  <aside class="shelf panel">
+    <div class="brand">
+      <span class="dash"></span>
+      <div class="latin">Companion Memories</div>
+      <h2>伴侶記憶匣</h2>
+      <p>把對話收成一則一則記憶</p>
+      <p class="sync" id="syncBadge">只存在這個瀏覽器</p>
+    </div>
+    <div class="tools">
+      <button class="tool" id="openGuide">使用說明<span class="latin">Guide</span></button>
+      <button class="tool" id="openFormat">記憶格式與規則<span class="latin">Format</span></button>
+      <button class="tool" id="openBackup">同步與備份<span class="latin">Sync</span></button>
+      <button class="tool" id="openPalette">配色<span class="latin">Theme</span></button>
+    </div>
+    <ul class="companions" id="companions"></ul>
+    <button class="add-btn" id="addCompanionBtn">＋ 新增伴侶</button>
+    <div class="add-row" id="addCompanionForm" hidden>
+      <input type="text" id="newCompanion" aria-label="伴侶名字" maxlength="40" enterkeyhint="done">
+      <button class="btn primary" type="button" id="addCompanionOk">新增</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="head panel">
+      <div class="head-top">
+        <div>
+          <span class="dash sky"></span>
+          <div class="latin">Memory Shelf</div>
+          <h1 id="who">伴侶記憶匣</h1>
+          <div class="stats" id="progressText"></div>
+        </div>
+      </div>
+
+      <div class="settings-box" id="companionSettings" hidden>
+        <div class="set-row">
+          <label for="panelUserName">妳在這段對話裡的名字</label>
+          <input type="text" id="panelUserName">
+        </div>
+        <div class="set-row">
+          <span class="set-label">接續方式</span>
+          <div class="seg" role="group" aria-label="接續方式">
+            <button type="button" id="modeRounds" aria-pressed="true">用輪數</button>
+            <button type="button" id="modeDate" aria-pressed="false">用日期</button>
+          </div>
+          <span class="muted" id="modeHint"></span>
+        </div>
+        <div class="set-row">
+          <label for="progRound">已整理到第幾輪</label>
+          <input type="number" id="progRound" min="0">
+          <label for="progDate" id="progDateLabel" class="inline">已整理到哪一天 <input type="date" id="progDate"></label>
+          <button class="btn primary" type="button" id="saveProgress">儲存進度</button>
+        </div>
+      </div>
+
+      <ol class="flow" id="companionPanel" hidden>
+        <li class="flow-step">
+          <div class="flow-title">上傳對話檔</div>
+          <ul class="files" id="fileList"></ul>
+          <span class="btn file-btn">上傳對話檔<input type="file" id="chatFile" accept=".txt,.md,.json,.html,text/plain" aria-label="上傳對話檔"></span>
+        </li>
+        <li class="flow-step">
+          <div class="flow-title">交給 AI 整理</div>
+          <p class="muted" id="promptNote">複製指令，連同對話檔一起交給妳的 AI。</p>
+          <div class="flow-actions">
+            <button class="btn primary" id="copyCompanionPrompt">複製指令</button>
+            <button class="btn" id="viewCompanionPrompt">查看／修改</button>
+          </div>
+        </li>
+        <li class="flow-step">
+          <div class="flow-title">貼回 AI 的回覆</div>
+          <p class="muted">貼上後就會變成下面的記憶卡片。</p>
+          <button class="btn primary" id="importHere">貼上回覆</button>
+        </li>
+      </ol>
+    </div>
+
+    <div class="list-head" id="listHead">
+      <div class="list-title"><span class="latin">Memories</span><span class="stats" id="stats"></span></div>
+      <div class="seg" role="group" aria-label="顯示">
+        <button id="showTodo" aria-pressed="true">待轉移</button>
+        <button id="showDone" aria-pressed="false">已轉移</button>
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </main>
+</div>
+
+<footer class="credit"><span class="dash"></span><span class="latin">made quietly by Boo_usaki</span></footer>
+
+<!-- Import sheet -->
+<div class="sheet-wrap" id="importSheet" hidden>
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="sheet-head">
+      <div><span class="dash"></span><div class="latin">Import</div><h3 id="importTitle">貼回 AI 的回覆</h3></div>
+      <button class="x" data-close aria-label="關閉">×</button>
+    </div>
+    <div class="step">
+      <p class="hint">把 AI 回的內容整段貼上就好，JSON 或照格式寫好的文字（每則用 # 開頭）都可以，也能直接選檔案。</p>
+      <textarea id="importText" rows="9" class="mono" placeholder='[{"companion": "伴侶名字", "rounds": "1-10", "title": "標題", "fields": { ... }}]&#10;&#10;或&#10;&#10;# [標題]&#10;- 地點：……'></textarea>
+      <div class="row">
+        <label for="importCompanion">匯入到哪位伴侶（AI 回覆裡有寫名字的話，以回覆為準）
+          <input type="text" id="importCompanion">
+        </label>
+      </div>
+      <div class="row-actions">
+        <button class="btn primary" id="doImport">匯入</button>
+        <span class="btn file-btn">選擇檔案<input type="file" id="importFile" accept=".json,.txt,.md,text/plain,application/json" aria-label="選擇要匯入的檔案"></span>
+      </div>
+      <p class="result" id="importResult" role="status"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Format sheet -->
+<div class="sheet-wrap" id="formatSheet" hidden>
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="formatTitle">
+    <div class="sheet-head">
+      <div><span class="dash sky"></span><div class="latin">Format</div><h3 id="formatTitle">記憶格式與規則</h3></div>
+      <button class="x" data-close aria-label="關閉">×</button>
+    </div>
+    <div class="step">
+      <div class="step-title"><span class="latin">01</span>妳習慣的記憶格式</div>
+      <p class="hint">照妳平常的寫法就好，{伴侶} 和 {我} 會自動換成名字。</p>
+      <textarea id="formatText" rows="9" class="mono"></textarea>
+      <div class="fieldlist" id="fieldPreview" aria-label="目前欄位"></div>
+    </div>
+    <div class="step">
+      <div class="step-title"><span class="latin">02</span>整理規則</div>
+      <p class="hint">這裡的設定所有伴侶共用；伴侶一則回覆＋妳一則回覆＝一輪。名字、進度和 AI 整理指令在每位伴侶的頁面。</p>
+      <div class="row">
+        <label for="roundsPer">每幾輪整理成一則
+          <input type="number" id="roundsPer" min="1" max="100" value="10">
+        </label>
+        <label for="charLimit">每則字數上限（含標點）
+          <input type="number" id="charLimit" min="50" max="5000" value="500">
+        </label>
+        <label for="rangeNote" class="full">整理範圍（選填）
+          <input type="text" id="rangeNote" placeholder="例如：只整理到 2026/9/1 之前">
+        </label>
+      </div>
+      <label for="extraNote" class="hint">其他給 AI 的提醒（選填）</label>
+      <textarea id="extraNote" rows="2" placeholder="例如：關鍵對話最多挑三句"></textarea>
+    </div>
+    <div class="row-actions"><button class="btn" id="resetFormat">恢復預設格式</button></div>
+  </div>
+</div>
+
+<!-- Per-companion prompt sheet -->
+<div class="sheet-wrap" id="promptSheet" hidden>
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="promptTitle">
+    <div class="sheet-head">
+      <div><span class="dash"></span><div class="latin">Prompt</div><h3 id="promptTitle">AI 整理指令</h3></div>
+      <button class="x" data-close aria-label="關閉">×</button>
+    </div>
+    <div class="step">
+      <div class="step-title">給 AI 的整理指令<span class="tag-ex" id="customBadge" hidden>含手動修改</span></div>
+      <p class="hint" id="promptHint"></p>
+      <textarea id="promptText" rows="14" class="mono" aria-describedby="promptHint" readonly></textarea>
+      <div class="row-actions">
+        <button class="btn primary" id="copyPrompt">複製指令</button>
+        <button class="btn" id="downloadPrompt">下載成 AGENT.md</button>
+        <button class="btn" id="editPrompt">手動修改</button>
+        <button class="btn" id="regenPrompt" hidden>清除手動修改</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Guide sheet -->
+<div class="sheet-wrap" id="guideSheet" hidden>
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="sheet-head">
+      <div><span class="dash"></span><div class="latin">Guide</div><h3 id="guideTitle">使用說明</h3></div>
+      <button class="x" data-close aria-label="關閉">×</button>
+    </div>
+    <div class="seg guide-tabs" role="group" aria-label="用哪個 AI">
+      <button type="button" id="tabClaude" aria-pressed="true">用 Claude</button>
+      <button type="button" id="tabCodex" aria-pressed="false">用 Codex 或其他 AI</button>
+    </div>
+    <ol class="guide" id="flowClaude">
+      <li><div><b>把頁面放進妳自己的 Claude 帳號（只要做一次）</b>
+        <p>資料會存在「頁面主人」的帳號裡，所以要用妳自己的那一份。打開別人分享的連結只能看，記憶存不進妳的帳號。</p>
+        <ol class="sub">
+          <li>拿到頁面檔 index.html：<span id="dlSelfWrap">按這裡 <button class="linkish" id="dlSelf" type="button">下載頁面檔</button>，或</span>到 GitHub 上的 repository 點 index.html，再按右上角的下載按鈕。</li>
+          <li>在電腦開一個新的 Claude 對話，附上 index.html，然後說：<span class="say">「幫我把這個網頁發佈成我自己的 Artifact，要開啟資料庫（db）和使用者（user）功能，發佈好幫我釘選到側邊欄。」</span></li>
+          <li>Claude 做好會出現一張頁面卡片，點開後左上角顯示「已同步到 Claude 帳號」就成功了。</li>
+          <li>之後電腦、手機都從 Claude 的側邊欄打開這份就好。</li>
+        </ol>
+        <p>如果妳現在看的這頁左上角已經顯示「已同步到 Claude 帳號」，這步可以跳過。</p></div></li>
+      <li><div><b>設定記憶格式</b><p>左側「記憶格式與規則」填妳要的格式、每幾輪一則、字數上限。預設是「伴侶一則回覆＋妳一則回覆＝一輪」。</p></div></li>
+      <li><div><b>新增伴侶，填妳的名字</b><p>左側「＋ 新增伴侶」，再到伴侶頁面上方填妳在這段對話裡的名字。</p></div></li>
+      <li><div><b>請 Claude 整理並寫入</b><p>不用開側欄。在伴侶頁面按「複製指令」，到 Claude 的對話貼上、附上對話檔，再補一句「整理好直接寫進伴侶記憶匣」。Claude 會從對話裡把記憶寫進這個頁面，整理進度也會自動往前。</p></div></li>
+      <li><div><b>用手機複製、轉移</b><p>在手機的 Claude App 打開側邊欄裡釘選的這個頁面（沒有釘選的話，打開當初發佈它的那個對話、點頁面卡片）。按「複製整則」貼到伴侶 App，貼好按「已轉移」，電腦那邊也會一起更新。</p></div></li>
+    </ol>
+    <ol class="guide" id="flowCodex" hidden>
+      <li><div><b>用 GitHub 上的網址打開這個頁面</b><p>agent 要能「看到並操作這個網頁」才能幫妳寫入，基本以 agent 側欄為主；如果 agent 有操作瀏覽器的功能（例如 Codex），也可以開在妳的慣用瀏覽器裡。</p></div></li>
+      <li><div><b>第一次使用：設定同步</b><p>左側「同步與備份」照教學連上妳的 GitHub（只要做一次），手機之後才看得到同樣的記憶。</p></div></li>
+      <li><div><b>設定記憶格式</b><p>左側「記憶格式與規則」填妳要的格式、每幾輪一則、字數上限。預設是「伴侶一則回覆＋妳一則回覆＝一輪」。</p></div></li>
+      <li><div><b>新增伴侶，填妳的名字</b><p>左側「＋ 新增伴侶」，再到伴侶頁面上方填妳在這段對話裡的名字。</p></div></li>
+      <li><div><b>上傳對話檔</b><p>伴侶頁面的第 1 步，檔案會標上上傳日期。</p></div></li>
+      <li><div><b>請 agent 整理並寫入</b><p>agent 看得到這個頁面，不用複製指令，直接跟它說「幫我整理〇〇的對話，寫進記憶匣」。它會自己讀整理指令和對話檔，整理完直接寫進來。</p></div></li>
+      <li><div><b>用手機複製、轉移</b><p>手機打開同一個網址，第一次到「同步與備份」貼上連線碼。之後按「複製整則」貼到伴侶 App，貼好按「已轉移」，電腦也會一起更新。</p></div></li>
+    </ol>
+    <div class="step">
+      <div class="step-title">記憶卡片長這樣</div>
+      <p class="hint">這只是示意，不會存進妳的記憶匣。</p>
+      <div id="guideSample"></div>
+    </div>
+    <div class="step">
+      <div class="step-title">小提醒</div>
+      <ul class="tips">
+        <li>記憶格式、每幾輪一則、字數上限，在左側「記憶格式與規則」改，所有伴侶共用。</li>
+        <li>妳的名字、接續方式、整理進度、AI 指令都跟著每位伴侶，各自獨立，都在伴侶頁面上方。</li>
+        <li>每次都匯出完整對話就選「用輪數」接續；每次只匯出新的一段就選「用日期」。</li>
+        <li>偶爾到「同步與備份」備份一份，比較安心。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Palette sheet -->
+<div class="sheet-wrap" id="paletteSheet" hidden>
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="paletteTitle">
+    <div class="sheet-head">
+      <div><span class="dash"></span><div class="latin">Theme</div><h3 id="paletteTitle">配色</h3></div>
+      <button class="x" data-close aria-label="關閉">×</button>
+    </div>
+    <div class="step">
+      <div class="step-title">選一套喜歡的顏色</div>
+      <p class="hint">只換頁面的樣子，記憶不會變。電腦和手機各自記得自己選的配色。</p>
+      <div class="palettes">
+        <button class="pal" type="button" data-p="berry" aria-pressed="false"><span class="dots"><i style="background:#E8B1C3"></i><i style="background:#F8CEDE"></i><i style="background:#FAF2DC"></i><i style="background:#E2EEF0"></i></span><span class="name"><span>草莓氣泡</span><span class="latin">Strawberry</span></span><span class="on">使用中</span></button>
+        <button class="pal" type="button" data-p="peach" aria-pressed="false"><span class="dots"><i style="background:#E9F5FC"></i><i style="background:#FFFFFF"></i><i style="background:#74C3EE"></i><i style="background:#E0407A"></i></span><span class="name"><span>法式桃紅</span><span class="latin">Tricolore</span></span><span class="on">使用中</span></button>
+        <button class="pal" type="button" data-p="night" aria-pressed="false"><span class="dots"><i style="background:#0C1A31"></i><i style="background:#1F2D45"></i><i style="background:#F2ECDF"></i><i style="background:#D6B677"></i></span><span class="name"><span>午夜唱片</span><span class="latin">Midnight</span></span><span class="on">使用中</span></button>
+        <button class="pal" type="button" data-p="lilac" aria-pressed="false"><span class="dots"><i style="background:#EEE9EE"></i><i style="background:#BAB5CF"></i><i style="background:#8484A0"></i><i style="background:#45446C"></i></span><span class="name"><span>芋泥啵啵</span><span class="latin">Taro Boba</span></span><span class="on">使用中</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backup sheet -->
+<div class="sheet-wrap" id="backupSheet" hidden>
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
+    <div class="sheet-head">
+      <div><span class="dash"></span><div class="latin">Backup</div><h3 id="backupTitle">同步與備份</h3></div>
+      <button class="x" data-close aria-label="關閉">×</button>
+    </div>
+    <div class="step">
+      <div class="step-title"><span class="latin">01</span>跨裝置同步</div>
+      <p class="hint" id="syncIntro"></p>
+      <div id="ghSetup" hidden>
+        <ol class="guide small">
+          <li><div><b>到 GitHub 產生同步金鑰</b><p>登入 GitHub 後打開 <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%E4%BC%B4%E4%BE%B6%E8%A8%98%E6%86%B6%E5%8C%A3" target="_blank" rel="noopener">這個連結</a>，權限已經只勾好「gist」。有效期限（Expiration）選妳想要的長度，按最下面的「Generate token」。</p></div></li>
+          <li><div><b>貼到下面按「連線」</b><p>複製 ghp_ 開頭的那串。頁面會在妳的 GitHub 建一份私人 Gist 存記憶。</p></div></li>
+          <li><div><b>手機或其他電腦</b><p>連線後按「複製手機連線碼」，傳給自己，在手機打開同一個網址、貼到這裡就好。</p></div></li>
+        </ol>
+        <div class="row">
+          <label for="ghToken">同步金鑰或連線碼
+            <input type="password" id="ghToken" autocomplete="off" spellcheck="false">
+          </label>
+        </div>
+        <div class="row-actions"><button class="btn primary" id="ghConnect">連線</button></div>
+      </div>
+      <div id="ghLinked" hidden>
+        <p class="hint" id="ghStatus"></p>
+        <div class="row-actions">
+          <button class="btn primary" id="ghSyncNow">立即同步</button>
+          <button class="btn" id="ghCopyCode">複製手機連線碼</button>
+          <button class="btn danger" id="ghDisconnect">中斷連線</button>
+        </div>
+        <p class="hint">連線碼等同金鑰，只傳給自己，不要貼到公開的地方。借別人的電腦用完，記得按「中斷連線」。</p>
+      </div>
+      <p class="result" id="syncResult" role="status"></p>
+    </div>
+    <div class="step">
+      <div class="step-title"><span class="latin">02</span>備份</div>
+      <p class="hint" id="backupHint">記憶只存在這個瀏覽器裡，換裝置或清除瀏覽器資料就會不見。定期備份比較安心；備份的內容可以從「貼上回覆」貼回來。</p>
+      <div class="row-actions">
+        <button class="btn primary" id="copyBackup">複製備份內容</button>
+        <button class="btn" id="downloadBackup">下載備份檔</button>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-title"><span class="latin">03</span>清除</div>
+      <div class="row-actions">
+        <button class="btn danger" id="clearAll">清除全部記憶</button>
+      </div>
+      <p class="result" id="backupResult" role="status"></p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" hidden>復原</button></div>
+<textarea id="copyArea" aria-hidden="true" tabindex="-1" style="position:fixed;left:-9999px;top:0;opacity:0"></textarea>
+
+<script>
+/* ---------- Pure helpers (no DOM) ---------- */
+const DEFAULT_FORMAT = [
+  "# [標題]",
+  "",
+  "- 地點：",
+  "- 場景概要：",
+  "- 關鍵詞：",
+  "- 關鍵對話：",
+  "- 情感變化及影響：",
+  "- {伴侶}覺得重要的事："
+].join("\n");
+const NAME_TOKEN = "{伴侶}";
+const USER_TOKEN = "{我}";
+
+function fieldKind(label) {
+  if (/關鍵詞|關鍵字|標籤|tag|keyword/i.test(label)) return "tags";
+  if (/對話|台詞|原文/.test(label)) return "quote";
+  return "text";
+}
+
+/* Read the user's format text into a list of field labels. */
+function parseFormat(text) {
+  const fields = [];
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || /^#/.test(line)) continue;
+    const m = line.match(/^[*\-•・]\s*(.+?)\s*[：:]\s*$/) || line.match(/^[*\-•・]\s*(.+?)\s*[：:]/);
+    if (m && m[1]) fields.push({ label: m[1], kind: fieldKind(m[1]) });
+  }
+  return fields;
+}
+
+/* How the user writes it: bullet character and whether the title sits in [brackets]. */
+function parseStyle(text) {
+  const lines = String(text || "").split(/\r?\n/).map(l => l.trim());
+  const title = lines.find(l => /^#/.test(l)) || "";
+  const field = lines.find(l => /^[*\-•・]\s*.+[：:]/.test(l)) || "";
+  return { bracket: /^#+\s*\[.*\]\s*$/.test(title), bullet: field ? field[0] : "-" };
+}
+
+function nameLabel(label, companion, user) {
+  return String(label).split(NAME_TOKEN).join(companion || "伴侶").split(USER_TOKEN).join(user || "我");
+}
+const escRe = t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/* Map a key the AI wrote back onto a template label. */
+function matchLabel(key, fields, companion, user) {
+  const k = String(key).trim();
+  for (const f of fields) {
+    if (f.label === k) return f.label;
+    if (nameLabel(f.label, companion, user) === k) return f.label;
+  }
+  for (const f of fields) {
+    if (f.label.includes(NAME_TOKEN) || f.label.includes(USER_TOKEN)) {
+      const re = new RegExp("^" + f.label.split(/(\{伴侶\}|\{我\})/).map(part => (part === NAME_TOKEN || part === USER_TOKEN) ? ".+" : escRe(part)).join("") + "$");
+      if (re.test(k)) return f.label;
+    }
+  }
+  return k;
+}
+
+function toTags(v) {
+  if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
+  return String(v || "").split(/[、,，;；\/]\s*|\s{2,}/).map(x => x.trim()).filter(Boolean);
+}
+
+function normalizeEntry(raw, fields, fallbackCompanion, user) {
+  const companion = String(raw.companion || raw["伴侶"] || raw.name || fallbackCompanion || "").trim();
+  const title = String(raw.title || raw["標題"] || "").replace(/^\[|\]$/g, "").trim();
+  const src = raw.fields && typeof raw.fields === "object" ? raw.fields : raw;
+  const skip = new Set(["companion", "伴侶", "name", "title", "標題", "rounds", "輪", "until", "日期", "fields", "seq", "id", "transferred", "example"]);
+  const out = {};
+  for (const [key, value] of Object.entries(src)) {
+    if (src === raw && skip.has(key)) continue;
+    const label = matchLabel(key, fields, companion, user);
+    const f = fields.find(x => x.label === label);
+    out[label] = (f ? f.kind : fieldKind(label)) === "tags" ? toTags(value) : String(value == null ? "" : value).trim();
+  }
+  const until = String(raw.until || raw["日期"] || "").trim();
+  return { companion, title, rounds: String(raw.rounds || raw["輪"] || "").trim(), until, fields: out };
+}
+
+function stripFence(text) {
+  const t = String(text || "").trim();
+  const m = t.match(/```(?:json|JSON|markdown|md)?\s*([\s\S]*?)```/);
+  return m ? m[1].trim() : t;
+}
+
+/* Markdown in the user's own format: entries start with "# ". */
+function parseMarkdown(text, fields, fallbackCompanion, user) {
+  const entries = [];
+  let cur = null, curKey = null;
+  const push = () => { if (cur && (cur.title || Object.keys(cur.fields).length)) entries.push(cur); };
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.replace(/\s+$/, "");
+    const h = line.match(/^#{1,3}\s+(.+)$/);
+    if (h) { push(); cur = { title: h[1].replace(/^\[|\]$/g, "").trim(), fields: {} }; curKey = null; continue; }
+    if (!cur) continue;
+    const sub = line.match(/^\s{2,}[*\-•・]\s*(.*)$/);
+    if (sub && curKey) { cur.fields[curKey] += (cur.fields[curKey] ? "\n" : "") + sub[1].trim(); continue; }
+    const b = line.match(/^\s{0,1}[*\-•・]\s*([^：:]{1,40}?)\s*[：:]\s*(.*)$/);
+    if (b) { curKey = b[1].trim(); cur.fields[curKey] = b[2]; continue; }
+    if (curKey && line.trim()) cur.fields[curKey] += (cur.fields[curKey] ? "\n" : "") + line.trim();
+  }
+  push();
+  return entries.map(e => {
+    const meta = {};
+    for (const k of Object.keys(e.fields)) {
+      if (/^(伴侶|伴侶名稱|companion)$/i.test(k)) { meta.companion = e.fields[k]; delete e.fields[k]; }
+      else if (/^(輪數|範圍|rounds)$/i.test(k)) { meta.rounds = e.fields[k]; delete e.fields[k]; }
+    }
+    return normalizeEntry({ ...meta, title: e.title, fields: e.fields }, fields, fallbackCompanion, user);
+  });
+}
+
+function parseImport(text, fields, fallbackCompanion, user) {
+  const t = stripFence(text);
+  if (!t) return { entries: [], error: "沒有內容可以匯入。" };
+  const start = t.search(/^\s*[\[{]/m);
+  if (start !== -1 && !/^\s*#/.test(t)) {
+    const body = t.slice(start), end = Math.max(body.lastIndexOf("]"), body.lastIndexOf("}"));
+    let data;
+    try { data = JSON.parse(body.slice(0, end + 1)); }
+    catch (e) { return { entries: [], error: "看起來是 JSON，但格式有誤，請確認是否完整複製了 AI 的回覆。" }; }
+    if (data && !Array.isArray(data)) data = Array.isArray(data.memories) ? data.memories : [data];
+    const entries = data.filter(x => x && typeof x === "object").map(x => {
+      const n = normalizeEntry(x, fields, fallbackCompanion, user);
+      if (typeof x.transferred === "boolean") n.transferred = x.transferred;
+      return n;
+    });
+    return { entries };
+  }
+  return { entries: parseMarkdown(t, fields, fallbackCompanion, user) };
+}
+
+function memoryText(m, fields, user, style) {
+  const st = style || { bracket: true, bullet: "-" };
+  const labels = fields.map(f => f.label);
+  for (const k of Object.keys(m.fields || {})) if (!labels.includes(k)) labels.push(k);
+  const title = m.title || "";
+  const lines = [st.bracket ? `# [${title}]` : `# ${title}`, ""];
+  for (const label of labels) {
+    const v = (m.fields || {})[label];
+    const val = Array.isArray(v) ? v.join("、") : String(v || "");
+    const parts = val.split(/\n/).map(x => x.trim()).filter(Boolean);
+    const head = `${st.bullet} ${nameLabel(label, m.companion, user)}：`;
+    if (parts.length > 1) { lines.push(head); parts.forEach(x => lines.push(`  ${st.bullet} ${x}`)); }
+    else lines.push(head + (parts[0] || ""));
+  }
+  return lines.join("\n");
+}
+
+function limitOf(settings) { return Math.max(50, parseInt(settings.charLimit, 10) || 500); }
+function charCount(text) { return [...String(text).replace(/\r/g, "")].length; }
+
+function roundEnd(rounds) {
+  const nums = String(rounds || "").match(/\d+/g);
+  return nums ? Math.max(...nums.map(Number)) : 0;
+}
+
+function progressRules(ctx, n) {
+  const R = Math.max(0, parseInt(ctx.lastRound, 10) || 0), start = R + 1, rules = [];
+  if (ctx.mode === "date") {
+    if (ctx.lastDate) rules.push(`之前已經整理到 ${ctx.lastDate} 的對話。這次只整理 ${ctx.lastDate} 之後的對話，前面的不要重複整理${R ? `；rounds 從第 ${start} 輪接續編號` : ""}。`);
+    else if (R) rules.push(`之前已經整理到第 ${R} 輪。這次從第 ${start} 輪開始，rounds 也從 ${start} 接續編號。`);
+    rules.push("每則記憶加上 until 欄位，填這段記憶最後一則對話的日期（YYYY-MM-DD）；對話檔沒有日期就留空。");
+  } else if (R) {
+    rules.push(`之前已經整理到第 ${R} 輪。這次從第 ${start} 輪開始，前面的不要重複整理；rounds 的編號也從 ${start} 接續。`);
+  }
+  return rules;
+}
+
+function buildPrompt(settings, ctx) {
+  ctx = ctx || {};
+  const fields = parseFormat(settings.format);
+  const n = Math.max(1, parseInt(settings.roundsPer, 10) || 10);
+  const start = Math.max(0, parseInt(ctx.lastRound, 10) || 0) + 1;
+  const comp = (ctx.name || settings.companionName || "").trim(), me = (ctx.userName !== undefined ? ctx.userName : (settings.userName || "")).trim();
+  const compWord = comp || "伴侶", meWord = me || "我";
+  const keyOf = label => comp || me ? nameLabel(label, comp || NAME_TOKEN, me || USER_TOKEN) : label;
+  const exampleFields = {};
+  for (const f of fields) exampleFields[keyOf(f.label)] = f.kind === "tags" ? ["詞語1", "詞語2"] : (f.kind === "quote" ? `${comp || "名字"}：「……」\n${me || "名字"}：「……」` : "……");
+  const sample = [{ companion: comp || "伴侶名字", rounds: `${start}-${start + n - 1}`, title: "這段記憶的標題", fields: exampleFields }];
+  if (ctx.mode === "date") sample[0].until = "YYYY-MM-DD";
+  const rules = [
+    `${compWord}的一則回覆加上${me ? meWord : "我"}的一則回覆，算作一輪。`,
+    `每 ${n} 輪整理成一則記憶，照時間順序編排。最後不足 ${n} 輪的部分，照實際剩下的輪數整理成一則，不要硬湊。`,
+    comp ? `伴侶的名字是「${comp}」。` : "伴侶的名字請看檔名或對話內容。",
+    ...(me ? [`我的名字是「${me}」，對話裡的「${me}」就是我。`] : []),
+    ...progressRules(ctx, n),
+    "只根據對話內容整理，不要自己補充或編造沒發生的事。",
+    `每則記憶整則（包含標題、欄位名稱、標點符號）不可超過 ${limitOf(settings)} 字；超過就精簡內容，不要拆成兩則。`
+  ];
+  if (fields.some(f => f.kind === "tags")) rules.push("標籤類欄位（例如關鍵詞）要挑對話裡真的出現、之後能觸發這段記憶的字詞，用陣列列出。");
+  if (fields.some(f => f.kind === "quote")) rules.push("對話類欄位要保留說話者的名字，格式是「名字：「內容」」，一句一行（用 \\n 換行）。");
+  const hasRange = !!(settings.rangeNote && settings.rangeNote.trim());
+  if (hasRange) rules.push(`整理範圍：${settings.rangeNote.trim()}。範圍外的對話不要整理。`);
+  if (settings.extraNote && settings.extraNote.trim()) rules.push(settings.extraNote.trim());
+  return [
+    `請幫我把附件中${me ? `我（${me}）` : "我"}和${comp ? comp : "伴侶"}的對話，整理成一則一則的記憶。`,
+    "",
+    "【規則】",
+    ...rules.map((r, i) => `${i + 1}. ${r}`),
+    "",
+    "【每則記憶的欄位】",
+    "- 標題",
+    ...fields.map(f => `- ${keyOf(f.label)}`),
+    ...(fields.some(f => keyOf(f.label).includes(NAME_TOKEN) || keyOf(f.label).includes(USER_TOKEN))
+      ? [`（欄位名稱裡的 ${NAME_TOKEN} 是伴侶名字、${USER_TOKEN} 是我的名字的位置；JSON 的欄位名稱請照抄。）`]
+      : ["（JSON 的欄位名稱請照抄上面的寫法。）"]),
+    "",
+    "【輸出格式】",
+    hasRange ? "先用一行文字寫出範圍內共有幾輪，接著輸出一個 JSON 陣列，其他說明都不要加。JSON 格式如下：" : "請只輸出一個 JSON 陣列，不要加任何說明文字，格式如下：",
+    JSON.stringify(sample, null, 2)
+  ].join("\n");
+}
+
+/* Hand edits to the prompt are kept as line patches against the auto prompt (names swapped
+   for {伴侶}/{我}), so they still apply after names, progress or rules change. */
+function tokenize(text, comp, me) {
+  let t = String(text);
+  const pairs = [[comp, NAME_TOKEN], [me, USER_TOKEN]].filter(p => p[0]).sort((a, b) => b[0].length - a[0].length);
+  for (const [name, tok] of pairs) t = t.split(name).join(tok);
+  return t.replace(/^\d+\.\s/gm, "#. ");   /* rule numbers shift when rules are added, so ignore them */
+}
+function detokenize(text, comp, me) {
+  let k = 0;
+  return String(text).split(NAME_TOKEN).join(comp || "伴侶").split(USER_TOKEN).join(me || "我")
+    .replace(/^#\. /gm, () => `${++k}. `);
+}
+function diffLines(a, b) {
+  const n = a.length, m = b.length, L = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = a[i] === b[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const hunks = []; let i = 0, j = 0, cur = null;
+  const flush = () => { if (cur) { hunks.push(cur); cur = null; } };
+  while (i < n || j < m) {
+    if (i < n && j < m && a[i] === b[j]) { flush(); i++; j++; continue; }
+    if (!cur) cur = { after: i > 0 ? a[i - 1] : null, from: [], to: [] };
+    if (j < m && (i >= n || L[i][j + 1] >= L[i + 1][j])) cur.to.push(b[j++]);
+    else cur.from.push(a[i++]);
+  }
+  flush();
+  return hunks;
+}
+function applyEdits(lines, hunks) {
+  const out = lines.slice(); let missed = 0;
+  for (const h of hunks || []) {
+    let at = -1;
+    if (h.from.length) {
+      for (let k = 0; k + h.from.length <= out.length; k++) if (h.from.every((x, q) => out[k + q] === x)) { at = k; break; }
+    } else at = h.after === null ? 0 : out.indexOf(h.after) + 1 || -1;
+    if (at < 0) { missed++; continue; }
+    out.splice(at, h.from.length, ...h.to);
+  }
+  return { lines: out, missed };
+}
+
+/* ---------- App ---------- */
+const inClaudeViewer = !!window.claude;
+const STORE_KEY = "companion-memory-shelf.v1";
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+const EXAMPLES = [
+  { id: "ex1", example: true, companion: "王小明", seq: 1, rounds: "1-10", title: "雨夜的便利商店", transferred: false, fields: {
+    "地點": "巷口的便利商店", "場景概要": "下班遇到大雨，兩人躲進便利商店，一邊等雨停一邊挑宵夜。",
+    "關鍵詞": ["雨天", "便利商店", "關東煮"], "關鍵對話": "王小明：「妳每次都只拿白蘿蔔。」\n張小美：「因為它最吸湯啊。」",
+    "情感變化及影響": "從疲憊到放鬆，第一次聊起彼此的小習慣，距離拉近。", "{伴侶}覺得重要的事": "她喜歡關東煮的白蘿蔔，下雨天心情容易低落。" } },
+  { id: "ex2", example: true, companion: "王小明", seq: 2, rounds: "11-17", title: "週末的散步", transferred: false, fields: {
+    "地點": "河濱公園", "場景概要": "天氣放晴，帶著狗狗去河邊散步，聊到小時候的事。",
+    "關鍵詞": ["散步", "河濱", "狗狗"], "關鍵對話": "張小美：「下次換我牽繩。」\n王小明：「妳確定拉得住牠？」",
+    "情感變化及影響": "輕鬆愉快，互相開玩笑，多了一點默契。", "{伴侶}覺得重要的事": "約好下次一起散步，由她牽繩。" } }
+];
+
+let state = {
+  memories: [],
+  settings: { format: DEFAULT_FORMAT, companionName: "", userName: "", roundsPer: 10, charLimit: 500, rangeNote: "", extraNote: "", customPrompt: null, promptEdits: [] },
+  companions: [],
+  /* companions: [{ name, userName, mode, lastRound, lastDate, promptEdits, files: [{ id, name, size, uploadedAt }] }] */
+  meta: { updatedAt: 0, clearedAt: 0 },
+  current: null, view: "todo", saveOk: true
+};
+
+const OLD_DEFAULT_FORMAT = DEFAULT_FORMAT.replace(/^- /gm, "* ");
+function migrate(settings) {
+  if (!settings) return settings;
+  if (settings.format === OLD_DEFAULT_FORMAT) settings.format = DEFAULT_FORMAT;
+  /* Older versions stored a whole hand-edited prompt; keep only what was changed. */
+  if (typeof settings.customPrompt === "string") {
+    if (typeof settings._promptBase === "string" &&
+        settings.customPrompt !== settings._promptBase.replace("；有多位伴侶就分開整理。", "。")) {
+      settings.promptEdits = diffLines(settings._promptBase.split("\n"), settings.customPrompt.split("\n"));
+    }
+    settings.customPrompt = null; delete settings._promptBase;
+  }
+  if (!Array.isArray(settings.promptEdits)) settings.promptEdits = [];
+  return settings;
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.memories)) state.memories = data.memories;
+      if (data.settings) state.settings = Object.assign(state.settings, migrate(data.settings));
+      if (Array.isArray(data.companions)) state.companions = data.companions;
+      if (data.meta) state.meta = Object.assign(state.meta, data.meta);
+      /* Examples are no longer stored as data; clear any left from older versions. */
+      state.memories = state.memories.filter(m => !m.example);
+      state.companions = state.companions.filter(c => !c.example);
+      spreadGlobals();
+    }
+  } catch (e) { state.saveOk = false; }
+}
+/* Older versions kept one name and one set of edits for everyone; hand them to each companion once. */
+function spreadGlobals() {
+  const s = state.settings, names = new Set(state.companions.map(c => c.name).concat(state.memories.filter(m => !m.example).map(m => m.companion)));
+  if ((s.userName || "").trim() || (s.promptEdits || []).length) {
+    for (const n of names) {
+      if (state.companions.some(c => c.name === n && c.example)) continue;
+      const c = companionRecord(n);
+      if (!c.userName && s.userName) c.userName = s.userName;
+      if (!(c.promptEdits || []).length && (s.promptEdits || []).length) c.promptEdits = JSON.parse(JSON.stringify(s.promptEdits));
+    }
+    s.userName = ""; s.promptEdits = [];
+  }
+}
+let applyingRemote = false;
+function save() {
+  if (!applyingRemote) { state.meta.updatedAt = Date.now(); if (typeof gistSchedule === "function") gistSchedule(); }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ memories: state.memories, settings: state.settings, companions: state.companions, meta: state.meta })); state.saveOk = true; }
+  catch (e) { state.saveOk = false; }
+}
+const fields = () => parseFormat(state.settings.format);
+
+const userOf = name => ((state.companions.find(x => x.name === name) || {}).userName || "").trim();
+function companionRecord(name) {
+  let c = state.companions.find(x => x.name === name);
+  if (!c) { c = { name, mode: "rounds", lastRound: 0, lastDate: "", files: [] }; state.companions.push(c); }
+  if (!Array.isArray(c.files)) c.files = [];
+  return c;
+}
+function companions() {
+  const map = new Map();
+  for (const r of state.companions) map.set(r.name, { name: r.name, todo: 0, done: 0 });
+  for (const m of state.memories) {
+    const c = map.get(m.companion) || { name: m.companion, todo: 0, done: 0 };
+    m.transferred ? c.done++ : c.todo++;
+    map.set(m.companion, c);
+  }
+  return [...map.values()];
+}
+/* Progress = what was recorded, or what the memories themselves show (so an agent that only
+   writes memories still moves it forward). A manual edit resets the baseline. */
+function progressOf(name) {
+  const r = state.companions.find(x => x.name === name) || {};
+  let round = r.lastRound || 0, date = r.lastDate || "";
+  for (const m of state.memories) {
+    if (m.companion !== name || m.example) continue;
+    if (r.progressSetAt && (m.updatedAt || 0) <= r.progressSetAt) continue;
+    round = Math.max(round, roundEnd(m.rounds));
+    if (m.until && m.until > date) date = m.until;
+  }
+  return { lastRound: round, lastDate: date };
+}
+function promptCtx(name) {
+  if (!name) return {};
+  const r = state.companions.find(x => x.name === name) || {};
+  const pr = progressOf(name);
+  return { name, userName: r.userName || "", mode: r.mode || "rounds", lastRound: pr.lastRound, lastDate: pr.lastDate };
+}
+
+function render() {
+  const list = companions();
+  if (!state.current || !list.some(c => c.name === state.current)) state.current = list[0] ? list[0].name : null;
+
+  const ul = $("companions"); ul.replaceChildren();
+  for (const c of list) {
+    const li = el("li"), b = el("button", "chip");
+    b.setAttribute("aria-current", c.name === state.current ? "true" : "false");
+    b.append(el("span", "avatar", [...(c.name || "？")][0]), el("span", "chip-name", c.name || "未命名"), el("span", "chip-count", String(c.todo)));
+    b.onclick = () => { state.current = c.name; disarm(); render(); };
+    li.append(b); ul.append(li);
+  }
+
+  const cur = list.find(c => c.name === state.current);
+  $("who").textContent = cur ? (cur.name || "未命名") : "伴侶記憶匣";
+  $("stats").textContent = cur ? `待轉移 ${cur.todo} · 已轉移 ${cur.done}` + (state.saveOk ? "" : " · 這個瀏覽器無法儲存，關掉頁面後記憶會消失") : "";
+  $("showTodo").setAttribute("aria-pressed", String(state.view === "todo"));
+  $("showDone").setAttribute("aria-pressed", String(state.view === "done"));
+  renderCompanionPanel(cur);
+  if (!$("promptSheet").hidden && document.activeElement !== $("promptText")) updatePromptSheet();
+
+  const box = $("cards"); box.replaceChildren();
+  if (!cur) {
+    const w = el("div", "welcome panel");
+    w.append(el("span", "latin", "Welcome"), el("h2", null, "伴侶記憶匣"),
+      el("p", null, "把和伴侶的對話交給 AI，整理成一則一則的記憶卡片，複製就能貼到妳的平台。先新增第一位伴侶吧。"));
+    const acts = el("div", "row-actions");
+    const add = el("button", "btn primary", "＋ 新增第一位伴侶");
+    add.onclick = () => { $("addCompanionBtn").hidden = true; $("addCompanionForm").hidden = false; $("newCompanion").focus(); };
+    const guide = el("button", "btn", "看使用說明"); guide.onclick = () => openSheet("guideSheet");
+    acts.append(add, guide); w.append(acts); box.append(w); return;
+  }
+  const items = state.memories
+    .filter(m => m.companion === state.current && !!m.transferred === (state.view === "done"))
+    .sort((a, b) => (a.seq || 0) - (b.seq || 0));
+  if (!items.length) {
+    const e = el("div", "empty panel");
+    const has = state.memories.some(m => m.companion === cur.name);
+    if (state.view === "todo" && !has) e.append(el("strong", null, `${cur.name} 還沒有記憶`), document.createTextNode("照上面 1、2、3 走完，記憶就會出現在這裡。"));
+    else if (state.view === "todo") e.append(el("strong", null, "全部轉移完了"), document.createTextNode(`${cur.name} 的記憶都搬過去囉。`));
+    else e.append(el("strong", null, "還沒有轉移過的記憶"), document.createTextNode("按下卡片上的「已轉移」，它就會收到這裡。"));
+    box.append(e); return;
+  }
+  const fs = fields();
+  for (const m of items) box.append(card(m, fs));
+}
+
+function card(m, fs, opts) {
+  opts = opts || {};
+  const me = opts.name !== undefined ? opts.name : userOf(m.companion);
+  const c = el("article", "card panel" + (m.transferred ? " done" : ""));
+  const top = el("div", "card-top"), eb = el("div", "eyebrow");
+  eb.append(el("span", "latin", "Memory · " + String(m.seq || 0).padStart(2, "0")));
+  if (m.rounds) eb.append(el("span", null, `第 ${m.rounds} 輪`));
+  if (m.until) eb.append(el("span", null, `到 ${m.until}`));
+  if (m.example) eb.append(el("span", "tag-ex", "範例"));
+  top.append(eb, el("h2", null, m.title || "（未命名）"));
+
+  const dl = el("dl", "fields");
+  const labels = fs.map(f => f.label);
+  for (const k of Object.keys(m.fields || {})) if (!labels.includes(k)) labels.push(k);
+  for (const label of labels) {
+    const v = (m.fields || {})[label];
+    if (v == null || v === "" || (Array.isArray(v) && !v.length)) continue;
+    const kind = (fs.find(f => f.label === label) || { kind: fieldKind(label) }).kind;
+    const dd = el("dd", kind === "quote" ? "quote" : null);
+    if (kind === "tags") { const w = el("div", "kw"); toTags(v).forEach(t => w.append(el("span", null, t))); dd.append(w); }
+    else dd.textContent = Array.isArray(v) ? v.join("、") : v;
+    dl.append(el("dt", null, nameLabel(label, m.companion, me)), dd);
+  }
+
+  const act = el("div", "actions");
+  if (opts.preview) { c.classList.add("sample"); c.append(top, dl); return c; }
+  const text = memoryText(m, fs, me, parseStyle(state.settings.format)), n = charCount(text), lim = limitOf(state.settings);
+  const cnt = el("span", "count" + (n > lim ? " over" : ""), n > lim ? `${n} / ${lim} 字 · 超過上限` : `${n} / ${lim} 字`);
+  act.append(cnt);
+  const mv = el("button", "btn", m.transferred ? "移回待轉移" : "已轉移");
+  mv.onclick = () => setTransferred(m, !m.transferred);
+  const cp = el("button", "btn primary", "複製整則");
+  cp.onclick = () => copyText(text, cp, "複製整則");
+  act.append(mv, cp);
+  c.append(top, dl, act);
+  return c;
+}
+
+function setTransferred(m, value) {
+  const prev = !!m.transferred;
+  m.transferred = value; m.updatedAt = Date.now(); save(); render(); syncMemories([m]);
+  if (value) toast(`「${m.title}」已轉移`, () => setTransferred(m, prev));
+}
+
+function copyText(text, btn, label) {
+  const done = () => {
+    if (btn) { btn.textContent = "已複製"; btn.classList.add("copied"); setTimeout(() => { btn.textContent = label; btn.classList.remove("copied"); }, 1600); }
+    toast("已複製到剪貼簿");
+  };
+  const fallback = () => {
+    const ta = $("copyArea"); ta.value = text; ta.focus(); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+    ok ? done() : toast("無法自動複製，請手動選取文字複製");
+  };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  } catch (e) { fallback(); }
+}
+
+let toastTimer;
+function toast(msg, undo) {
+  $("toastMsg").textContent = msg;
+  const u = $("toastUndo"); u.hidden = !undo; u.onclick = () => { $("toast").classList.remove("show"); if (undo) undo(); };
+  $("toast").classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $("toast").classList.remove("show"), undo ? 5000 : 1800);
+}
+
+/* ---------- Import ---------- */
+/* Shared by the paste box and by agents (window.memoryShelf.importMemories). */
+function importCore(text, fallbackCompanion) {
+  const fs = fields();
+  const fb = (fallbackCompanion || "").trim();
+  const { entries, error } = parseImport(typeof text === "string" ? text : JSON.stringify(text), fs, fb, userOf(fb));
+  if (error) return { ok: false, error };
+  const valid = entries.filter(e => e.title || Object.keys(e.fields).length);
+  if (!valid.length) return { ok: false, error: "找不到記憶。JSON 請確認是陣列；文字請確認每則用 # 開頭。" };
+  const noName = valid.filter(e => !e.companion).length;
+  if (noName) return { ok: false, error: `有 ${noName} 則沒有伴侶名字，請填入伴侶名字再匯入一次。`, needsCompanion: true };
+  let added = 0, replaced = 0;
+  const touched = [];
+  for (const e of valid) {
+    const same = state.memories.find(m => m.companion === e.companion && ((e.rounds && m.rounds === e.rounds) || (!e.rounds && m.title === e.title)));
+    const rec = companionRecord(e.companion);
+    rec.lastRound = Math.max(rec.lastRound || 0, roundEnd(e.rounds));
+    if (e.until && (!rec.lastDate || e.until > rec.lastDate)) rec.lastDate = e.until;
+    if (same) { same.title = e.title; same.fields = e.fields; if (e.until) same.until = e.until; if (typeof e.transferred === "boolean") same.transferred = e.transferred; same.updatedAt = Date.now(); replaced++; touched.push(same); continue; }
+    const seq = state.memories.filter(m => m.companion === e.companion).reduce((acc, m) => Math.max(acc, m.seq || 0), 0) + 1;
+    const nm = { id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), companion: e.companion, seq, rounds: e.rounds, until: e.until || "", title: e.title, fields: e.fields, transferred: !!e.transferred, updatedAt: Date.now() };
+    state.memories.push(nm); touched.push(nm);
+    added++;
+  }
+  save(); pushSettings(); syncMemories(touched);
+  state.current = valid[valid.length - 1].companion; state.view = "todo";
+  render();
+  toast(`匯入 ${added + replaced} 則記憶`);
+  return { ok: true, added, replaced, companion: state.current, lastRound: companionRecord(state.current).lastRound };
+}
+function importText(text) {
+  const r = importCore(text, $("importCompanion").value.trim() || state.current || "");
+  if (!r.ok) { $("importResult").textContent = r.error; if (r.needsCompanion) $("importCompanion").focus(); return; }
+  $("importResult").textContent = `匯入 ${r.added} 則` + (r.replaced ? `，更新 ${r.replaced} 則` : "") + "。";
+  $("importText").value = "";
+}
+
+/* ---------- Sheets ---------- */
+let lastFocus = null;
+function openSheet(id) {
+  lastFocus = document.activeElement;
+  document.querySelectorAll(".sheet-wrap").forEach(s => s.hidden = s.id !== id);
+  document.body.classList.add("locked");
+  if (id === "formatSheet") syncFormatSheet();
+  if (id === "guideSheet") renderGuideSample();
+  if (id === "promptSheet") { state.editingPrompt = false; updatePromptSheet(); }
+  if (id === "importSheet") { $("importResult").textContent = ""; $("importCompanion").value = state.current || ""; }
+  if (id === "backupSheet") {
+    $("backupResult").textContent = ""; $("syncResult").textContent = ""; disarmAll(); refreshSyncUI();
+    if (gistOn()) $("backupHint").textContent = "記憶已同步到妳的 GitHub。備份是額外的保險；備份的內容可以從「貼上回覆」貼回來。";
+    if (remote.mem) $("backupHint").textContent = "在 Claude 裡打開時，記憶會同步到妳的帳號，電腦和手機都看得到。備份是額外的保險；備份的內容可以從「貼上回覆」貼回來。";
+  }
+  const first = $(id).querySelector("textarea:not([readonly]), input:not([type=file]), button.primary");
+  if (first) first.focus();
+}
+function closeSheets() {
+  document.querySelectorAll(".sheet-wrap").forEach(s => s.hidden = true);
+  document.body.classList.remove("locked");
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+function syncFormatSheet() {
+  $("formatText").value = state.settings.format;
+  $("roundsPer").value = state.settings.roundsPer;
+  $("charLimit").value = limitOf(state.settings);
+  $("rangeNote").value = state.settings.rangeNote || "";
+  $("extraNote").value = state.settings.extraNote || "";
+  updatePrompt();
+}
+function updatePrompt() {
+  const fs = parseFormat(state.settings.format);
+  const fp = $("fieldPreview"); fp.replaceChildren();
+  if (!fs.length) fp.append(el("span", null, "還沒有欄位：每行寫成「- 欄位名稱：」"));
+  const cn = (state.current || "").trim(), un = userOf(state.current);
+  for (const f of fs) { const sp = el("span", null, nameLabel(f.label, cn, un)); if (f.kind !== "text") sp.append(el("i", null, f.kind === "tags" ? "標籤" : "引言")); fp.append(sp); }
+  updatePromptSheet();
+}
+function updatePromptSheet() {
+  const rec = state.companions.find(x => x.name === state.current) || {};
+  const edited = (rec.promptEdits || []).length > 0;
+  const result = promptResult(state.current);
+  $("promptTitle").textContent = state.current ? `${state.current} 的 AI 整理指令` : "AI 整理指令";
+  if (document.activeElement !== $("promptText")) $("promptText").value = result.text;
+  $("customBadge").hidden = !edited;
+  $("promptHint").textContent = "會依照記憶格式、規則、這位的名字和整理進度自動產生，直接複製就能用。想調整措辭可以手動修改，改過的地方之後換名字、改設定都會保留。"
+    + (result.missed ? `（有 ${result.missed} 處手動修改對不上目前的內容，暫時沒有套用。）` : "");
+  $("promptText").readOnly = !state.editingPrompt;
+  $("editPrompt").hidden = !!state.editingPrompt;
+  $("regenPrompt").hidden = !edited;
+}
+function promptResult(name) {
+  name = name === undefined ? state.current : name;
+  const ctx = promptCtx(name);
+  const rec = state.companions.find(x => x.name === name) || {};
+  const comp = (ctx.name || "").trim(), me = (ctx.userName || "").trim();
+  const auto = tokenize(buildPrompt(state.settings, ctx), comp, me).split("\n");
+  const r = applyEdits(auto, rec.promptEdits);
+  return { text: detokenize(r.lines.join("\n"), comp, me), missed: r.missed };
+}
+function currentPrompt(name) { return promptResult(name).text; }
+function onPromptEdit() {
+  if (!state.current) return;
+  const ctx = promptCtx(state.current), rec = companionRecord(state.current);
+  const comp = (ctx.name || "").trim(), me = (ctx.userName || "").trim();
+  const auto = tokenize(buildPrompt(state.settings, ctx), comp, me).split("\n");
+  const edited = tokenize($("promptText").value, comp, me).split("\n");
+  rec.promptEdits = diffLines(auto, edited);
+  updatePromptSheet();
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); pushSettings(); }, 400);
+}
+let fmtTimer;
+function onSettingsInput() {
+  state.settings.format = $("formatText").value;
+  state.settings.roundsPer = Math.max(1, parseInt($("roundsPer").value, 10) || 10);
+  state.settings.charLimit = Math.max(50, parseInt($("charLimit").value, 10) || 500);
+  state.settings.rangeNote = $("rangeNote").value;
+  state.settings.extraNote = $("extraNote").value;
+  updatePrompt();
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); pushSettings(); }, 400);
+}
+
+/* Two-step destructive buttons (no browser dialogs). */
+function armButton(btn, label, armedLabel, action) {
+  btn.onclick = () => {
+    if (btn.classList.contains("arm")) { disarmAll(); action(); return; }
+    disarmAll(); btn.classList.add("arm"); btn.textContent = armedLabel;
+    btn._reset = () => { btn.classList.remove("arm"); btn.textContent = label; };
+    btn._timer = setTimeout(btn._reset, 4000);
+  };
+}
+function disarmAll() { document.querySelectorAll(".btn.arm").forEach(b => { clearTimeout(b._timer); b._reset && b._reset(); }); }
+const disarm = disarmAll;
+
+/* ---------- Companion panel: progress + chat files ---------- */
+const fileDB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    try {
+      const r = indexedDB.open("memory-shelf-files", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("files");
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    } catch (e) { rej(e); }
+  }));
+  const tx = (mode, fn) => open().then(db => new Promise((res, rej) => {
+    const t = db.transaction("files", mode), st = t.objectStore("files"), q = fn(st);
+    t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error);
+  }));
+  return {
+    put: (id, text) => tx("readwrite", st => st.put(text, id)),
+    get: id => tx("readonly", st => st.get(id)),
+    del: id => tx("readwrite", st => st.delete(id))
+  };
+})();
+
+const fmtDate = iso => { const d = new Date(iso); return isNaN(d) ? "" : `${d.getMonth() + 1}/${d.getDate()}`; };
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+
+function renderCompanionPanel(cur) {
+  $("companionPanel").hidden = !cur;
+  $("who").closest(".head").hidden = !cur;
+  $("listHead").hidden = !cur;
+  $("companionSettings").hidden = !cur;
+  if (!cur) { $("progressText").textContent = ""; return; }
+  const rec = state.companions.find(x => x.name === cur.name) || { mode: "rounds", lastRound: 0, lastDate: "", files: [] };
+  const prog = progressOf(cur.name), R = prog.lastRound;
+  setModeButtons(rec.mode || "rounds");
+  $("modeHint").textContent = rec.mode === "date" ? "適合每次只匯出新的一段對話" : "適合每次都匯出完整對話";
+  $("progDateLabel").hidden = rec.mode !== "date";
+  const box = $("companionSettings");
+  if (document.activeElement !== $("panelUserName")) $("panelUserName").value = rec.userName || "";
+  if (!box.contains(document.activeElement)) { $("progRound").value = R; $("progDate").value = prog.lastDate || ""; }
+
+  const parts = [];
+  parts.push(rec.userName ? `妳是 ${rec.userName}` : "還沒填妳的名字");
+  if (rec.mode === "date") parts.push(prog.lastDate ? `整理到 ${prog.lastDate}` : "用日期接續，還沒有紀錄");
+  else parts.push(R ? `已整理到第 ${R} 輪` : "還沒整理過，從第 1 輪開始");
+  $("progressText").textContent = parts.join(" · ");
+
+  const ul = $("fileList"); ul.replaceChildren();
+  const files = (rec.files || []).slice().sort((a, b) => a.uploadedAt < b.uploadedAt ? 1 : -1);
+  for (const f of files) {
+    const li = el("li");
+    li.append(el("span", "fdate", `${fmtDate(f.uploadedAt)} 上傳`), el("span", "fname", f.name), el("span", "muted", fmtSize(f.size || 0)));
+    if (!inClaudeViewer) {
+      const dl = el("button", null, "下載"); dl.setAttribute("aria-label", `下載 ${f.name}`);
+      dl.onclick = async () => { try { const t = await fileDB.get(f.id); t ? saveFile(f.name, t, "text/plain") : toast("這個瀏覽器裡找不到檔案內容"); } catch (e) { toast("讀不到檔案內容"); } };
+      li.append(dl);
+    }
+    const rm = el("button", null, "移除"); rm.setAttribute("aria-label", `移除 ${f.name}`);
+    rm.onclick = () => {
+      if (!rm.classList.contains("arm")) { rm.classList.add("arm"); rm.textContent = "確定移除"; setTimeout(() => { rm.classList.remove("arm"); rm.textContent = "移除"; }, 3000); return; }
+      rec.files = rec.files.filter(x => x.id !== f.id); fileDB.del(f.id).catch(() => {});
+      save(); pushSettings(); render();
+    };
+    li.append(rm); ul.append(li);
+  }
+  if (!files.length) ul.append(el("li", "muted", "還沒有上傳"));
+  const latest = files[0];
+  $("promptNote").textContent = latest ? `複製指令，連同 ${latest.name} 一起交給妳的 AI。` : "複製指令，連同對話檔一起交給妳的 AI。";
+}
+
+function setModeButtons(mode) {
+  $("modeRounds").setAttribute("aria-pressed", String(mode !== "date"));
+  $("modeDate").setAttribute("aria-pressed", String(mode === "date"));
+}
+function setMode(mode) {
+  const rec = companionRecord(state.current);
+  if (rec.mode === mode) return;
+  rec.mode = mode; save(); pushSettings(); render();
+  toast(mode === "date" ? "改成用日期接續" : "改成用輪數接續");
+}
+
+function renderGuideSample() {
+  const box = $("guideSample"); box.replaceChildren();
+  const fs = fields(), ex = JSON.parse(JSON.stringify(EXAMPLES[0]));
+  delete ex.example; ex.seq = 1;
+  const c = card(ex, fs, { name: "張小美", preview: true });
+  box.append(c);
+}
+
+/* ---------- For AI agents working in the browser ----------
+   A browser agent can call these from the page's console, or use the buttons on screen. */
+window.memoryShelf = {
+  help() {
+    return [
+      "伴侶記憶匣 agent API",
+      "list() → 伴侶、妳的名字、整理進度、對話檔清單",
+      "prompt(companion) → 這位伴侶的整理指令（已含名字與進度）",
+      "readFile(companion, fileId?) → 對話檔內容（不給 fileId 就讀最新上傳的）",
+      "importMemories(jsonOrText, companion?) → 寫入記憶，回傳新增/更新筆數與最新進度",
+      "addCompanion(name, userName?) → 新增伴侶"
+    ].join("\n");
+  },
+  list() {
+    return companions().map(c => {
+      const r = state.companions.find(x => x.name === c.name) || {};
+      return { name: c.name, userName: r.userName || "", mode: r.mode || "rounds", lastRound: r.lastRound || 0, lastDate: r.lastDate || "",
+        memories: c.todo + c.done, files: (r.files || []).map(f => ({ id: f.id, name: f.name, uploadedAt: f.uploadedAt })) };
+    });
+  },
+  prompt(companion) { return currentPrompt(companion || state.current); },
+  async readFile(companion, fileId) {
+    const r = state.companions.find(x => x.name === (companion || state.current));
+    if (!r || !(r.files || []).length) throw new Error("這位伴侶還沒有上傳對話檔");
+    const f = fileId ? r.files.find(x => x.id === fileId) : r.files.slice().sort((a, b) => a.uploadedAt < b.uploadedAt ? 1 : -1)[0];
+    if (!f) throw new Error("找不到這個檔案");
+    const text = await fileDB.get(f.id);
+    if (text == null) throw new Error("這個瀏覽器裡沒有檔案內容，請重新上傳");
+    return text;
+  },
+  importMemories(data, companion) { return importCore(data, companion || state.current || ""); },
+  addCompanion(name, userName) {
+    name = String(name || "").trim(); if (!name) throw new Error("需要伴侶名字");
+    const r = companionRecord(name); if (userName) r.userName = String(userName).trim();
+    state.current = name; save(); pushSettings(); render(); return this.list().find(c => c.name === name);
+  }
+};
+
+/* ---------- GitHub Gist sync (when opened outside Claude) ----------
+   Each person's own token (gist scope only) and a private gist in their own account. */
+const SYNC_KEY = "companion-memory-shelf.sync";
+const GIST_FILE = "memory-shelf.json", GIST_DESC = "伴侶記憶匣 sync";
+const gist = { token: "", id: "", lastSeen: 0, lastPushed: 0, lastSyncAt: 0, timer: null, busy: false, again: false, error: "" };
+function gistLoadCfg() { try { Object.assign(gist, JSON.parse(localStorage.getItem(SYNC_KEY) || "{}")); } catch (e) {} }
+function gistSaveCfg() {
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify({ token: gist.token, id: gist.id, lastSeen: gist.lastSeen, lastPushed: gist.lastPushed, lastSyncAt: gist.lastSyncAt })); } catch (e) {}
+}
+const gistOn = () => !inClaudeViewer && !!gist.token && !!gist.id;
+async function gh(path, opts) {
+  let r;
+  try {
+    r = await fetch("https://api.github.com" + path, Object.assign({}, opts || {}, {
+      headers: { "Authorization": "Bearer " + gist.token, "Accept": "application/vnd.github+json", "Content-Type": "application/json" } }));
+  } catch (e) { throw new Error("連不到 GitHub，請確認網路"); }
+  if (r.status === 401) throw new Error("金鑰無效或已過期，請重新產生一組");
+  if (r.status === 404) throw new Error("找不到同步用的 Gist，請確認金鑰有勾 gist 權限");
+  if (!r.ok) throw new Error("GitHub 暫時無法使用（" + r.status + "），稍後再試");
+  return r.json();
+}
+const gistPayload = () => JSON.stringify({ app: "companion-memory-shelf", version: 1, updatedAt: state.meta.updatedAt || 0, clearedAt: state.meta.clearedAt || 0,
+  memories: state.memories, companions: state.companions, settings: state.settings });
+async function gistRead() {
+  const g = await gh("/gists/" + gist.id);
+  const f = g.files && g.files[GIST_FILE];
+  if (!f) return null;
+  let text = f.content;
+  if (f.truncated) text = await (await fetch(f.raw_url)).text();
+  try { return JSON.parse(text); } catch (e) { return null; }
+}
+async function gistWrite() {
+  await gh("/gists/" + gist.id, { method: "PATCH", body: JSON.stringify({ files: { [GIST_FILE]: { content: gistPayload() } } }) });
+  gist.lastPushed = gist.lastSeen = state.meta.updatedAt; gist.lastSyncAt = Date.now(); gistSaveCfg();
+}
+function persistQuietly() { applyingRemote = true; save(); applyingRemote = false; }
+/* Memories are only ever added or changed (clearing leaves a timestamp), so both sides are
+   merged card by card and nothing written on another device is lost. Returns true when the
+   merged result has something the remote copy lacks. */
+function mergeRemote(remote) {
+  const dirty = (state.meta.updatedAt || 0) > (gist.lastPushed || 0);
+  const cleared = Math.max(state.meta.clearedAt || 0, remote.clearedAt || 0);
+  const remoteMem = new Map((remote.memories || []).map(m => [m.id, m]));
+  const byId = new Map();
+  for (const m of (remote.memories || []).concat(state.memories)) {
+    if ((m.updatedAt || 0) < cleared) continue;
+    const cur = byId.get(m.id);
+    if (!cur || (m.updatedAt || 0) > (cur.updatedAt || 0)) byId.set(m.id, m);
+  }
+  let ahead = false;
+  for (const [id, m] of byId) { const r = remoteMem.get(id); if (!r || (m.updatedAt || 0) > (r.updatedAt || 0)) { ahead = true; break; } }
+  state.memories = [...byId.values()];
+
+  const localFiles = new Map(state.companions.map(c => [c.name, c.files || []]));
+  const next = [];
+  for (const rc of remote.companions || []) {
+    const lc = state.companions.find(c => c.name === rc.name);
+    const base = JSON.parse(JSON.stringify(dirty && lc ? lc : rc));
+    const other = dirty && lc ? rc : lc;
+    if (other) {
+      base.lastRound = Math.max(base.lastRound || 0, other.lastRound || 0);
+      if ((other.lastDate || "") > (base.lastDate || "")) base.lastDate = other.lastDate;
+      if (!base.userName && other.userName) base.userName = other.userName;
+    }
+    const ids = new Set((base.files || []).map(f => f.id));
+    base.files = (base.files || []).concat(((other && other.files) || []).concat(localFiles.get(rc.name) || []).filter(f => !ids.has(f.id) && ids.add(f.id)));
+    next.push(base);
+  }
+  for (const lc of state.companions) if (!next.some(c => c.name === lc.name)) { next.push(lc); ahead = true; }
+  state.companions = next;
+  if (!dirty && remote.settings) state.settings = Object.assign(state.settings, migrate(remote.settings));
+  state.meta.clearedAt = cleared;
+  if (!dirty && !ahead) state.meta.updatedAt = remote.updatedAt || 0;
+  persistQuietly(); render();
+  return dirty || ahead;
+}
+async function gistSync() {
+  if (!gistOn()) return;
+  if (gist.busy) { gist.again = true; return; }
+  gist.busy = true; gist.error = ""; refreshSyncUI("同步中…");
+  try {
+    const remote = await gistRead();
+    if (remote && (remote.updatedAt || 0) > (gist.lastSeen || 0)) {
+      const dirty = mergeRemote(remote);
+      gist.lastSeen = remote.updatedAt || 0;
+      if (dirty) { state.meta.updatedAt = Date.now(); persistQuietly(); await gistWrite(); }
+      else { gist.lastPushed = state.meta.updatedAt; gist.lastSyncAt = Date.now(); gistSaveCfg(); }
+    } else if (!remote || (state.meta.updatedAt || 0) > (gist.lastPushed || 0)) {
+      await gistWrite();
+    } else { gist.lastSyncAt = Date.now(); gistSaveCfg(); }
+  } catch (e) { gist.error = e.message; }
+  gist.busy = false;
+  refreshSyncUI();
+  if (gist.again) { gist.again = false; gistSync(); }
+}
+function gistSchedule() { if (!gistOn()) return; clearTimeout(gist.timer); gist.timer = setTimeout(gistSync, 1500); }
+const CODE_PREFIX = "cms1.";
+const linkCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify({ t: gist.token, g: gist.id }))));
+async function gistConnect(input) {
+  input = String(input || "").trim();
+  if (!input) throw new Error("請先貼上同步金鑰或連線碼");
+  let token = input, id = "";
+  if (input.startsWith(CODE_PREFIX)) {
+    try { const o = JSON.parse(decodeURIComponent(escape(atob(input.slice(CODE_PREFIX.length))))); token = o.t; id = o.g; }
+    catch (e) { throw new Error("連線碼不完整，請重新複製一次"); }
+  }
+  gist.token = token; gist.id = ""; gist.lastSeen = 0; gist.lastPushed = 0;
+  try {
+    if (!id) {
+      const list = await gh("/gists?per_page=100");
+      const found = list.find(g => g.description === GIST_DESC && g.files && g.files[GIST_FILE]);
+      if (found) id = found.id;
+      else {
+        const g = await gh("/gists", { method: "POST", body: JSON.stringify({ description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: gistPayload() } } }) });
+        id = g.id; gist.lastSeen = gist.lastPushed = state.meta.updatedAt;
+      }
+    } else await gh("/gists/" + id);
+  } catch (e) { gist.token = ""; throw e; }
+  gist.id = id; gistSaveCfg();
+  await gistSync();
+}
+const hhmm = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+function refreshSyncUI(busyText) {
+  const badge = $("syncBadge");
+  if (inClaudeViewer) {
+    $("syncIntro").textContent = "在 Claude 裡打開時，記憶會自動同步到妳的 Claude 帳號，電腦和手機的 Claude 都看得到，不需要設定。";
+    $("ghSetup").hidden = true; $("ghLinked").hidden = true; return;
+  }
+  const on = gistOn();
+  $("ghSetup").hidden = on; $("ghLinked").hidden = !on;
+  $("syncIntro").textContent = on
+    ? "已用妳的 GitHub 同步。手機或其他電腦打開同一個網址、貼上連線碼，就會看到一樣的記憶。"
+    : "現在記憶只存在這個瀏覽器。想在手機也看到，可以用妳自己的 GitHub 帳號同步，設定一次就好：";
+  $("ghStatus").textContent = busyText || (gist.error ? "同步失敗：" + gist.error : (gist.lastSyncAt ? `已連線 · 上次同步 ${hhmm(gist.lastSyncAt)}` : "已連線"));
+  badge.textContent = on ? (gist.error ? "GitHub 同步失敗" : "已同步到 GitHub") : "只存在這個瀏覽器";
+  badge.classList.toggle("on", on && !gist.error);
+}
+
+/* ---------- Wire up ---------- */
+load(); persistQuietly();
+gistLoadCfg();
+
+$("showTodo").onclick = () => { state.view = "todo"; render(); };
+$("showDone").onclick = () => { state.view = "done"; render(); };
+$("importHere").onclick = () => openSheet("importSheet");
+$("openFormat").onclick = () => openSheet("formatSheet");
+$("openBackup").onclick = () => openSheet("backupSheet");
+/* ---------- Palette ---------- */
+const PALETTE_KEY = "companion-memory-shelf.palette";
+const PALETTE_NAMES = { berry: "草莓氣泡", peach: "法式桃紅", night: "午夜唱片", lilac: "芋泥啵啵" };
+function applyPalette(p) {
+  if (p !== "berry") document.documentElement.setAttribute("data-palette", p);
+  else document.documentElement.removeAttribute("data-palette");
+  document.querySelectorAll(".pal").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.p === p)));
+}
+let currentPalette = "berry";
+try { const v = localStorage.getItem(PALETTE_KEY); if (v && PALETTE_NAMES[v]) currentPalette = v; } catch (e) {}
+applyPalette(currentPalette);
+document.querySelectorAll(".pal").forEach(b => b.addEventListener("click", () => {
+  if (b.dataset.p === currentPalette) return;
+  currentPalette = b.dataset.p; applyPalette(currentPalette);
+  try { localStorage.setItem(PALETTE_KEY, currentPalette); } catch (e) {}
+  toast("換成" + PALETTE_NAMES[currentPalette]);
+}));
+$("openPalette").onclick = () => openSheet("paletteSheet");
+$("openGuide").onclick = () => openSheet("guideSheet");
+function setGuideTab(which) {
+  $("tabClaude").setAttribute("aria-pressed", String(which === "claude"));
+  $("tabCodex").setAttribute("aria-pressed", String(which !== "claude"));
+  $("flowClaude").hidden = which !== "claude";
+  $("flowCodex").hidden = which === "claude";
+}
+$("tabClaude").onclick = () => setGuideTab("claude");
+if (inClaudeViewer) $("dlSelfWrap").hidden = true;
+$("dlSelf").onclick = async () => {
+  try { const t = await (await fetch(location.href.split("#")[0])).text(); saveFile("index.html", t, "text/html"); }
+  catch (e) { toast("下載失敗，請改從 GitHub 下載 index.html"); }
+};
+$("tabCodex").onclick = () => setGuideTab("codex");
+setGuideTab(inClaudeViewer ? "claude" : "codex");
+$("viewCompanionPrompt").onclick = () => openSheet("promptSheet");
+$("panelUserName").addEventListener("input", () => {
+  if (!state.current) return;
+  companionRecord(state.current).userName = $("panelUserName").value;
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); pushSettings(); render(); }, 500);
+});
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = closeSheets);
+document.querySelectorAll(".sheet-wrap").forEach(w => w.addEventListener("click", e => { if (e.target === w) closeSheets(); }));
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheets(); });
+
+$("doImport").onclick = () => importText($("importText").value);
+$("addCompanionBtn").onclick = () => { $("addCompanionBtn").hidden = true; $("addCompanionForm").hidden = false; $("newCompanion").focus(); };
+function addCompanion() {
+  const name = $("newCompanion").value.trim();
+  $("addCompanionForm").hidden = true; $("addCompanionBtn").hidden = false; $("newCompanion").value = "";
+  if (!name) return;
+  companionRecord(name); state.current = name; state.view = "todo"; save(); pushSettings(); render();
+  toast(`新增了 ${name}`);
+}
+$("addCompanionOk").onclick = addCompanion;
+$("newCompanion").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); addCompanion(); return; } if (e.key === "Escape") { e.stopPropagation(); $("addCompanionForm").hidden = true; $("addCompanionBtn").hidden = false; } });
+$("modeRounds").onclick = () => setMode("rounds");
+$("modeDate").onclick = () => setMode("date");
+$("saveProgress").onclick = () => {
+  const rec = companionRecord(state.current);
+  rec.lastRound = Math.max(0, parseInt($("progRound").value, 10) || 0);
+  rec.lastDate = $("progDate").value || "";
+  rec.progressSetAt = Date.now();
+  save(); pushSettings(); render(); toast("進度已更新");
+};
+$("chatFile").onchange = e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f || !state.current) return;
+  const r = new FileReader();
+  r.onload = async () => {
+    const rec = companionRecord(state.current);
+    const id = "f" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    try { await fileDB.put(id, String(r.result || "")); } catch (err) { /* list still records the upload */ }
+    rec.files.push({ id, name: f.name, size: f.size, uploadedAt: new Date().toISOString() });
+    save(); pushSettings(); render(); toast(`已上傳 ${f.name}`);
+  };
+  r.onerror = () => toast("讀不到這個檔案");
+  r.readAsText(f);
+};
+$("copyCompanionPrompt").onclick = e => copyText(currentPrompt(state.current), e.currentTarget, "複製指令");
+$("importFile").onchange = e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { $("importText").value = String(r.result || ""); importText($("importText").value); };
+  r.onerror = () => { $("importResult").textContent = "讀不到這個檔案，請改用貼上的方式。"; };
+  r.readAsText(f); e.target.value = "";
+};
+$("copyPrompt").onclick = e => copyText(currentPrompt(), e.currentTarget, "複製指令");
+$("promptText").addEventListener("input", onPromptEdit);
+$("editPrompt").onclick = () => { state.editingPrompt = true; updatePromptSheet(); $("promptText").focus(); };
+$("regenPrompt").onclick = () => {
+  if (state.current) companionRecord(state.current).promptEdits = [];
+  state.editingPrompt = false; save(); pushSettings();
+  $("promptText").value = currentPrompt(); updatePromptSheet(); toast("已清除手動修改");
+};
+$("promptText").addEventListener("blur", () => { state.editingPrompt = false; updatePromptSheet(); });
+["formatText", "roundsPer", "charLimit", "rangeNote", "extraNote"].forEach(id => $(id).addEventListener("input", onSettingsInput));
+$("resetFormat").onclick = () => { $("formatText").value = DEFAULT_FORMAT; onSettingsInput(); toast("已恢復預設格式"); };
+
+const backupJSON = () => JSON.stringify(state.memories.map(m => ({ companion: m.companion, rounds: m.rounds, title: m.title, fields: m.fields, transferred: !!m.transferred })), null, 2);
+$("copyBackup").onclick = e => copyText(backupJSON(), e.currentTarget, "複製備份內容");
+if (inClaudeViewer) { $("downloadBackup").hidden = true; $("downloadPrompt").hidden = true; }
+function saveFile(name, text, type) {
+  const blob = new Blob([text], { type });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$("downloadBackup").onclick = () => saveFile(`伴侶記憶備份-${new Date().toISOString().slice(0, 10)}.json`, backupJSON(), "application/json");
+$("downloadPrompt").onclick = () => saveFile("AGENT.md", currentPrompt() + "\n", "text/markdown");
+
+armButton($("clearAll"), "清除全部記憶", "再按一次確認全部清除", () => {
+  deleteMemories(state.memories.map(m => m.id));
+  state.meta.clearedAt = Date.now();
+  state.memories = []; state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; }); save(); render(); pushSettings();
+  $("backupResult").textContent = "已清除全部記憶，整理進度也歸零了。";
+});
+
+render();
+refreshSyncUI();
+if (gistOn()) gistSync();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && gistOn()) gistSync(); });
+$("ghConnect").onclick = async () => {
+  const btn = $("ghConnect"); btn.disabled = true; $("syncResult").textContent = "連線中…";
+  try { await gistConnect($("ghToken").value); $("ghToken").value = ""; $("syncResult").textContent = gist.error ? "" : "連線成功，之後會自動同步。"; }
+  catch (e) { $("syncResult").textContent = e.message; }
+  btn.disabled = false; refreshSyncUI();
+};
+$("ghToken").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); $("ghConnect").click(); } });
+$("ghSyncNow").onclick = async () => { await gistSync(); $("syncResult").textContent = gist.error ? "" : "同步完成。"; };
+$("ghCopyCode").onclick = e => copyText(linkCode(), e.currentTarget, "複製手機連線碼");
+armButton($("ghDisconnect"), "中斷連線", "再按一次確認中斷", () => {
+  gist.token = ""; gist.id = ""; gist.lastSeen = gist.lastPushed = gist.lastSyncAt = 0; gist.error = "";
+  try { localStorage.removeItem(SYNC_KEY); } catch (e) {}
+  refreshSyncUI(); $("syncResult").textContent = "已中斷連線。這台裝置上的記憶還在，GitHub 上的那份也還在。";
+});
+
+/* ---------- Claude sync (only when opened inside Claude) ----------
+   Settings are mirrored to the viewer's private store so Claude can read them.
+   On GitHub or anywhere else this does nothing and the page uses the browser only. */
+const remote = { ref: null, busy: false, again: false, mem: null, chain: Promise.resolve() };
+const memBody = m => JSON.parse(JSON.stringify({ companion: m.companion, seq: m.seq || 0, rounds: m.rounds || "", until: m.until || "", title: m.title || "", fields: m.fields || {}, transferred: !!m.transferred, updatedAt: m.updatedAt || 0 }));
+/* One write at a time, in order, so a burst of imports never overlaps on the same card. */
+function syncMemories(list) {
+  if (!remote.mem || !list.length) return;
+  for (const m of list) remote.chain = remote.chain.then(() => remote.mem && remote.mem.doc(m.id).set(memBody(m))).catch(claudeSyncFailed);
+}
+function claudeSyncFailed() {
+  remote.ref = null; remote.mem = null;
+  $("syncBadge").textContent = "只存在這個瀏覽器"; $("syncBadge").classList.remove("on");
+}
+function deleteMemories(ids) {
+  if (!remote.mem || !ids.length) return;
+  for (const id of ids) remote.chain = remote.chain.then(() => remote.mem.doc(id).delete()).catch(() => {});
+}
+async function pushSettings() {
+  if (!remote.ref) return;
+  if (remote.busy) { remote.again = true; return; }
+  remote.busy = true;
+  try { await remote.ref.set({ settings: JSON.parse(JSON.stringify(state.settings)), companions: JSON.parse(JSON.stringify(state.companions)), updatedAt: new Date().toISOString() }); }
+  catch (e) { claudeSyncFailed(); }
+  remote.busy = false;
+  if (remote.again) { remote.again = false; pushSettings(); }
+}
+(async () => {
+  if (!window.claude || !window.claude.use) return;
+  try {
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    /* Someone viewing another person's shared page can't save there; they stay on browser storage. */
+    let canWrite = null; try { canWrite = await user.can("data.write"); } catch (e) {}
+    if (canWrite === false) return;
+    const ref = db.doc("data/users/" + id + "/settings");
+    const snap = await ref.get();
+    if (snap.exists && snap.data() && snap.data().settings) {
+      const remoteSettings = migrate(JSON.parse(JSON.stringify(snap.data().settings)));
+      state.settings = Object.assign(state.settings, remoteSettings);
+      spreadGlobals();
+      const rc = snap.data().companions;
+      if (Array.isArray(rc)) {
+        for (const c of rc) {
+          const local = state.companions.find(x => x.name === c.name);
+          if (!local) state.companions.push(c);
+          else {
+            local.mode = c.mode || local.mode;
+            if (c.userName && !local.userName) local.userName = c.userName;
+            if ((c.promptEdits || []).length && !(local.promptEdits || []).length) local.promptEdits = c.promptEdits;
+            local.lastRound = Math.max(local.lastRound || 0, c.lastRound || 0);
+            if ((c.lastDate || "") > (local.lastDate || "")) local.lastDate = c.lastDate;
+            const ids = new Set((local.files || []).map(f => f.id));
+            local.files = (local.files || []).concat((c.files || []).filter(f => !ids.has(f.id)));
+          }
+        }
+      }
+      save(); render();
+      if (!$("formatSheet").hidden) syncFormatSheet();
+    }
+    remote.ref = ref;
+    if (!snap.exists || !Array.isArray(snap.data().companions)) pushSettings();  /* first sync: copy this browser's data once */
+
+    /* Memories live in the same private place, so the phone sees what the computer imported. */
+    const mem = db.doc("data/users/" + id + "/shelf").collection("memories");
+    const ms = await mem.get();
+    const remoteIds = new Set(ms.docs.map(d => d.id));
+    remote.mem = mem;
+    $("syncBadge").textContent = "已同步到 Claude 帳號"; $("syncBadge").classList.add("on");
+    syncMemories(state.memories.filter(m => !remoteIds.has(m.id)));   /* first sync from this browser */
+    mem.onSnapshot(qs => {
+      if (qs.metadata.hasPendingWrites) return;
+      const byId = new Map(qs.docs.map(d => [d.id, { ...d.data(), id: d.id }]));
+      const localOnly = state.memories.filter(m => !byId.has(m.id) && !remoteIds.has(m.id));
+      state.memories = [...byId.values(), ...localOnly];
+      qs.docs.forEach(d => remoteIds.add(d.id));
+      save(); render();
+    }, () => {});
+    ref.onSnapshot(sn => {
+      if (sn.metadata.hasPendingWrites || !sn.exists) return;
+      const d = sn.data();
+      if (Array.isArray(d.companions)) {
+        const files = new Map(state.companions.map(c => [c.name, c.files || []]));
+        state.companions = JSON.parse(JSON.stringify(d.companions)).map(c => {
+          const ids = new Set((c.files || []).map(f => f.id));
+          c.files = (c.files || []).concat((files.get(c.name) || []).filter(f => !ids.has(f.id)));
+          return c;
+        });
+      }
+      if (d.settings) state.settings = Object.assign(state.settings, migrate(JSON.parse(JSON.stringify(d.settings))));
+      save(); render();
+    }, () => {});
+  } catch (e) { remote.ref = null; }
+})();
+</script>
+
+</body>
+</html>
