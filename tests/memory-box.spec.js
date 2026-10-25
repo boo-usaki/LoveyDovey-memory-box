@@ -1,13 +1,13 @@
 // 伴侶記憶匣自動測試：直接開啟 repo 裡的 index.html，模擬使用者與 agent 的操作。
-// 執行方式見 TESTING.md。GitHub API 一律用假的回應，不會連到真的 GitHub、也不需要金鑰。
+// 執行方式見 TESTING.md。測試不會連到外部服務，也不需要帳號或金鑰。
 const { test, expect } = require('@playwright/test');
 const path = require('path');
 const { pathToFileURL } = require('url');
 
 const PAGE = pathToFileURL(path.resolve(__dirname, '..', 'index.html')).href;
 const OFFICIAL = 'https://boo-usaki.github.io/LoveyDovey-memory-box/';
-const SYNC_KEY = 'companion-memory-shelf.sync';
-const FAKE_TOKEN = 'ghp_fake_token_for_tests';
+const OLD_SYNC_KEY = 'companion-memory-shelf.sync';
+const BACKUP_PASSWORD = '只給自己的密碼123';
 
 const MEM = (from, title) => ({
   companion: '王小明', rounds: `${from}-${from + 9}`, title,
@@ -19,28 +19,10 @@ const EV = (kw, date, len = 2) => ({
 });
 const realMemories = page => page.evaluate(() => state.memories.filter(m => !m.example).length);
 
-/* 假的 GitHub Gist：同一個 store 給多台「裝置」共用 */
-function fakeGist() { return { id: null, content: null, calls: [] }; }
-async function routeGitHub(context, store) {
-  await context.route('https://api.github.com/**', async route => {
-    const req = route.request(), u = new URL(req.url()), m = req.method();
-    store.calls.push(`${m} ${u.pathname}`);
-    if ((req.headers()['authorization'] || '') !== 'Bearer ' + FAKE_TOKEN) return route.fulfill({ status: 401, body: '{}' });
-    const body = () => ({ id: store.id, description: '伴侶記憶匣 sync', files: { 'memory-shelf.json': { content: store.content, truncated: false } } });
-    const json = (status, data) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
-    if (u.pathname === '/gists' && m === 'GET') return json(200, store.id ? [body()] : []);
-    if (u.pathname === '/gists' && m === 'POST') { store.id = 'g123'; store.content = JSON.parse(req.postData()).files['memory-shelf.json'].content; return json(201, body()); }
-    if (u.pathname === '/gists/g123' && m === 'GET') return json(200, body());
-    if (u.pathname === '/gists/g123' && m === 'PATCH') { store.content = JSON.parse(req.postData()).files['memory-shelf.json'].content; return json(200, body()); }
-    return route.fulfill({ status: 404, body: '{}' });
-  });
-}
-
 /* 開一台「裝置」：獨立的瀏覽器資料、剪貼簿權限、收集頁面錯誤 */
-async function openDevice(browser, { store, viewport = { width: 1280, height: 1000 }, mobile = false, init } = {}) {
+async function openDevice(browser, { viewport = { width: 1280, height: 1000 }, mobile = false, init } = {}) {
   const context = await browser.newContext({ viewport, isMobile: mobile, hasTouch: mobile });
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  if (store) await routeGitHub(context, store);
   const page = await context.newPage();
   page.errors = []; page.on('pageerror', e => page.errors.push(e.message));
   if (init) await page.addInitScript(init);
@@ -90,8 +72,14 @@ test.describe('事件', () => {
       ['長一', '長二', '長三', '長四', '長五'].map((kw, i) => EV(kw, `2026-02-0${5 + i}`, 80)));
     expect(r.pending).toBeTruthy();
     expect(r.pending.canOpenNew).toBe(true);
+    await expect(page.locator('#evPendingBar')).toBeVisible();
+    await expect(page.locator('#evPendingBar')).toContainText('在等妳決定');
+    await expect(page.locator('.card.panel.overflow')).toBeVisible();
+    await page.waitForTimeout(2200); // 短暫提示消失後，處理提醒仍必須留著
+    await expect(page.locator('#evPendingBar')).toBeVisible();
     r = await page.evaluate(() => memoryShelf.resolveEventOverflow('new'));
     expect(r.ok).toBe(true);
+    await expect(page.locator('#evPendingBar')).toBeHidden();
     expect((await codes()).some(c => c.startsWith('FIR-02-01'))).toBe(true);
 
     // 單則超過上限：只能改短
@@ -108,14 +96,14 @@ test.describe('事件', () => {
 });
 
 test.describe('備份', () => {
-  test('清除、還原，重新整理後資料還在', async ({ browser }) => {
+  test('清除、復原，重新整理後資料還在', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     await page.evaluate(([mems, evs]) => {
       memoryShelf.addCompanion('王小明', '張小美');
       memoryShelf.importMemories(JSON.stringify(mems), '王小明');
       memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR');
     }, [[MEM(1, '雨夜'), MEM(11, '晴天')], [EV('一', '2026-02-01'), EV('二', '2026-02-02')]]);
-    const backup = await page.evaluate(() => backupJSON());
+    const backup = await page.evaluate(password => encryptBackup(password), BACKUP_PASSWORD);
     const count = () => page.evaluate(() => ({ m: state.memories.filter(m => !m.example).length, e: liveEvents().length }));
     const before = await count();
 
@@ -124,10 +112,8 @@ test.describe('備份', () => {
     await expect(page.locator('#backupResult')).toContainText('已清除');
     expect(await count()).toEqual({ m: 0, e: 0 });
 
-    await page.click('#openRestore');
-    await page.fill('#restoreText', backup);
-    await page.click('#doRestore'); await page.click('#doRestore');
-    await expect(page.locator('#backupResult')).toContainText('已還原');
+    const result = await page.evaluate(async ([text, password]) => restoreBackup(await decryptBackup(text, password)), [backup, BACKUP_PASSWORD]);
+    expect(result).toContain('已復原');
     expect(await count()).toEqual(before);
 
     await page.reload(); await page.waitForTimeout(300);
@@ -137,53 +123,64 @@ test.describe('備份', () => {
   });
 });
 
-test.describe('Gist 同步', () => {
-  test('電腦連線、手機貼連線碼、手機複製與已轉移、雙邊合併、清除同步', async ({ browser }) => {
-    const store = fakeGist();
-    const pc = await openDevice(browser, { store });
+test.describe('加密手機備份', () => {
+  test('電腦加密、錯誤密碼擋下、手機復原與操作', async ({ browser }) => {
+    const pc = await openDevice(browser);
     const A = pc.page;
-    await A.evaluate(list => { memoryShelf.addCompanion('王小明', '張小美'); memoryShelf.importMemories(JSON.stringify(list), '王小明'); }, [MEM(1, '雨夜'), MEM(11, '晴天')]);
+    await A.evaluate(([mems, evs]) => {
+      memoryShelf.addCompanion('王小明', '張小美');
+      memoryShelf.importMemories(JSON.stringify(mems), '王小明');
+      memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR');
+      companionRecord('王小明').files.push({ id: 'f-local-only', name: '原始對話.txt', size: 123, uploadedAt: new Date().toISOString() });
+      save();
+    }, [[MEM(1, '雨夜'), MEM(11, '晴天')], [EV('一', '2026-02-01')]]);
 
     await A.evaluate(() => openSheet('backupSheet'));
-    await A.fill('#ghToken', FAKE_TOKEN);
-    await A.click('#ghConnect');
-    await expect(A.locator('#syncBadge')).toHaveText('已同步到 GitHub');
-    expect(JSON.parse(store.content).memories.filter(m => !m.example)).toHaveLength(2);
-    const code = await A.evaluate(() => linkCode());
+    await A.fill('#backupPassword', '太短');
+    await A.fill('#backupPasswordAgain', '太短');
+    await A.click('#downloadBackup');
+    await expect(A.locator('#backupResult')).toContainText('至少要有 4 個字元');
+    await A.fill('#backupPassword', BACKUP_PASSWORD);
+    await A.fill('#backupPasswordAgain', '不是同一組密碼');
+    await A.click('#downloadBackup');
+    await expect(A.locator('#backupResult')).toContainText('兩次輸入的密碼不一樣');
+    await A.fill('#backupPasswordAgain', BACKUP_PASSWORD);
+    const downloadReady = A.waitForEvent('download');
+    await A.click('#downloadBackup');
+    const download = await downloadReady;
+    expect(download.suggestedFilename()).toMatch(/^伴侶記憶匣-手機備份-\d{4}-\d{2}-\d{2}\.memorybox$/);
+    const chunks = [], stream = await download.createReadStream();
+    for await (const chunk of stream) chunks.push(chunk);
+    const encrypted = Buffer.concat(chunks).toString('utf8');
+    await expect(A.locator('#backupResult')).toContainText('已下載加密手機備份');
+    const envelope = JSON.parse(encrypted);
+    expect(envelope.app).toBe('companion-memory-shelf-encrypted-backup');
+    expect(envelope.encryption.name).toBe('AES-GCM');
+    expect(encrypted).not.toContain('雨夜');
+    await expect(A.evaluate(([text, password]) => decryptBackup(text, password), [encrypted, '錯的密碼'])).rejects.toThrow('密碼不對');
+    const plain = JSON.parse(await A.evaluate(([text, password]) => decryptBackup(text, password), [encrypted, BACKUP_PASSWORD]));
+    expect(plain.memories.filter(m => !m.example)).toHaveLength(2);
+    expect(plain.companions.find(c => c.name === '王小明').files).toEqual([]); // 原始對話檔不進備份
 
-    const phone = await openDevice(browser, { store, viewport: { width: 375, height: 812 }, mobile: true });
+    const phone = await openDevice(browser, { viewport: { width: 375, height: 812 }, mobile: true });
     const P = phone.page;
     await P.evaluate(() => openSheet('backupSheet'));
-    await P.fill('#ghToken', code);
-    await P.click('#ghConnect');
-    await expect(P.locator('#syncBadge')).toHaveText('已同步到 GitHub');
-    await expect.poll(() => realMemories(P)).toBe(2);   // 連線後會在背景把雲端內容讀進來
+    await P.locator('#restoreFile').setInputFiles({ name: '手機備份.memorybox', mimeType: 'application/json', buffer: Buffer.from(encrypted) });
+    await P.fill('#restorePassword', BACKUP_PASSWORD);
+    await P.click('#doRestore'); await P.click('#doRestore');
+    await expect(P.locator('#backupResult')).toContainText('已復原');
+    expect(await realMemories(P)).toBe(2);
+    expect(await P.evaluate(() => liveEvents().length)).toBe(1);
 
-    // 手機版面：沒有左右溢出，可以複製整則、標記已轉移
+    // 手機版面：沒有左右溢出，可以複製整則、標記已轉移；電腦不會跟著改變
     await P.evaluate(() => { closeSheets(); state.current = '王小明'; state.tab = 'memory'; state.view = 'todo'; render(); });
     expect(await P.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     const copyBtn = P.locator('#cards button', { hasText: '複製整則' }).first();
     await copyBtn.scrollIntoViewIfNeeded(); await copyBtn.click();
     expect(await P.evaluate(() => navigator.clipboard.readText())).toContain('地點');
     await P.locator('#cards button', { hasText: '已轉移' }).first().click();
-    await P.waitForTimeout(2200);   // 等自動同步
-    await A.evaluate(() => gistSync());
-    expect(await A.evaluate(() => state.memories.filter(m => m.transferred).length)).toBe(1);
-
-    // 兩邊各自新增，同步後都保留
-    await A.evaluate(m => memoryShelf.importMemories(JSON.stringify([m]), '王小明'), MEM(21, '電腦新增'));
-    await P.evaluate(() => { state.memories.push({ id: 'mphone1', companion: '王小明', seq: 99, rounds: '991-1000', title: '手機新增', fields: {}, transferred: false, updatedAt: Date.now() }); save(); });
-    await A.evaluate(() => gistSync()); await P.evaluate(() => gistSync()); await A.evaluate(() => gistSync());
-    for (const d of [A, P]) {
-      const t = await d.evaluate(() => state.memories.map(m => m.title));
-      expect(t).toEqual(expect.arrayContaining(['電腦新增', '手機新增']));
-    }
-
-    // 電腦清除，手機同步後也清空
-    await A.evaluate(() => openSheet('backupSheet'));
-    await A.click('#clearAll'); await A.click('#clearAll');
-    await A.evaluate(() => gistSync()); await P.evaluate(() => gistSync());
-    expect(await P.evaluate(() => state.memories.filter(m => !m.example).length + liveEvents().length)).toBe(0);
+    expect(await P.evaluate(() => state.memories.filter(m => m.transferred).length)).toBe(1);
+    expect(await A.evaluate(() => state.memories.filter(m => m.transferred).length)).toBe(0);
 
     expect(A.errors.concat(P.errors)).toEqual([]);
     await pc.context.close(); await phone.context.close();
@@ -196,6 +193,15 @@ test.describe('使用說明', () => {
     await page.evaluate(() => openSheet('guideSheet'));
     await expect(page.locator('#flowMain')).toBeVisible();
     await expect(page.locator('#flowMain > li')).toHaveCount(6);
+    await expect(page.locator('#flowMain')).toContainText('不用建立 GitHub 帳號');
+    await expect(page.locator('#flowMain')).toContainText('下載手機備份');
+    await expect(page.locator('#flowMain')).toContainText('密碼不會被記住或上傳');
+    await expect(page.locator('#flowMain')).toContainText('貼進「卿卿我我」');
+    await page.evaluate(() => { closeSheets(); openSheet('backupSheet'); });
+    await expect(page.locator('#backupSheet')).toContainText('備份會先在這台裝置加密');
+    await expect(page.locator('#backupSheet')).toContainText('網站不會把密碼傳給作者、GitHub 或傳送備份檔的服務');
+    await expect(page.locator('#backupSheet')).toContainText('不含上傳的原始對話檔');
+    await expect(page.locator('#ghToken')).toHaveCount(0);
     await expect(page.locator('#tabClaude')).toHaveCount(0);
     await context.close();
   });
@@ -219,31 +225,30 @@ test.describe('在 Claude Artifact 裡打開', () => {
     await context.close();
   });
 
-  test('即使留有同步金鑰也不讀寫 Gist；一般網頁模式則會同步', async ({ browser }) => {
-    const cfg = { token: FAKE_TOKEN, id: 'g123', lastSeen: 0, lastPushed: 0, lastSyncAt: 0 };
-    const withKey = ([key, value, claude]) => {
+  test('舊同步金鑰會被清掉，Claude 與一般網頁都不連 GitHub', async ({ browser }) => {
+    const oldCfg = { token: 'ghp_old_test_token', id: 'g123' };
+    const withOldKey = ([key, value, claude]) => {
       if (claude) window.claude = { use: () => Promise.resolve(null) };
       if (!localStorage.getItem(key)) localStorage.setItem(key, value);
     };
 
-    const claudeStore = fakeGist(); claudeStore.id = 'g123'; claudeStore.content = '{}';
-    const c = await browser.newContext(); await routeGitHub(c, claudeStore);
+    const claudeCalls = [];
+    const c = await browser.newContext(); await c.route('https://api.github.com/**', route => { claudeCalls.push(route.request().url()); return route.abort(); });
     const cp = await c.newPage(); const errors = []; cp.on('pageerror', e => errors.push(e.message));
-    await cp.addInitScript(withKey, [SYNC_KEY, JSON.stringify(cfg), true]);
-    await cp.goto(PAGE); await cp.waitForTimeout(800);
-    await cp.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-    await cp.waitForTimeout(2000);
-    expect(claudeStore.calls).toEqual([]);
-    expect(await cp.evaluate(() => gistOn())).toBe(false);
+    await cp.addInitScript(withOldKey, [OLD_SYNC_KEY, JSON.stringify(oldCfg), true]);
+    await cp.goto(PAGE); await cp.waitForTimeout(500);
+    expect(claudeCalls).toEqual([]);
+    expect(await cp.evaluate(key => localStorage.getItem(key), OLD_SYNC_KEY)).toBeNull();
     expect(errors).toEqual([]);
     await c.close();
 
-    const webStore = fakeGist(); webStore.id = 'g123'; webStore.content = '{}';
-    const w = await browser.newContext(); await routeGitHub(w, webStore);
+    const webCalls = [];
+    const w = await browser.newContext(); await w.route('https://api.github.com/**', route => { webCalls.push(route.request().url()); return route.abort(); });
     const wp = await w.newPage();
-    await wp.addInitScript(withKey, [SYNC_KEY, JSON.stringify(cfg), false]);
-    await wp.goto(PAGE);
-    await expect.poll(() => webStore.calls.length).toBeGreaterThan(0);
+    await wp.addInitScript(withOldKey, [OLD_SYNC_KEY, JSON.stringify(oldCfg), false]);
+    await wp.goto(PAGE); await wp.waitForTimeout(500);
+    expect(webCalls).toEqual([]);
+    expect(await wp.evaluate(key => localStorage.getItem(key), OLD_SYNC_KEY)).toBeNull();
     await w.close();
   });
 });

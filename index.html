@@ -214,10 +214,8 @@ textarea.mono { font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6;
 .muted { color: var(--muted); font-size: 12.5px; }
 .credit { max-width: 1040px; margin: 40px auto 0; display: flex; flex-direction: column; align-items: center; }
 .credit .dash { margin-bottom: 10px; }
-.sync { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px !important; font-size: 11.5px !important; color: var(--muted); }
-.sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
-.sync.on { color: var(--sky-ink); }
-.sync.on::before { background: #7FB9A6; }
+.storage { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px !important; font-size: 11.5px !important; color: var(--muted); }
+.storage::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
 .guide.small { gap: 10px; }
 .guide .sub { margin: 6px 0 4px; padding-left: 1.3em; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 .guide .sub li { display: list-item; }
@@ -274,7 +272,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 .ev-cats { flex-wrap: wrap; border-radius: 16px; max-width: 100%; }
 .muted.warn { color: var(--pink-ink); }
-.pending-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; border-radius: var(--r); border: 1px solid var(--pink); background: var(--pink-soft); color: var(--pink-ink); font-size: 13.5px; }
+.pending-bar { position: sticky; top: 8px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; border-radius: var(--r); border: 1px solid var(--pink); background: var(--pink-soft); box-shadow: var(--shadow); color: var(--pink-ink); font-size: 13.5px; }
 .pending-bar span { flex: 1 1 220px; }
 .restore-box { display: flex; flex-direction: column; gap: 8px; }
 
@@ -421,7 +419,7 @@ if (window.claude) {
 }
 </script>
 
-<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作伴侶 App。</p>
+<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作「卿卿我我」。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -430,12 +428,12 @@ if (window.claude) {
       <div class="latin">Companion Memories</div>
       <h2>伴侶記憶匣</h2>
       <p>把對話收成一則一則記憶</p>
-      <p class="sync" id="syncBadge">只存在這個瀏覽器</p>
+      <p class="storage" id="storageBadge">只存在這個瀏覽器</p>
     </div>
     <div class="tools">
       <button class="tool" id="openGuide">使用說明<span class="latin">Guide</span></button>
       <button class="tool" id="openFormat">記憶格式與規則<span class="latin">Format</span></button>
-      <button class="tool" id="openBackup">同步與備份<span class="latin">Sync</span></button>
+      <button class="tool" id="openBackup">手機備份<span class="latin">Backup</span></button>
       <button class="tool" id="openPalette">配色<span class="latin">Theme</span></button>
     </div>
     <ul class="companions" id="companions"></ul>
@@ -447,7 +445,7 @@ if (window.claude) {
   </aside>
 
   <main class="main">
-    <div class="pending-bar" id="evPendingBar" hidden><span id="evPendingText"></span><button class="btn sm primary" type="button" id="evPendingGo">回去處理</button></div>
+    <div class="pending-bar" id="evPendingBar" role="alert" aria-live="assertive" hidden><span id="evPendingText"></span><button class="btn sm primary" type="button" id="evPendingGo">查看並處理</button></div>
     <div class="head panel">
       <div class="head-top">
         <div>
@@ -675,19 +673,19 @@ if (window.claude) {
     </div>
     <div class="step">
       <div class="step-title">先看這裡</div>
-      <p>不需要懂程式。流程是：在電腦上請 AI 整理對話 → 用手機打開同一個網址，複製貼進伴侶 App。</p>
+      <p>不需要懂程式。流程是：在電腦上請 AI 整理對話 → 用手機打開同一個網址，複製貼進「卿卿我我」。</p>
       <p class="hint">記憶匣只有一個正式網址：<a href="https://boo-usaki.github.io/LoveyDovey-memory-box/" target="_blank" rel="noopener">boo-usaki.github.io/LoveyDovey-memory-box</a>。電腦和手機都從這裡打開，建議加入書籤。</p>
     </div>
     <ol class="guide" id="flowMain">
-      <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。只在這台電腦使用時，不用登入，也不用設定。</p></div></li>
-      <li><div><b>需要手機共用時，設定一次同步</b><p>到左側「同步與備份」，照步驟連上妳自己的 GitHub，記憶會存進妳帳號裡的一份私人 Gist。只要在電腦設定一次。</p></div></li>
+      <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。不用登入，也不用建立 GitHub 帳號。</p></div></li>
       <li><div><b>新增伴侶，選「記憶」或「事件」</b><p>按左側「＋ 新增伴侶」輸入名字，再到伴侶頁上方填妳在這段對話裡的名字。記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情，要再選類別和日期範圍。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
-      <li><div><b>在電腦上傳對話檔，請 AI 整理</b>
+      <li><div><b>在網頁上傳對話檔，請 AI 整理</b>
         <p><strong>這次對話能操作瀏覽器或電腦：</strong>Codex、Claude 或其他有這項能力的 AI 都可以直接完成。跟它說「打開伴侶記憶匣，幫我把〇〇的對話整理成記憶（或 FIR 事件），直接寫進去。」它會打開正式網站，讀取妳已上傳的對話檔，整理後寫進記憶匣；妳不用複製指令，也不用把 AI 回覆貼回來。</p>
         <p><strong>這次對話不能操作瀏覽器或電腦：</strong>按「複製指令」，連同對話檔一起交給 AI；它回覆後，按「貼上回覆」把整段回覆貼回記憶匣。</p>
         <p class="hint">事件會自動編號，接在目前的事件欄後面；放不下時，頁面會先問妳要改短還是開新欄。</p></div></li>
-      <li><div><b>手機打開同一個網址，貼上連線碼</b><p>在電腦的「同步與備份」按「複製手機連線碼」傳給自己；手機打開同一個網址，到「同步與備份」貼上，就會看到一樣的內容。只要第一次做。</p></div></li>
-      <li><div><b>在手機複製，貼進伴侶 App</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進伴侶 App。貼好後按「已轉移」，電腦那邊也會一起更新。</p></div></li>
+      <li><div><b>在電腦下載手機備份</b><p>打開左側「手機備份」，設定一組至少 4 個字元、內容不限的備份密碼，再按「下載手機備份」。密碼只在這台裝置上用來加密或復原，不會被記住、上傳或寫進備份檔；備份檔會先加密，主要是防止不小心傳錯聊天室或群組時，沒有密碼的人直接看到內容。</p></div></li>
+      <li><div><b>把備份傳到手機並復原</b><p>用自己信任的方式把檔案傳到手機。手機打開同一個正式網址，到「手機備份」選擇檔案，輸入同一組密碼後復原。電腦有新內容時，再重新下載和搬一次。</p></div></li>
+      <li><div><b>在手機複製，貼進「卿卿我我」</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進「卿卿我我」。手機和電腦不會自動同步；手機上的「已轉移」狀態也不會傳回電腦。</p></div></li>
     </ol>
     <div class="step">
       <div class="step-title">記憶卡片長這樣</div>
@@ -700,8 +698,8 @@ if (window.claude) {
         <li>不調整任何設定也能使用。想換記憶格式、事件類別或字數，再到「記憶格式與規則」。</li>
         <li>「記憶」適合依順序保存長對話；「事件」適合挑出關係進展、劇情或人物設定等重要事情。</li>
         <li>每次都匯出完整對話就選「用輪數」接續；每次只匯出新的一段就選「用日期」。</li>
-        <li>事件欄快滿時，頁面會先問妳要改短還是開新欄，不會自己決定。</li>
-        <li>偶爾到「同步與備份」留一份備份；原始對話檔不會包含在同步或備份裡。</li>
+        <li>事件欄快滿時，頁面會留下醒目的提醒，直到妳選擇要改短還是開新欄，不會自己決定或咻一下消失。</li>
+        <li>記憶只存在目前使用的瀏覽器。定期到「手機備份」下載一份加密備份；原始對話檔不會包含在備份裡。</li>
       </ul>
     </div>
   </div>
@@ -731,52 +729,40 @@ if (window.claude) {
 <div class="sheet-wrap" id="backupSheet" hidden>
   <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
     <div class="sheet-head">
-      <div><span class="dash"></span><div class="latin">Backup</div><h3 id="backupTitle">同步與備份</h3></div>
+      <div><span class="dash"></span><div class="latin">Backup</div><h3 id="backupTitle">手機備份</h3></div>
       <button class="x" data-close aria-label="關閉">×</button>
     </div>
     <div class="step">
-      <div class="step-title"><span class="latin">01</span>跨裝置同步</div>
-      <p class="hint" id="syncIntro"></p>
-      <div id="ghSetup" hidden>
-        <ol class="guide small">
-          <li><div><b>到 GitHub 產生同步金鑰</b><p>登入 GitHub 後打開 <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%E4%BC%B4%E4%BE%B6%E8%A8%98%E6%86%B6%E5%8C%A3" target="_blank" rel="noopener">這個連結</a>，權限已經只勾好「gist」。有效期限（Expiration）選妳想要的長度，按最下面的「Generate token」。</p></div></li>
-          <li><div><b>貼到下面按「連線」</b><p>複製 ghp_ 開頭的那串。頁面會在妳的 GitHub 建一份私人 Gist 存記憶。</p></div></li>
-          <li><div><b>手機或其他電腦</b><p>連線後按「複製手機連線碼」，傳給自己，在手機打開同一個網址、貼到這裡就好。</p></div></li>
-        </ol>
-        <div class="row">
-          <label for="ghToken">同步金鑰或連線碼
-            <input type="password" id="ghToken" autocomplete="off" spellcheck="false">
-          </label>
-        </div>
-        <div class="row-actions"><button class="btn primary" id="ghConnect">連線</button></div>
+      <div class="step-title"><span class="latin">01</span>在電腦下載備份</div>
+      <p class="hint">記憶只存在目前這個瀏覽器。備份包含全部記憶、事件、事件欄、伴侶設定、格式和 AI 指令修改；不含上傳的原始對話檔。</p>
+      <p class="hint"><strong>備份會先在這台裝置加密，再下載成檔案。</strong>主要是防止檔案不小心傳錯聊天室或群組時，沒有密碼的人直接看到內容。密碼只在這台裝置上使用，不會被記住、上傳或寫進備份檔；網站不會把密碼傳給作者、GitHub 或傳送備份檔的服務。忘記密碼時，只要電腦裡的原始資料還在，就能重新下載一份；如果只剩備份檔，沒有密碼就無法復原。</p>
+      <div class="row">
+        <label for="backupPassword">設定備份密碼（至少 4 個字元，內容不限）
+          <input type="password" id="backupPassword" autocomplete="off" minlength="4">
+        </label>
+        <label for="backupPasswordAgain">再輸入一次
+          <input type="password" id="backupPasswordAgain" autocomplete="off" minlength="4">
+        </label>
       </div>
-      <div id="ghLinked" hidden>
-        <p class="hint" id="ghStatus"></p>
-        <div class="row-actions">
-          <button class="btn primary" id="ghSyncNow">立即同步</button>
-          <button class="btn" id="ghCopyCode">複製手機連線碼</button>
-          <button class="btn danger" id="ghDisconnect">中斷連線</button>
-        </div>
-        <p class="hint">連線碼等同金鑰，只傳給自己，不要貼到公開的地方。借別人的電腦用完，記得按「中斷連線」。</p>
+      <div class="row-actions">
+        <button class="btn primary" id="downloadBackup">下載手機備份</button>
       </div>
-      <p class="result" id="syncResult" role="status"></p>
+      <p class="hint">下載後，用自己信任的方式把檔案傳到手機。即使透過通訊軟體或雲端硬碟傳送，檔案裡仍是加密內容。</p>
     </div>
     <div class="step">
-      <div class="step-title"><span class="latin">02</span>備份</div>
-      <p class="hint" id="backupHint">記憶只存在這個瀏覽器裡，換裝置或清除瀏覽器資料就會不見。定期備份比較安心。</p>
-      <p class="hint">備份包含全部記憶、事件、事件欄、伴侶設定、記憶與事件格式和 AI 指令的修改；不含上傳的對話檔。</p>
+      <div class="step-title"><span class="latin">02</span>在手機復原</div>
+      <p class="hint">先選擇從電腦傳來的備份檔，再輸入下載時設定的密碼。復原會用備份內容<strong>取代這台手機目前的全部記憶、事件和設定</strong>。</p>
       <div class="row-actions">
-        <button class="btn primary" id="copyBackup">複製備份內容</button>
-        <button class="btn" id="downloadBackup">下載備份檔</button>
-        <button class="btn" id="openRestore">還原備份</button>
+        <span class="btn file-btn">選擇手機備份<input type="file" id="restoreFile" accept=".memorybox,application/json,text/plain" aria-label="選擇手機備份"></span>
+        <span class="hint" id="restoreFileName">尚未選擇檔案</span>
       </div>
-      <div class="restore-box" id="restoreBox" hidden>
-        <p class="hint">貼上備份內容或選擇備份檔。還原會用備份<strong>取代目前全部的記憶、事件和設定</strong>，建議先複製一份現在的備份。</p>
-        <textarea id="restoreText" rows="5" class="mono" placeholder='{"app": "companion-memory-shelf", "version": 2, ...}'></textarea>
-        <div class="row-actions">
-          <button class="btn danger" id="doRestore">用這份備份取代目前資料</button>
-          <span class="btn file-btn">選擇備份檔<input type="file" id="restoreFile" accept=".json,application/json,text/plain" aria-label="選擇備份檔"></span>
-        </div>
+      <div class="row">
+        <label for="restorePassword">備份密碼
+          <input type="password" id="restorePassword" autocomplete="off">
+        </label>
+      </div>
+      <div class="row-actions">
+        <button class="btn danger" id="doRestore">用這份備份取代目前資料</button>
       </div>
     </div>
     <div class="step">
@@ -1123,10 +1109,9 @@ function spreadGlobals() {
     s.userName = ""; s.promptEdits = [];
   }
 }
-let applyingRemote = false;
 function save() {
   if (inClaudeViewer) return;   /* not the official site: never store anything */
-  if (!applyingRemote) { state.meta.updatedAt = Date.now(); if (typeof gistSchedule === "function") gistSchedule(); }
+  state.meta.updatedAt = Date.now();
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ memories: state.memories, events: state.events, evp: state.evp || null, settings: state.settings, companions: state.companions, meta: state.meta })); state.saveOk = true; }
   catch (e) { state.saveOk = false; }
 }
@@ -1172,7 +1157,8 @@ function promptCtx(name) {
 function renderPendingBar() {
   const p = typeof getPending === "function" ? getPending() : null, bar = $("evPendingBar");
   const here = p && state.current === p.companion && state.tab === "event" && state.view === "todo" && catOf(p.companion).code === p.cat;
-  bar.hidden = !p || here;
+  bar.hidden = !p;
+  $("evPendingGo").textContent = here ? "查看並處理" : "前往處理";
   if (p) $("evPendingText").textContent = p.reason === "item"
     ? `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」超過每則字數上限，改短後才能繼續匯入。`
     : `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」在等妳決定（擠進 ${slotTitle(p.cat, { no: p.slotNo })} 或開新欄），處理完才能再匯入事件。`;
@@ -1357,9 +1343,9 @@ function openSheet(id) {
     $("importText").placeholder = ev ? '[{"category": "FIR", "date": "2026-02-13", "keywords": "關鍵字", "fields": { ... }}]\n\n或\n\n[FIR-05-02] 關鍵字\n時間：……' : '[{"companion": "伴侶名字", "rounds": "1-10", "title": "標題", "fields": { ... }}]\n\n或\n\n# [標題]\n- 地點：……';
   }
   if (id === "backupSheet") {
-    $("backupResult").textContent = ""; $("syncResult").textContent = ""; disarmAll(); refreshSyncUI();
-    $("restoreBox").hidden = true;
-    if (gistOn()) $("backupHint").textContent = "記憶已同步到妳的 GitHub。備份是額外的保險。";
+    $("backupResult").textContent = ""; disarmAll();
+    $("backupPassword").value = ""; $("backupPasswordAgain").value = ""; $("restorePassword").value = "";
+    resetRestoreSelection();
   }
   const first = $(id).querySelector("textarea:not([readonly]), input:not([type=file]), button.primary");
   if (first) first.focus();
@@ -1579,16 +1565,15 @@ function addDays(iso, n) {
 }
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const liveEvents = () => state.events.filter(e => !e.deleted);
-/* The "won't fit, what now?" question is synced like any other data, with a timestamp. */
+/* Keep the "won't fit, what now?" question in the local state and backups. */
 const getPending = () => (state.evp && state.evp.data) || null;
 function setPending(p) { state.evp = { at: Date.now(), data: p ? JSON.parse(JSON.stringify(p)) : null }; }
-function newerPending(a, b) { return ((b && b.at) || 0) > ((a && a.at) || 0) ? b : a; }
 function hashStr(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 function evCanonical(e) {
   const f = {}; for (const k of Object.keys(e.fields || {}).sort()) f[k] = evItems(e.fields[k]).join("\n");
   return [e.companion, e.cat, e.date || "", (e.keywords || "").trim(), JSON.stringify(f)].join("\u0001");
 }
-/* Same content → same id on every device, so importing one AI reply on two devices merges into one. */
+/* Same content gets the same id, so importing one AI reply twice stays as one event. */
 function evFingerprint(e) {
   const s = evCanonical(e);
   return "e" + hashStr(s) + hashStr([...s].reverse().join(""));
@@ -1726,7 +1711,7 @@ function newSlot(r) {
   const s = { no: r.slots.reduce((n, x) => Math.max(n, x.no || 0), 0) + 1, start: "", end: "", closed: false, base: "", baseIdx: 0, hw: 0, updatedAt: Date.now() };
   r.slots.push(s); return s;
 }
-/* Events whose column record went missing (e.g. after syncing) get their column back. */
+/* Events whose column record went missing get their column back. */
 function repairSlots(name, code) {
   const r = evRec(name, code), have = new Set(r.slots.map(s => s.no));
   const nos = [...new Set(liveEvents().filter(e => e.companion === name && e.cat === code).map(e => e.slot))].filter(n => n && !have.has(n));
@@ -1738,29 +1723,6 @@ function repairSlots(name, code) {
       hw: Math.max(...items.map(e => e.idx || 0), 0), updatedAt: 1 });
   }
   return true;
-}
-/* Merge two copies of a companion's column records card by card instead of one overwriting the other. */
-function mergeEvMeta(a, b) {
-  a = a || {}; b = b || {};
-  const out = {};
-  for (const code of new Set(Object.keys(a).concat(Object.keys(b)))) {
-    const x = a[code] || { slots: [] }, y = b[code] || { slots: [] }, byNo = new Map();
-    for (const s of (x.slots || []).concat(y.slots || [])) {
-      const cur = byNo.get(s.no);
-      if (!cur) { byNo.set(s.no, JSON.parse(JSON.stringify(s))); continue; }
-      const win = (s.updatedAt || 0) > (cur.updatedAt || 0) ? JSON.parse(JSON.stringify(s)) : cur;
-      win.hw = Math.max(cur.hw || 0, s.hw || 0, cur.baseIdx || 0, s.baseIdx || 0);
-      win.closed = !!(cur.closed || s.closed);
-      if (win.closed && !win.end) win.end = cur.end || s.end || "";
-      byNo.set(s.no, win);
-    }
-    const newerRange = (y.rangeAt || 0) > (x.rangeAt || 0) ? y : x;
-    out[code] = { slots: [...byNo.values()].sort((m, n) => m.no - n.no), from: [x.from || "", y.from || ""].sort().pop(), to: newerRange.to || "", rangeAt: Math.max(x.rangeAt || 0, y.rangeAt || 0) };
-    if ((newerRange.rangeAt || 0) && newerRange.from) out[code].from = [out[code].from, newerRange.from].sort().pop();
-    const open = out[code].slots.filter(s => !s.closed);
-    open.slice(0, -1).forEach(s => { s.closed = true; });   /* only the newest column stays open */
-  }
-  return out;
 }
 function slotTitle(code, slot) {
   return evSet().title.replace(/\{代號\}/g, code).replace(/\{名稱\}/g, catByCode(code).name).replace(/\{欄號\}/g, pad2(slot.no));
@@ -2094,6 +2056,7 @@ function renderEventList(cur) {
 /* Asks the user what to do with an event that doesn't fit. */
 function overflowCard(p) {
   const e = p.queue[0], c = el("article", "card panel overflow");
+  c.id = "evOverflowCard"; c.tabIndex = -1;
   const slot = (peekEv(p.companion, p.cat).slots.find(s => s.no === p.slotNo)) || { no: p.slotNo };
   const text = eventText({ ...e, slot: p.slotNo, idx: nextIdx(p.companion, p.cat, slot) });
   const itemTooLong = p.reason === "item", mustShorten = itemTooLong || p.empty, max = itemTooLong ? p.max : p.room;
@@ -2357,156 +2320,10 @@ window.memoryShelf = {
   }
 };
 
-/* ---------- GitHub Gist sync ----------
-   Each person's own token (gist scope only) and a private gist in their own account. */
-const SYNC_KEY = "companion-memory-shelf.sync";
-const GIST_FILE = "memory-shelf.json", GIST_DESC = "伴侶記憶匣 sync";
-const gist = { token: "", id: "", lastSeen: 0, lastPushed: 0, lastSyncAt: 0, timer: null, busy: false, again: false, error: "" };
-function gistLoadCfg() { try { Object.assign(gist, JSON.parse(localStorage.getItem(SYNC_KEY) || "{}")); } catch (e) {} }
-function gistSaveCfg() {
-  try { localStorage.setItem(SYNC_KEY, JSON.stringify({ token: gist.token, id: gist.id, lastSeen: gist.lastSeen, lastPushed: gist.lastPushed, lastSyncAt: gist.lastSyncAt })); } catch (e) {}
-}
-const gistOn = () => !inClaudeViewer && !!gist.token && !!gist.id;   /* never sync from a non-official copy */
-async function gh(path, opts) {
-  let r;
-  try {
-    r = await fetch("https://api.github.com" + path, Object.assign({}, opts || {}, {
-      headers: { "Authorization": "Bearer " + gist.token, "Accept": "application/vnd.github+json", "Content-Type": "application/json" } }));
-  } catch (e) { throw new Error("連不到 GitHub，請確認網路"); }
-  if (r.status === 401) throw new Error("金鑰無效或已過期，請重新產生一組");
-  if (r.status === 404) throw new Error("找不到同步用的 Gist，請確認金鑰有勾 gist 權限");
-  if (!r.ok) throw new Error("GitHub 暫時無法使用（" + r.status + "），稍後再試");
-  return r.json();
-}
-const gistPayload = () => JSON.stringify({ app: "companion-memory-shelf", version: 1, updatedAt: state.meta.updatedAt || 0, clearedAt: state.meta.clearedAt || 0, evp: state.evp || null,
-  memories: state.memories, events: state.events, companions: state.companions, settings: state.settings });
-async function gistRead() {
-  const g = await gh("/gists/" + gist.id);
-  const f = g.files && g.files[GIST_FILE];
-  if (!f) return null;
-  let text = f.content;
-  if (f.truncated) text = await (await fetch(f.raw_url)).text();
-  try { return JSON.parse(text); } catch (e) { return null; }
-}
-async function gistWrite() {
-  await gh("/gists/" + gist.id, { method: "PATCH", body: JSON.stringify({ files: { [GIST_FILE]: { content: gistPayload() } } }) });
-  gist.lastPushed = gist.lastSeen = state.meta.updatedAt; gist.lastSyncAt = Date.now(); gistSaveCfg();
-}
-function persistQuietly() { applyingRemote = true; save(); applyingRemote = false; }
-/* Memories are only ever added or changed (clearing leaves a timestamp), so both sides are
-   merged card by card and nothing written on another device is lost. Returns true when the
-   merged result has something the remote copy lacks. */
-function mergeRemote(remote) {
-  const dirty = (state.meta.updatedAt || 0) > (gist.lastPushed || 0);
-  const cleared = Math.max(state.meta.clearedAt || 0, remote.clearedAt || 0);
-  const remoteMem = new Map((remote.memories || []).map(m => [m.id, m]));
-  const byId = new Map();
-  for (const m of (remote.memories || []).concat(state.memories)) {
-    if ((m.updatedAt || 0) < cleared) continue;
-    const cur = byId.get(m.id);
-    if (!cur || (m.updatedAt || 0) > (cur.updatedAt || 0)) byId.set(m.id, m);
-  }
-  let ahead = false;
-  for (const [id, m] of byId) { const r = remoteMem.get(id); if (!r || (m.updatedAt || 0) > (r.updatedAt || 0)) { ahead = true; break; } }
-  state.memories = [...byId.values()];
-  if (((state.evp || {}).at || 0) > ((remote.evp || {}).at || 0)) ahead = true;
-  state.evp = newerPending(state.evp, remote.evp);
-  const remoteEv = new Map((remote.events || []).map(e => [e.id, e]));
-  const evById = new Map();
-  for (const e of (remote.events || []).concat(state.events)) {
-    if ((e.updatedAt || 0) < cleared) continue;
-    const cur = evById.get(e.id);
-    if (!cur || (e.updatedAt || 0) > (cur.updatedAt || 0)) evById.set(e.id, e);
-  }
-  if (!ahead) for (const [id, e] of evById) { const r = remoteEv.get(id); if (!r || (e.updatedAt || 0) > (r.updatedAt || 0)) { ahead = true; break; } }
-  state.events = [...evById.values()];
-
-  const localFiles = new Map(state.companions.map(c => [c.name, c.files || []]));
-  const next = [];
-  for (const rc of remote.companions || []) {
-    const lc = state.companions.find(c => c.name === rc.name);
-    const base = JSON.parse(JSON.stringify(dirty && lc ? lc : rc));
-    const other = dirty && lc ? rc : lc;
-    if (other) {
-      base.lastRound = Math.max(base.lastRound || 0, other.lastRound || 0);
-      if ((other.lastDate || "") > (base.lastDate || "")) base.lastDate = other.lastDate;
-      if (!base.userName && other.userName) base.userName = other.userName;
-      base.ev = mergeEvMeta(base.ev, other.ev);
-      if (JSON.stringify(base.ev || {}) !== JSON.stringify(mergeEvMeta(rc.ev, null))) ahead = true;
-    }
-    const ids = new Set((base.files || []).map(f => f.id));
-    base.files = (base.files || []).concat(((other && other.files) || []).concat(localFiles.get(rc.name) || []).filter(f => !ids.has(f.id) && ids.add(f.id)));
-    next.push(base);
-  }
-  for (const lc of state.companions) if (!next.some(c => c.name === lc.name)) { next.push(lc); ahead = true; }
-  state.companions = next;
-  if (!dirty && remote.settings) state.settings = Object.assign(state.settings, migrate(remote.settings));
-  state.meta.clearedAt = cleared;
-  if (!dirty && !ahead) state.meta.updatedAt = remote.updatedAt || 0;
-  persistQuietly(); render();
-  return dirty || ahead;
-}
-async function gistSync() {
-  if (!gistOn()) return;
-  if (gist.busy) { gist.again = true; return; }
-  gist.busy = true; gist.error = ""; refreshSyncUI("同步中…");
-  try {
-    const remote = await gistRead();
-    if (remote && (remote.updatedAt || 0) > (gist.lastSeen || 0)) {
-      const dirty = mergeRemote(remote);
-      gist.lastSeen = remote.updatedAt || 0;
-      if (dirty) { state.meta.updatedAt = Date.now(); persistQuietly(); await gistWrite(); }
-      else { gist.lastPushed = state.meta.updatedAt; gist.lastSyncAt = Date.now(); gistSaveCfg(); }
-    } else if (!remote || (state.meta.updatedAt || 0) > (gist.lastPushed || 0)) {
-      await gistWrite();
-    } else { gist.lastSyncAt = Date.now(); gistSaveCfg(); }
-  } catch (e) { gist.error = e.message; }
-  gist.busy = false;
-  refreshSyncUI();
-  if (gist.again) { gist.again = false; gistSync(); }
-}
-function gistSchedule() { if (!gistOn()) return; clearTimeout(gist.timer); gist.timer = setTimeout(gistSync, 1500); }
-const CODE_PREFIX = "cms1.";
-const linkCode = () => CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify({ t: gist.token, g: gist.id }))));
-async function gistConnect(input) {
-  input = String(input || "").trim();
-  if (!input) throw new Error("請先貼上同步金鑰或連線碼");
-  let token = input, id = "";
-  if (input.startsWith(CODE_PREFIX)) {
-    try { const o = JSON.parse(decodeURIComponent(escape(atob(input.slice(CODE_PREFIX.length))))); token = o.t; id = o.g; }
-    catch (e) { throw new Error("連線碼不完整，請重新複製一次"); }
-  }
-  gist.token = token; gist.id = ""; gist.lastSeen = 0; gist.lastPushed = 0;
-  try {
-    if (!id) {
-      const list = await gh("/gists?per_page=100");
-      const found = list.find(g => g.description === GIST_DESC && g.files && g.files[GIST_FILE]);
-      if (found) id = found.id;
-      else {
-        const g = await gh("/gists", { method: "POST", body: JSON.stringify({ description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: gistPayload() } } }) });
-        id = g.id; gist.lastSeen = gist.lastPushed = state.meta.updatedAt;
-      }
-    } else await gh("/gists/" + id);
-  } catch (e) { gist.token = ""; throw e; }
-  gist.id = id; gistSaveCfg();
-  await gistSync();
-}
-const hhmm = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
-function refreshSyncUI(busyText) {
-  const badge = $("syncBadge");
-  const on = gistOn();
-  $("ghSetup").hidden = on; $("ghLinked").hidden = !on;
-  $("syncIntro").textContent = on
-    ? "已用妳的 GitHub 同步。手機或其他電腦打開同一個網址、貼上連線碼，就會看到一樣的記憶。"
-    : "現在記憶只存在這個瀏覽器。想在手機也看到，可以用妳自己的 GitHub 帳號同步，設定一次就好：";
-  $("ghStatus").textContent = busyText || (gist.error ? "同步失敗：" + gist.error : (gist.lastSyncAt ? `已連線 · 上次同步 ${hhmm(gist.lastSyncAt)}` : "已連線"));
-  badge.textContent = on ? (gist.error ? "GitHub 同步失敗" : "已同步到 GitHub") : "只存在這個瀏覽器";
-  badge.classList.toggle("on", on && !gist.error);
-}
-
 /* ---------- Wire up ---------- */
-load(); persistQuietly();
-gistLoadCfg();
+/* Remove the retired Gist token if this browser ever tested the old sync design. */
+try { localStorage.removeItem("companion-memory-shelf.sync"); } catch (e) {}
+load(); save();
 
 $("showTodo").onclick = () => { state.view = "todo"; render(); };
 $("showDone").onclick = () => { state.view = "done"; render(); };
@@ -2605,7 +2422,11 @@ $("copyCompanionPrompt").onclick = e => {
   if (state.tab === "event" && state.current && rangeBad(state.current, catOf(state.current).code)) { toast("整理範圍的「從」比「到」還晚，請先改一下"); return; }
   copyText(panelPrompt(), e.currentTarget, "複製指令");
 };
-$("evPendingGo").onclick = () => { const p = getPending(); if (!p) return; state.current = p.companion; companionRecord(p.companion).evCat = p.cat; state.tab = "event"; state.view = "todo"; render(); window.scrollTo(0, 0); };
+$("evPendingGo").onclick = () => {
+  const p = getPending(); if (!p) return;
+  state.current = p.companion; companionRecord(p.companion).evCat = p.cat; state.tab = "event"; state.view = "todo"; render();
+  requestAnimationFrame(() => { const card = $("evOverflowCard"); if (card) { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.focus({ preventScroll: true }); } });
+};
 $("importFile").onchange = e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const r = new FileReader();
@@ -2626,15 +2447,12 @@ $("promptText").addEventListener("blur", () => { state.editingPrompt = false; up
 $("resetFormat").onclick = () => { $("formatText").value = DEFAULT_FORMAT; onSettingsInput(); toast("已恢復預設格式"); };
 
 const backupJSON = () => JSON.stringify({ app: "companion-memory-shelf", version: 2, exportedAt: new Date().toISOString(),
-  memories: state.memories, events: state.events, companions: state.companions.map(c => { const x = JSON.parse(JSON.stringify(c)); return x; }),
+  memories: state.memories, events: state.events, companions: state.companions.map(c => { const x = JSON.parse(JSON.stringify(c)); x.files = []; return x; }),
   settings: state.settings, evp: state.evp || null }, null, 2);
-/* Restoring replaces everything; old devices and the cloud copy are told to drop what came before. */
+/* Restoring replaces the local shelf. Uploaded chat files stay only on the device where they were uploaded. */
 async function restoreBackup(text) {
   let data;
   try { data = JSON.parse(stripFence(String(text || ""))); } catch (e) { return "讀不懂這份備份，請確認是完整複製的內容。"; }
-  if (Array.isArray(data)) {   /* older backups were just a list of memories */
-    const r = importCore(data, state.current || ""); return r.ok ? `這是舊版的備份（只有記憶），已匯入 ${r.added + (r.replaced || 0)} 則記憶。` : r.error;
-  }
   if (!data || data.app !== "companion-memory-shelf" || !Array.isArray(data.memories)) return "這看起來不是伴侶記憶匣的備份。";
   const now = Date.now();
   state.meta.clearedAt = now;
@@ -2648,9 +2466,51 @@ async function restoreBackup(text) {
   if (data.settings) state.settings = Object.assign(state.settings, migrate(data.settings));
   state.evp = { at: now, data: data.evp && data.evp.data ? data.evp.data : null };
   save(); render();
-  return `已還原：${state.memories.length} 則記憶、${liveEvents().length} 則事件。`;
+  return `已復原：${state.memories.length} 則記憶、${liveEvents().length} 則事件。`;
 }
-$("copyBackup").onclick = e => copyText(backupJSON(), e.currentTarget, "複製備份內容");
+const ENCRYPTED_BACKUP_APP = "companion-memory-shelf-encrypted-backup";
+const BACKUP_AAD = "companion-memory-shelf-encrypted-backup:v1";
+const BACKUP_ITERATIONS = 250000;
+const textEncoder = new TextEncoder(), textDecoder = new TextDecoder();
+function bytesToBase64(value) {
+  const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+function base64ToBytes(value) {
+  const binary = atob(value), bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+async function deriveBackupKey(password, salt, usage) {
+  const material = await window.crypto.subtle.importKey("raw", textEncoder.encode(password), "PBKDF2", false, ["deriveKey"]);
+  return window.crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: BACKUP_ITERATIONS, hash: "SHA-256" }, material,
+    { name: "AES-GCM", length: 256 }, false, [usage]);
+}
+async function encryptBackup(password) {
+  if (!window.crypto || !window.crypto.subtle) throw new Error("這個瀏覽器不支援加密備份，請更新瀏覽器後再試。");
+  const salt = window.crypto.getRandomValues(new Uint8Array(16)), iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveBackupKey(password, salt, "encrypt");
+  const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: textEncoder.encode(BACKUP_AAD) }, key, textEncoder.encode(backupJSON()));
+  return JSON.stringify({ app: ENCRYPTED_BACKUP_APP, version: 1, createdAt: new Date().toISOString(),
+    encryption: { name: "AES-GCM", kdf: "PBKDF2", hash: "SHA-256", iterations: BACKUP_ITERATIONS,
+      salt: bytesToBase64(salt), iv: bytesToBase64(iv) }, data: bytesToBase64(encrypted) });
+}
+async function decryptBackup(text, password) {
+  if (!window.crypto || !window.crypto.subtle) throw new Error("這個瀏覽器不支援加密備份，請更新瀏覽器後再試。");
+  let box;
+  try { box = JSON.parse(String(text || "")); } catch (e) { throw new Error("讀不懂這個檔案，請重新選擇記憶匣的手機備份。"); }
+  const enc = box && box.encryption;
+  if (box.app !== ENCRYPTED_BACKUP_APP || box.version !== 1 || !enc || enc.name !== "AES-GCM" || enc.kdf !== "PBKDF2" || enc.hash !== "SHA-256" || enc.iterations !== BACKUP_ITERATIONS || !enc.salt || !enc.iv || !box.data) {
+    throw new Error("這不是記憶匣的加密手機備份。");
+  }
+  try {
+    const salt = base64ToBytes(enc.salt), iv = base64ToBytes(enc.iv), key = await deriveBackupKey(password, salt, "decrypt");
+    const plain = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv, additionalData: textEncoder.encode(BACKUP_AAD) }, key, base64ToBytes(box.data));
+    return textDecoder.decode(plain);
+  } catch (e) { throw new Error("密碼不對，或備份檔已經損壞。請確認後再試一次。"); }
+}
 function saveFile(name, text, type) {
   const blob = new Blob([text], { type });
   const a = document.createElement("a");
@@ -2658,17 +2518,43 @@ function saveFile(name, text, type) {
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
-$("openRestore").onclick = () => { $("restoreBox").hidden = !$("restoreBox").hidden; if (!$("restoreBox").hidden) $("restoreText").focus(); };
-armButton($("doRestore"), "用這份備份取代目前資料", "再按一次確認還原", async () => {
-  $("backupResult").textContent = "正在還原…";
-  $("backupResult").textContent = await restoreBackup($("restoreText").value); $("restoreText").value = "";
+let selectedBackupText = "";
+function resetRestoreSelection() {
+  selectedBackupText = "";
+  $("restoreFile").value = "";
+  $("restoreFileName").textContent = "尚未選擇檔案";
+}
+armButton($("doRestore"), "用這份備份取代目前資料", "再按一次確認復原", async () => {
+  const password = $("restorePassword").value;
+  if (!selectedBackupText) { $("backupResult").textContent = "請先選擇從電腦傳來的手機備份。"; return; }
+  if (!password) { $("backupResult").textContent = "請輸入下載備份時設定的密碼。"; return; }
+  $("backupResult").textContent = "正在解開並還原備份…";
+  try {
+    const plain = await decryptBackup(selectedBackupText, password);
+    const result = await restoreBackup(plain);
+    $("backupResult").textContent = result;
+    if (result.startsWith("已復原")) { $("restorePassword").value = ""; resetRestoreSelection(); }
+  } catch (e) { $("backupResult").textContent = e.message; }
 });
 $("restoreFile").onchange = e => {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
-  const rd = new FileReader(); rd.onload = () => { $("restoreText").value = String(rd.result || ""); $("backupResult").textContent = "讀好了，確認沒問題就按「用這份備份取代目前資料」。"; };
+  const rd = new FileReader(); rd.onload = () => { selectedBackupText = String(rd.result || ""); $("restoreFileName").textContent = f.name; $("backupResult").textContent = "檔案讀好了，請輸入備份密碼。"; };
+  rd.onerror = () => { resetRestoreSelection(); $("backupResult").textContent = "讀不到這個檔案，請重新選擇一次。"; };
   rd.readAsText(f);
 };
-$("downloadBackup").onclick = () => saveFile(`伴侶記憶備份-${new Date().toISOString().slice(0, 10)}.json`, backupJSON(), "application/json");
+$("downloadBackup").onclick = async () => {
+  const password = $("backupPassword").value, again = $("backupPasswordAgain").value, button = $("downloadBackup");
+  if (password.length < 4) { $("backupResult").textContent = "備份密碼至少要有 4 個字元。"; $("backupPassword").focus(); return; }
+  if (password !== again) { $("backupResult").textContent = "兩次輸入的密碼不一樣，請再確認。"; $("backupPasswordAgain").focus(); return; }
+  button.disabled = true; $("backupResult").textContent = "正在加密備份…";
+  try {
+    const encrypted = await encryptBackup(password);
+    saveFile(`伴侶記憶匣-手機備份-${new Date().toISOString().slice(0, 10)}.memorybox`, encrypted, "application/json");
+    $("backupPassword").value = ""; $("backupPasswordAgain").value = "";
+    $("backupResult").textContent = "已下載加密手機備份。請記住密碼，再把檔案傳到手機。";
+  } catch (e) { $("backupResult").textContent = e.message || "備份失敗，請稍後再試。"; }
+  button.disabled = false;
+};
 $("downloadPrompt").onclick = () => saveFile("AGENT.md", sheetPrompt() + "\n", "text/markdown");
 
 armButton($("clearAll"), "清除全部記憶與事件", "再按一次確認全部清除", async () => {
@@ -2678,23 +2564,6 @@ armButton($("clearAll"), "清除全部記憶與事件", "再按一次確認全�
 });
 
 render();
-refreshSyncUI();
-if (gistOn()) gistSync();
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && gistOn()) gistSync(); });
-$("ghConnect").onclick = async () => {
-  const btn = $("ghConnect"); btn.disabled = true; $("syncResult").textContent = "連線中…";
-  try { await gistConnect($("ghToken").value); $("ghToken").value = ""; $("syncResult").textContent = gist.error ? "" : "連線成功，之後會自動同步。"; }
-  catch (e) { $("syncResult").textContent = e.message; }
-  btn.disabled = false; refreshSyncUI();
-};
-$("ghToken").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); $("ghConnect").click(); } });
-$("ghSyncNow").onclick = async () => { await gistSync(); $("syncResult").textContent = gist.error ? "" : "同步完成。"; };
-$("ghCopyCode").onclick = e => copyText(linkCode(), e.currentTarget, "複製手機連線碼");
-armButton($("ghDisconnect"), "中斷連線", "再按一次確認中斷", () => {
-  gist.token = ""; gist.id = ""; gist.lastSeen = gist.lastPushed = gist.lastSyncAt = 0; gist.error = "";
-  try { localStorage.removeItem(SYNC_KEY); } catch (e) {}
-  refreshSyncUI(); $("syncResult").textContent = "已中斷連線。這台裝置上的記憶還在，GitHub 上的那份也還在。";
-});
 /* Inside a Claude Artifact the page is only a pointer to the official site: no agent API either. */
 if (inClaudeViewer) { try { delete window.memoryShelf; } catch (e) { window.memoryShelf = undefined; } }
 </script>
