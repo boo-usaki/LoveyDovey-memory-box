@@ -1,6 +1,7 @@
 # 伴侶記憶匣
 
-*made quietly by Boo_usaki*
+*made quietly by Boo_usaki*<br>
+<sub>created with Claude Opus 5.5</sub>
 
 把和伴侶的對話整理成一則一則的記憶卡片：交給 AI 整理、寫進記憶匣，一鍵複製整則貼到伴侶 App，轉移完就收起來。
 
