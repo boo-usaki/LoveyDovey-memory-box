@@ -737,13 +737,13 @@ if (window.claude) {
     <div class="step">
       <div class="step-title"><span class="latin">01</span>跨裝置同步</div>
       <p class="hint" id="syncIntro"></p>
-      <p class="hint"><strong>貼金鑰前先知道：</strong>金鑰只保存在這台裝置的瀏覽器裡，連線時送到 GitHub API；不會送給記憶匣作者、不會寫進 Gist，也不會放進備份檔。瀏覽器並未加密保管它；這把金鑰能讀寫妳帳號裡的 Gists，但沒有 GitHub repository 權限，請保護好使用中的裝置與瀏覽器。</p>
-      <p class="hint"><strong>同步內容的限制：</strong>Secret Gist 只是「不會出現在 GitHub 公開列表和搜尋裡」，不是真正的私人檔案；拿到那份 Gist 網址的人仍能看到內容。非常敏感的內容建議不要開啟同步，改用本機與自行保管的備份。<a href="https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists" target="_blank" rel="noopener">查看 GitHub 官方說明</a></p>
+      <p class="hint"><strong>貼金鑰前先知道：</strong>金鑰只保存在這台裝置的瀏覽器裡，連線時送到 GitHub；不會送給記憶匣作者、不會寫進同步檔，也不會放進備份檔。瀏覽器並未加密保管它；這把金鑰能讀寫妳帳號裡的 GitHub 小檔案，但不能存取程式碼倉庫，請保護好使用中的裝置與瀏覽器。</p>
+      <p class="hint"><strong>同步內容的限制：</strong>不公開列出不等於真正私人。同步檔不會出現在 GitHub 公開列表和搜尋裡，但拿到它網址的人仍能看到內容。非常敏感的內容建議不要開啟同步，改用本機與自行保管的備份。<a href="https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists" target="_blank" rel="noopener">查看 GitHub 官方說明</a></p>
       <div id="ghSetup" hidden>
         <ol class="guide small">
-          <li><div><b>到 GitHub 產生同步金鑰</b><p>登入 GitHub 後打開 <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%E4%BC%B4%E4%BE%B6%E8%A8%98%E6%86%B6%E5%8C%A3" target="_blank" rel="noopener">這個連結</a>，權限已經只勾好「gist」。<code>Expiration</code> 是有效期限：<code>7 / 30 / 60 / 90 days</code> 是幾天後到期，<code>Custom</code> 是自選日期，<code>No expiration</code> 是永不過期。建議選 <code>90 days</code>；到期後再產生一組新的即可。最後按頁面最下面的 <code>Generate token</code>（產生金鑰）。</p></div></li>
-          <li><div><b>貼到下面按「連線」</b><p>複製 ghp_ 開頭的那串。頁面會在妳的 GitHub 建一份不公開列出的 Secret Gist 存記憶。</p></div></li>
-          <li><div><b>讓手機看到同一份內容</b><p>電腦連線後按「複製手機連線碼」。接著用手機瀏覽器打開記憶匣，點「同步與備份」，把連線碼貼進下面的「同步金鑰或連線碼」，再按「連線」。手機不用安裝 GitHub App，也不用登入 GitHub。</p></div></li>
+          <li><div><b>到 GitHub 產生同步金鑰</b><p>登入 GitHub 後打開 <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%E4%BC%B4%E4%BE%B6%E8%A8%98%E6%86%B6%E5%8C%A3" target="_blank" rel="noopener">這個連結</a>，權限已經只勾好「小檔案（gist）」。有效期限（Expiration）可以選 7、30、60 或 90 天，也可以選自訂日期（Custom）或永不過期（No expiration）。建議選 90 天；到期後再產生一組新的即可。最後按頁面最下面的「產生金鑰（Generate token）」。</p></div></li>
+          <li><div><b>貼到下面按「連線」</b><p>複製以 ghp_ 開頭的那串。頁面會在妳的 GitHub 建一份不公開列出的同步檔來保存記憶。</p></div></li>
+          <li><div><b>讓手機看到同一份內容</b><p>電腦連線後按「複製手機連線碼」。接著用手機瀏覽器打開記憶匣，點「同步與備份」，把連線碼貼進下面的「同步金鑰或連線碼」，再按「連線」。手機不用安裝 GitHub，也不用登入 GitHub。</p></div></li>
         </ol>
         <div class="row">
           <label for="ghToken">同步金鑰或連線碼
@@ -767,7 +767,7 @@ if (window.claude) {
       <div class="step-title"><span class="latin">02</span>備份</div>
       <p class="hint" id="backupHint">記憶只存在這個瀏覽器裡，換裝置或清除瀏覽器資料就會不見。定期備份比較安心。</p>
       <p class="hint">備份包含全部記憶、事件、事件欄、伴侶設定、記憶與事件格式和 AI 指令的修改；不含上傳的對話檔。</p>
-      <p class="hint"><strong>不想使用 GitHub 金鑰？</strong>AI 整理完成後，在電腦按「下載備份檔」，把 `.json` 檔用自己的 LINE、Discord 或其他私人方式傳到手機；手機打開正式網站，到「同步與備份 → 還原備份 → 選擇備份檔」。這是一次性搬運，以後有新內容要再搬一次。備份檔含有妳的記憶、事件和設定，請依自己的隱私需求選擇傳送方式。</p>
+      <p class="hint"><strong>不想使用 GitHub 金鑰？</strong>AI 整理完成後，在電腦按「下載備份檔」，把檔案用自己的 LINE、Discord 或其他私人方式傳到手機；手機打開正式網站，到「同步與備份 → 還原備份 → 選擇備份檔」。這是一次性搬運，以後有新內容要再搬一次。備份檔含有妳的記憶、事件和設定，請依自己的隱私需求選擇傳送方式。</p>
       <div class="row-actions">
         <button class="btn primary" id="copyBackup">複製備份內容</button>
         <button class="btn" id="downloadBackup">下載備份檔</button>
@@ -2363,7 +2363,7 @@ window.memoryShelf = {
 };
 
 /* ---------- GitHub Gist sync ----------
-   Each person's own token (gist scope only) and a private gist in their own account. */
+   Each person's own token (gist scope only) and an unlisted, not truly private, gist in their account. */
 const SYNC_KEY = "companion-memory-shelf.sync";
 const GIST_FILE = "memory-shelf.json", GIST_DESC = "伴侶記憶匣 sync";
 const gist = { token: "", id: "", lastSeen: 0, lastPushed: 0, lastSyncAt: 0, timer: null, busy: false, again: false, error: "" };
@@ -2379,7 +2379,7 @@ async function gh(path, opts) {
       headers: { "Authorization": "Bearer " + gist.token, "Accept": "application/vnd.github+json", "Content-Type": "application/json" } }));
   } catch (e) { throw new Error("連不到 GitHub，請確認網路"); }
   if (r.status === 401) throw new Error("金鑰無效或已過期，請重新產生一組");
-  if (r.status === 404) throw new Error("找不到同步用的 Gist，請確認金鑰有勾 gist 權限");
+  if (r.status === 404) throw new Error("找不到同步檔，請確認金鑰有勾「小檔案（gist）」權限");
   if (!r.ok) throw new Error("GitHub 暫時無法使用（" + r.status + "），稍後再試");
   return r.json();
 }
@@ -2502,7 +2502,7 @@ function refreshSyncUI(busyText) {
   const on = gistOn();
   $("ghSetup").hidden = on; $("ghLinked").hidden = !on;
   $("syncIntro").textContent = on
-    ? "已用妳的 GitHub 同步。手機或其他電腦用瀏覽器打開同一個網址，在「同步與備份」貼上連線碼並按「連線」，就會看到一樣的記憶；不用安裝 GitHub App。"
+    ? "已用妳的 GitHub 同步。手機或其他電腦用瀏覽器打開同一個網址，在「同步與備份」貼上連線碼並按「連線」，就會看到一樣的記憶；不用安裝 GitHub。"
     : "現在記憶只存在這個瀏覽器。想在手機也看到，可以用妳自己的 GitHub 帳號同步；手機不用安裝 GitHub，也不用登入 GitHub：";
   $("ghStatus").textContent = busyText || (gist.error ? "同步失敗：" + gist.error : (gist.lastSyncAt ? `已連線 · 上次同步 ${hhmm(gist.lastSyncAt)}` : "已連線"));
   badge.textContent = on ? (gist.error ? "GitHub 同步失敗" : "已同步到 GitHub") : "只存在這個瀏覽器";
