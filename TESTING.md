@@ -6,14 +6,14 @@
 
 ## 需要的東西
 
-- Node.js 18 以上
+- Node.js 20 以上
 
 ## 安裝（第一次）
 
 在 repo 根目錄執行：
 
 ```bash
-npm install
+npm ci
 npx playwright install chromium
 ```
 

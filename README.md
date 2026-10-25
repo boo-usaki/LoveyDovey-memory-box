@@ -5,7 +5,7 @@
 
 把妳和 AI 伴侶的長對話，整理成一張張可以複製下來、再搬進伴侶 App 的記憶卡片。
 
-👉 **[打開伴侶記憶匣](https://boo-usaki.github.io/memory-box/)**
+👉 **[打開伴侶記憶匣](https://boo-usaki.github.io/LoveyDovey-memory-box/)**
 
 不懂程式也可以使用。記憶匣只有一個正式網址，就是上面這個；電腦和手機都從這裡打開。記憶預設只留在妳現在使用的瀏覽器，想讓手機和電腦看到同一份內容時，再開啟同步即可。
 
@@ -22,7 +22,7 @@
 
 整理在電腦上做，手機只用來複製。
 
-1. **在電腦打開正式網站**：[boo-usaki.github.io/memory-box](https://boo-usaki.github.io/memory-box/)。只在這台電腦使用時，不用登入，也不用設定。
+1. **在電腦打開正式網站**：[boo-usaki.github.io/LoveyDovey-memory-box](https://boo-usaki.github.io/LoveyDovey-memory-box/)。只在這台電腦使用時，不用登入，也不用設定。
 2. **需要手機共用時，設定一次同步**：到左側「同步與備份」，照畫面連上妳自己的 GitHub，記憶會存進妳帳號裡的一份私人 Gist。只要在電腦設定一次。
 3. **新增伴侶，選「記憶」或「事件」**：按左側「＋ 新增伴侶」輸入名字，再到伴侶頁上方填妳在這段對話裡的名字。
 4. **在電腦上傳對話檔，請 AI 整理**：
@@ -149,7 +149,7 @@
 
 如果 agent 只能讀網址，請它先讀：
 
-`https://raw.githubusercontent.com/boo-usaki/memory-box/main/AGENT.md`
+`https://raw.githubusercontent.com/boo-usaki/LoveyDovey-memory-box/main/AGENT.md`
 
 使用者若已自訂格式，仍以伴侶頁面「複製指令」產生的版本為準。
 

@@ -6,8 +6,9 @@
 
 ## 正式來源
 
-- GitHub repo `boo-usaki/memory-box` 的 `main` 分支，以及由它發布的 GitHub Pages，是**唯一正式來源**。
-- 正式網址：**https://boo-usaki.github.io/memory-box/**
+- GitHub repo `boo-usaki/LoveyDovey-memory-box` 的 `main` 分支，以及由它發布的 GitHub Pages，是**唯一正式來源**。
+- 正式網址：**https://boo-usaki.github.io/LoveyDovey-memory-box/**
+- 舊 repo 名稱 `boo-usaki/memory-box` 與舊網址 `https://boo-usaki.github.io/memory-box/` 已退役，不再作為正式入口。
 - 伴侶記憶匣只有這一個正式版本，不再擴張平行版本。
 
 ## 使用方式

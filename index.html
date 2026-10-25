@@ -402,9 +402,9 @@ a.btn { text-decoration: none; display: inline-block; }
     <div class="latin">Companion Memories</div>
     <h2>伴侶記憶匣</h2>
     <p>伴侶記憶匣只在正式網站更新，請改用正式版。</p>
-    <input id="retiredUrl" readonly value="https://boo-usaki.github.io/memory-box/" aria-label="正式版網址">
+    <input id="retiredUrl" readonly value="https://boo-usaki.github.io/LoveyDovey-memory-box/" aria-label="正式版網址">
     <div class="row-actions">
-      <a class="btn primary" id="retiredOpen" href="https://boo-usaki.github.io/memory-box/" target="_blank" rel="noopener">開啟正式版</a>
+      <a class="btn primary" id="retiredOpen" href="https://boo-usaki.github.io/LoveyDovey-memory-box/" target="_blank" rel="noopener">開啟正式版</a>
       <button class="btn" type="button" id="retiredCopy">複製網址</button>
     </div>
   </div>
@@ -421,7 +421,7 @@ if (window.claude) {
 }
 </script>
 
-<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作伴侶 App。</p>
+<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作伴侶 App。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -676,7 +676,7 @@ if (window.claude) {
     <div class="step">
       <div class="step-title">先看這裡</div>
       <p>不需要懂程式。流程是：在電腦上請 AI 整理對話 → 用手機打開同一個網址，複製貼進伴侶 App。</p>
-      <p class="hint">記憶匣只有一個正式網址：<a href="https://boo-usaki.github.io/memory-box/" target="_blank" rel="noopener">boo-usaki.github.io/memory-box</a>。電腦和手機都從這裡打開，建議加入書籤。</p>
+      <p class="hint">記憶匣只有一個正式網址：<a href="https://boo-usaki.github.io/LoveyDovey-memory-box/" target="_blank" rel="noopener">boo-usaki.github.io/LoveyDovey-memory-box</a>。電腦和手機都從這裡打開，建議加入書籤。</p>
     </div>
     <ol class="guide" id="flowMain">
       <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。只在這台電腦使用時，不用登入，也不用設定。</p></div></li>

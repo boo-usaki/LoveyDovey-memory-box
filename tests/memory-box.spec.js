@@ -5,7 +5,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 const PAGE = pathToFileURL(path.resolve(__dirname, '..', 'index.html')).href;
-const OFFICIAL = 'https://boo-usaki.github.io/memory-box/';
+const OFFICIAL = 'https://boo-usaki.github.io/LoveyDovey-memory-box/';
 const SYNC_KEY = 'companion-memory-shelf.sync';
 const FAKE_TOKEN = 'ghp_fake_token_for_tests';
 
@@ -66,7 +66,7 @@ test.describe('記憶', () => {
     await page.click('#doImport');
     await expect.poll(() => realMemories(page)).toBe(3);
 
-    await page.evaluate(() => { closeSheets(); state.current = '王小明'; state.tab = 'mem'; state.view = 'todo'; render(); });
+    await page.evaluate(() => { closeSheets(); state.current = '王小明'; state.tab = 'memory'; state.view = 'todo'; render(); });
     await page.locator('#cards button', { hasText: '已轉移' }).first().click();
     await expect.poll(() => page.evaluate(() => state.memories.filter(m => m.transferred).length)).toBe(1);
     expect(page.errors).toEqual([]);
@@ -160,7 +160,7 @@ test.describe('Gist 同步', () => {
     await expect.poll(() => realMemories(P)).toBe(2);   // 連線後會在背景把雲端內容讀進來
 
     // 手機版面：沒有左右溢出，可以複製整則、標記已轉移
-    await P.evaluate(() => { closeSheets(); state.current = '王小明'; state.tab = 'mem'; state.view = 'todo'; render(); });
+    await P.evaluate(() => { closeSheets(); state.current = '王小明'; state.tab = 'memory'; state.view = 'todo'; render(); });
     expect(await P.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     const copyBtn = P.locator('#cards button', { hasText: '複製整則' }).first();
     await copyBtn.scrollIntoViewIfNeeded(); await copyBtn.click();
