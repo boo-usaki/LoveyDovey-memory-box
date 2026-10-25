@@ -4,7 +4,7 @@
 > 把結果存成一個 `.json` 檔（或直接回覆 JSON），讓使用者匯入「伴侶記憶匣」頁面。
 > 這份是預設格式；使用者若在頁面上自訂了格式，會另外給你自己的版本，以那份為準。
 >
-> 伴侶記憶匣只有一個正式網址：**https://boo-usaki.github.io/memory-box/**。要操作頁面時，只在這個網址操作。
+> 伴侶記憶匣只有一個正式網址：**https://boo-usaki.github.io/LoveyDovey-memory-box/**。要操作頁面時，只在這個網址操作。
 
 請幫我把附件中我和伴侶的對話，整理成一則一則的記憶。
 
@@ -52,7 +52,7 @@
 
 ## 在瀏覽器裡操作頁面（給能操作網頁的 agent）
 
-請在電腦的瀏覽器打開正式網址 https://boo-usaki.github.io/memory-box/ 。頁面提供 `window.memoryShelf`，整個流程可以由你完成：
+請在電腦的瀏覽器打開正式網址 https://boo-usaki.github.io/LoveyDovey-memory-box/ 。頁面提供 `window.memoryShelf`，整個流程可以由你完成：
 
 1. `memoryShelf.help()` 看用法，`memoryShelf.list()` 看有哪些伴侶、進度和對話檔
 2. `memoryShelf.prompt("伴侶名字")` 取得這位伴侶的整理指令（已寫好名字、格式與從第幾輪接續）—— 以這份為準

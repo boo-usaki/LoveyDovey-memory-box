@@ -402,9 +402,9 @@ a.btn { text-decoration: none; display: inline-block; }
     <div class="latin">Companion Memories</div>
     <h2>伴侶記憶匣</h2>
     <p>伴侶記憶匣只在正式網站更新，請改用正式版。</p>
-    <input id="retiredUrl" readonly value="https://boo-usaki.github.io/memory-box/" aria-label="正式版網址">
+    <input id="retiredUrl" readonly value="https://boo-usaki.github.io/LoveyDovey-memory-box/" aria-label="正式版網址">
     <div class="row-actions">
-      <a class="btn primary" id="retiredOpen" href="https://boo-usaki.github.io/memory-box/" target="_blank" rel="noopener">開啟正式版</a>
+      <a class="btn primary" id="retiredOpen" href="https://boo-usaki.github.io/LoveyDovey-memory-box/" target="_blank" rel="noopener">開啟正式版</a>
       <button class="btn" type="button" id="retiredCopy">複製網址</button>
     </div>
   </div>
@@ -421,7 +421,7 @@ if (window.claude) {
 }
 </script>
 
-<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作伴侶 App。</p>
+<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作伴侶 App。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -676,15 +676,15 @@ if (window.claude) {
     <div class="step">
       <div class="step-title">先看這裡</div>
       <p>不需要懂程式。流程是：在電腦上請 AI 整理對話 → 用手機打開同一個網址，複製貼進伴侶 App。</p>
-      <p class="hint">記憶匣只有一個正式網址：<a href="https://boo-usaki.github.io/memory-box/" target="_blank" rel="noopener">boo-usaki.github.io/memory-box</a>。電腦和手機都從這裡打開，建議加入書籤。</p>
+      <p class="hint">記憶匣只有一個正式網址：<a href="https://boo-usaki.github.io/LoveyDovey-memory-box/" target="_blank" rel="noopener">boo-usaki.github.io/LoveyDovey-memory-box</a>。電腦和手機都從這裡打開，建議加入書籤。</p>
     </div>
     <ol class="guide" id="flowMain">
       <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。只在這台電腦使用時，不用登入，也不用設定。</p></div></li>
       <li><div><b>需要手機共用時，設定一次同步</b><p>到左側「同步與備份」，照步驟連上妳自己的 GitHub，記憶會存進妳帳號裡的一份私人 Gist。只要在電腦設定一次。</p></div></li>
       <li><div><b>新增伴侶，選「記憶」或「事件」</b><p>按左側「＋ 新增伴侶」輸入名字，再到伴侶頁上方填妳在這段對話裡的名字。記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情，要再選類別和日期範圍。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
       <li><div><b>在電腦上傳對話檔，請 AI 整理</b>
-        <p><strong>能操作網頁的 AI：</strong>讓它打開這個網址，跟它說「幫我整理〇〇的對話，寫進記憶匣」，它會自己讀檔、整理、寫入。</p>
-        <p><strong>不能操作網頁的 AI：</strong>按「複製指令」，連同對話檔一起交給它；它回覆後，按「貼上回覆」貼回記憶匣。</p>
+        <p><strong>這次對話能操作瀏覽器或電腦：</strong>Codex、Claude 或其他有這項能力的 AI 都可以直接完成。跟它說「打開伴侶記憶匣，幫我把〇〇的對話整理成記憶（或 FIR 事件），直接寫進去。」它會打開正式網站，讀取妳已上傳的對話檔，整理後寫進記憶匣；妳不用複製指令，也不用把 AI 回覆貼回來。</p>
+        <p><strong>這次對話不能操作瀏覽器或電腦：</strong>按「複製指令」，連同對話檔一起交給 AI；它回覆後，按「貼上回覆」把整段回覆貼回記憶匣。</p>
         <p class="hint">事件會自動編號，接在目前的事件欄後面；放不下時，頁面會先問妳要改短還是開新欄。</p></div></li>
       <li><div><b>手機打開同一個網址，貼上連線碼</b><p>在電腦的「同步與備份」按「複製手機連線碼」傳給自己；手機打開同一個網址，到「同步與備份」貼上，就會看到一樣的內容。只要第一次做。</p></div></li>
       <li><div><b>在手機複製，貼進伴侶 App</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進伴侶 App。貼好後按「已轉移」，電腦那邊也會一起更新。</p></div></li>
