@@ -203,7 +203,14 @@ test.describe('使用說明', () => {
     await expect(page.locator('#flowMain')).toBeVisible();
     await expect(page.locator('#flowMain > li')).toHaveCount(6);
     await expect(page.locator('#flowMain')).toContainText('不用在手機安裝 GitHub');
+    await expect(page.locator('#flowMain')).toContainText('不想使用 GitHub 金鑰');
+    await expect(page.locator('#flowMain')).toContainText('下載備份檔');
     await expect(page.locator('#flowMain')).toContainText('貼進「卿卿我我」');
+    await page.evaluate(() => { closeSheets(); openSheet('backupSheet'); });
+    await expect(page.locator('#backupSheet')).toContainText('不是真正的私人檔案');
+    await expect(page.locator('#backupSheet')).toContainText('只保存在這台裝置的瀏覽器裡');
+    await expect(page.locator('#backupSheet')).toContainText('不會放進備份檔');
+    await expect(page.locator('#backupSheet')).toContainText('備份檔含有妳的記憶、事件和設定');
     await expect(page.locator('#tabClaude')).toHaveCount(0);
     await context.close();
   });

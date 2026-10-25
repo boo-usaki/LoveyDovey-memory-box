@@ -680,13 +680,13 @@ if (window.claude) {
     </div>
     <ol class="guide" id="flowMain">
       <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。只在這台電腦使用時，不用登入，也不用設定。</p></div></li>
-      <li><div><b>需要手機共用時，設定一次同步</b><p>到左側「同步與備份」，照步驟連上妳自己的 GitHub。GitHub 在這裡就像一個只有妳能讀取的雲端抽屜，會用一份私人 Gist 保存記憶。手機不用安裝 GitHub，也不用登入 GitHub。</p></div></li>
+      <li><div><b>決定怎麼把整理結果帶到手機</b><p>想讓手機和電腦一直保持一致，再到左側「同步與備份」設定 GitHub 同步；不想使用 GitHub 金鑰也可以，等 AI 整理完後再下載備份檔搬到手機。</p></div></li>
       <li><div><b>新增伴侶，選「記憶」或「事件」</b><p>按左側「＋ 新增伴侶」輸入名字，再到伴侶頁上方填妳在這段對話裡的名字。記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情，要再選類別和日期範圍。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
       <li><div><b>在網頁上傳對話檔，請 AI 整理</b>
         <p><strong>這次對話能操作瀏覽器或電腦：</strong>Codex、Claude 或其他有這項能力的 AI 都可以直接完成。跟它說「打開伴侶記憶匣，幫我把〇〇的對話整理成記憶（或 FIR 事件），直接寫進去。」它會打開正式網站，讀取妳已上傳的對話檔，整理後寫進記憶匣；妳不用複製指令，也不用把 AI 回覆貼回來。</p>
         <p><strong>這次對話不能操作瀏覽器或電腦：</strong>按「複製指令」，連同對話檔一起交給 AI；它回覆後，按「貼上回覆」把整段回覆貼回記憶匣。</p>
         <p class="hint">事件會自動編號，接在目前的事件欄後面；放不下時，頁面會先問妳要改短還是開新欄。</p></div></li>
-      <li><div><b>讓手機看到同一份內容</b><p>先在電腦網頁的「同步與備份」按「複製手機連線碼」，只傳給自己。接著用手機瀏覽器打開同一個正式網址，點「同步與備份」，把連線碼貼進「同步金鑰或連線碼」，再按「連線」。第一次完成後，手機與電腦就會讀取同一份私人 Gist；不用在手機安裝 GitHub，也不用登入 GitHub。</p></div></li>
+      <li><div><b>把整理結果帶到手機（二選一）</b><p><strong>想要自動同步：</strong>在電腦設定 GitHub 同步，再把「手機連線碼」貼到手機版記憶匣；不用在手機安裝 GitHub，也不用登入。<strong>不想使用 GitHub 金鑰：</strong>在電腦下載備份檔，用自己的 LINE、Discord 或其他私人方式傳到手機，再到手機版記憶匣按「還原備份」。後者只搬這一次，以後有新內容要再搬一次。</p></div></li>
       <li><div><b>在手機複製，貼進「卿卿我我」</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進「卿卿我我」。貼好後按「已轉移」，電腦那邊也會一起更新。</p></div></li>
     </ol>
     <div class="step">
@@ -737,11 +737,13 @@ if (window.claude) {
     <div class="step">
       <div class="step-title"><span class="latin">01</span>跨裝置同步</div>
       <p class="hint" id="syncIntro"></p>
+      <p class="hint"><strong>貼金鑰前先知道：</strong>金鑰只保存在這台裝置的瀏覽器裡，連線時送到 GitHub API；不會送給記憶匣作者、不會寫進 Gist，也不會放進備份檔。瀏覽器並未加密保管它；這把金鑰能讀寫妳帳號裡的 Gists，但沒有 GitHub repository 權限，請保護好使用中的裝置與瀏覽器。</p>
+      <p class="hint"><strong>同步內容的限制：</strong>Secret Gist 只是「不會出現在 GitHub 公開列表和搜尋裡」，不是真正的私人檔案；拿到那份 Gist 網址的人仍能看到內容。非常敏感的內容建議不要開啟同步，改用本機與自行保管的備份。<a href="https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists" target="_blank" rel="noopener">查看 GitHub 官方說明</a></p>
       <div id="ghSetup" hidden>
         <ol class="guide small">
           <li><div><b>到 GitHub 產生同步金鑰</b><p>登入 GitHub 後打開 <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%E4%BC%B4%E4%BE%B6%E8%A8%98%E6%86%B6%E5%8C%A3" target="_blank" rel="noopener">這個連結</a>，權限已經只勾好「gist」。<code>Expiration</code> 是有效期限：<code>7 / 30 / 60 / 90 days</code> 是幾天後到期，<code>Custom</code> 是自選日期，<code>No expiration</code> 是永不過期。建議選 <code>90 days</code>；到期後再產生一組新的即可。最後按頁面最下面的 <code>Generate token</code>（產生金鑰）。</p></div></li>
-          <li><div><b>貼到下面按「連線」</b><p>複製 ghp_ 開頭的那串。頁面會在妳的 GitHub 建一份私人 Gist 存記憶。</p></div></li>
-          <li><div><b>讓手機看到同一份內容</b><p>電腦連線後按「複製手機連線碼」，只傳給自己。接著用手機瀏覽器打開記憶匣，點「同步與備份」，把連線碼貼進下面的「同步金鑰或連線碼」，再按「連線」。手機不用安裝 GitHub App，也不用登入 GitHub。</p></div></li>
+          <li><div><b>貼到下面按「連線」</b><p>複製 ghp_ 開頭的那串。頁面會在妳的 GitHub 建一份不公開列出的 Secret Gist 存記憶。</p></div></li>
+          <li><div><b>讓手機看到同一份內容</b><p>電腦連線後按「複製手機連線碼」。接著用手機瀏覽器打開記憶匣，點「同步與備份」，把連線碼貼進下面的「同步金鑰或連線碼」，再按「連線」。手機不用安裝 GitHub App，也不用登入 GitHub。</p></div></li>
         </ol>
         <div class="row">
           <label for="ghToken">同步金鑰或連線碼
@@ -757,8 +759,7 @@ if (window.claude) {
           <button class="btn" id="ghCopyCode">複製手機連線碼</button>
           <button class="btn danger" id="ghDisconnect">中斷連線</button>
         </div>
-        <p class="hint">連線碼等同金鑰。可以暫時傳到只有自己看得到的 LINE／Discord 私人訊息，但連線碼仍會經過並可能留存在該服務；手機貼好後請刪除，不要貼到群組或公開頻道。借別人的電腦用完，記得按「中斷連線」。</p>
-        <p class="hint">不想傳連線碼，可以改用下方的「下載備份」與「還原備份」搬到手機；這是一次性搬運，之後不會自動同步。</p>
+        <p class="hint">手機連線碼裡含有同一把金鑰，安全性等同金鑰；不要貼到群組、公開頻道或交給別人。「中斷連線」只刪除這台裝置瀏覽器裡的金鑰；裝置遺失或懷疑外洩時，還要到 GitHub 刪除那把金鑰，才能讓它失效。</p>
       </div>
       <p class="result" id="syncResult" role="status"></p>
     </div>
@@ -766,6 +767,7 @@ if (window.claude) {
       <div class="step-title"><span class="latin">02</span>備份</div>
       <p class="hint" id="backupHint">記憶只存在這個瀏覽器裡，換裝置或清除瀏覽器資料就會不見。定期備份比較安心。</p>
       <p class="hint">備份包含全部記憶、事件、事件欄、伴侶設定、記憶與事件格式和 AI 指令的修改；不含上傳的對話檔。</p>
+      <p class="hint"><strong>不想使用 GitHub 金鑰？</strong>AI 整理完成後，在電腦按「下載備份檔」，把 `.json` 檔用自己的 LINE、Discord 或其他私人方式傳到手機；手機打開正式網站，到「同步與備份 → 還原備份 → 選擇備份檔」。這是一次性搬運，以後有新內容要再搬一次。備份檔含有妳的記憶、事件和設定，請依自己的隱私需求選擇傳送方式。</p>
       <div class="row-actions">
         <button class="btn primary" id="copyBackup">複製備份內容</button>
         <button class="btn" id="downloadBackup">下載備份檔</button>
