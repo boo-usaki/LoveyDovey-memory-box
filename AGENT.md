@@ -67,8 +67,12 @@
 1. `memoryShelf.setEventRange("伴侶名字", "FIR", "2026-02-01", "2026-02-20")` 設定日期範圍（「到」可以留空）
 2. `memoryShelf.eventPrompt("伴侶名字", "FIR")` 取得事件指令 —— 以這份為準
 3. `await memoryShelf.readFile("伴侶名字")` 讀對話檔，照指令整理成 JSON 陣列
-4. `memoryShelf.importEvents(JSON, "伴侶名字", "FIR")` 寫入。編號（[FIR-05-03] 這種）頁面會自動接續，一欄滿了會自動開新的一欄
-5. `memoryShelf.events("伴侶名字", "FIR")` 查看結果
+4. `memoryShelf.importEvents(JSON, "伴侶名字", "FIR")` 寫入。編號（[FIR-05-03] 這種）頁面會自動接續
+5. 回傳裡有 `pending`，代表下一則放不下這一欄。**先問使用者**要怎麼處理（`pending.ask` 有寫好的問句），不要自己決定：
+   - 改短一點擠進這欄：照 `pending.room` 的字數把那一則精簡，呼叫 `memoryShelf.resolveEventOverflow("fit", 精簡後的文字)`（第一行保留標題行）
+   - 開新的一欄：呼叫 `memoryShelf.resolveEventOverflow("new")`
+   回傳如果又有 `pending`，就再問一次
+6. `memoryShelf.events("伴侶名字", "FIR")` 查看結果
 
 事件 JSON 的格式：
 
