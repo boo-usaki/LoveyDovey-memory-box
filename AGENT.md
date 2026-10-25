@@ -59,3 +59,31 @@
 5. `memoryShelf.importMemories(JSON, "伴侶名字")` 寫入，回傳新增筆數與最新進度
 
 不能執行程式的話：在伴侶頁面按「貼上回覆」，把 JSON 貼進輸入框按「匯入」。
+
+### 整理事件
+
+使用者請你整理「事件」（例如 FIR、EV、DIA）時：
+
+1. `memoryShelf.setEventRange("伴侶名字", "FIR", "2026-02-01", "2026-02-20")` 設定日期範圍（「到」可以留空）
+2. `memoryShelf.eventPrompt("伴侶名字", "FIR")` 取得事件指令 —— 以這份為準
+3. `await memoryShelf.readFile("伴侶名字")` 讀對話檔，照指令整理成 JSON 陣列
+4. `memoryShelf.importEvents(JSON, "伴侶名字", "FIR")` 寫入。編號（[FIR-05-03] 這種）頁面會自動接續，一欄滿了會自動開新的一欄
+5. `memoryShelf.events("伴侶名字", "FIR")` 查看結果
+
+事件 JSON 的格式：
+
+```json
+[
+  {
+    "companion": "伴侶名字",
+    "category": "FIR",
+    "date": "2026-02-13",
+    "keywords": "關鍵字1、關鍵字2",
+    "fields": {
+      "時間": "2026/02/13 晚上",
+      "地點": "……",
+      "細節": ["……", "名字：「……」"]
+    }
+  }
+]
+```

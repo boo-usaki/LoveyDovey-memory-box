@@ -273,6 +273,40 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
   dl.fields dt { margin-top: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+/* Events */
+.tab-seg { align-self: flex-start; }
+.ev-cats button { font-family: var(--f-latin); letter-spacing: .08em; padding: 3px 12px; }
+.ev-status { font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+input[type="date"] { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); padding: 5px 10px; font: inherit; font-size: 13.5px; color: inherit; }
+.row > label input[type="date"] { width: 100%; padding: 8px 12px; font-size: 14px; }
+.ev-slot-form { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 12px; border: 1px dashed var(--line); background: var(--surface); }
+.slot .slot-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 16px; align-items: flex-start; }
+.slot .slot-head .row-actions { justify-content: flex-end; }
+.slot-sub { font-size: 13px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.slot-usage { display: flex; flex-direction: column; gap: 6px; }
+.slot-usage .count { margin-right: 0; align-self: flex-start; }
+.meter { height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--pink); border-radius: inherit; }
+.meter.over i { background: var(--pink-ink); }
+.slot-note { margin: 0; font-size: 12.5px; color: var(--pink-ink); background: var(--pink-soft); border-radius: 10px; padding: 6px 12px; }
+.ev-items { display: flex; flex-direction: column; gap: 10px; }
+.ev-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 10px; display: flex; flex-direction: column; gap: 8px; background: var(--bg); }
+.ev-item.done { opacity: .65; }
+.ev-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ev-code { font-family: var(--f-latin); font-size: 12.5px; letter-spacing: .06em; color: var(--pink-ink); font-variant-numeric: tabular-nums; }
+.ev-kw { font-weight: 700; font-size: 15px; }
+dl.ev-fields { grid-template-columns: 5em minmax(0, 1fr); }
+.ev-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 2px; }
+.ev-list li::marker { color: var(--faint); }
+.ev-item .actions { padding-block: 8px 0; }
+.ev-item textarea { background: var(--surface); }
+.ev-preview { margin: 0; white-space: pre-wrap; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; color: var(--ink); }
+@media (max-width: 760px) {
+  .slot { padding: 16px; }
+  dl.ev-fields { grid-template-columns: minmax(0, 1fr); }
+  .ev-item { padding: 12px 12px 10px; }
+}
 .credit .credit-sub { margin-top: 4px; font-size: 9.5px; color: var(--faint); }
 
 /* Palette: 法式桃紅 — all white, sky-blue lines, rose-pink text, tinted page (always light) */
@@ -342,7 +376,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
 </head>
 <body>
 
-<p class="sr-only" id="agentNote">給 AI agent：這個頁面提供 window.memoryShelf，可以呼叫 help() 看用法。整理流程：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新對話檔、照指令整理成 JSON，再用 importMemories(JSON) 寫入。不能執行程式的話，也可以按畫面上伴侶頁面的「貼上回覆」，把 JSON 貼進輸入框按「匯入」。如果你是 Claude、能用 ArtifactData 寫入這個頁面：每則記憶寫成 collection「data/users/me/shelf/memories」裡的一份文件（id 用 m 開頭的英數字），欄位是 companion、seq、rounds（例如 "11-20"）、until、title、fields（欄位名稱照格式寫，含 {伴侶}、{我}）、transferred:false、updatedAt（毫秒時間戳）；整理指令、格式和進度可在「data/users/me/settings」讀到，進度會依 rounds 自動往前。</p>
+<p class="sr-only" id="agentNote">給 AI agent：這個頁面提供 window.memoryShelf，可以呼叫 help() 看用法。整理流程：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新對話檔、照指令整理成 JSON，再用 importMemories(JSON) 寫入。不能執行程式的話，也可以按畫面上伴侶頁面的「貼上回覆」，把 JSON 貼進輸入框按「匯入」。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續。如果你是 Claude、能用 ArtifactData 寫入這個頁面：每則記憶寫成 collection「data/users/me/shelf/memories」裡的一份文件（id 用 m 開頭的英數字），欄位是 companion、seq、rounds（例如 "11-20"）、until、title、fields（欄位名稱照格式寫，含 {伴侶}、{我}）、transferred:false、updatedAt（毫秒時間戳）；整理指令、格式和進度可在「data/users/me/settings」讀到，進度會依 rounds 自動往前。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -376,6 +410,10 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
           <h1 id="who">伴侶記憶匣</h1>
           <div class="stats" id="progressText"></div>
         </div>
+        <div class="seg tab-seg" role="group" aria-label="記憶或事件" id="tabSeg" hidden>
+          <button type="button" id="tabMem" aria-pressed="true">記憶</button>
+          <button type="button" id="tabEv" aria-pressed="false">事件</button>
+        </div>
       </div>
 
       <div class="settings-box" id="companionSettings" hidden>
@@ -383,7 +421,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
           <label for="panelUserName">妳在這段對話裡的名字</label>
           <input type="text" id="panelUserName">
         </div>
-        <div class="set-row">
+        <div class="set-row mem-only">
           <span class="set-label">接續方式</span>
           <div class="seg" role="group" aria-label="接續方式">
             <button type="button" id="modeRounds" aria-pressed="true">用輪數</button>
@@ -391,11 +429,42 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
           </div>
           <span class="muted" id="modeHint"></span>
         </div>
-        <div class="set-row">
+        <div class="set-row mem-only">
           <label for="progRound">已整理到第幾輪</label>
           <input type="number" id="progRound" min="0">
           <label for="progDate" id="progDateLabel" class="inline">已整理到哪一天 <input type="date" id="progDate"></label>
           <button class="btn primary" type="button" id="saveProgress">儲存進度</button>
+        </div>
+        <div class="set-row ev-only" hidden>
+          <span class="set-label">事件代號</span>
+          <div class="seg ev-cats" role="group" aria-label="事件代號" id="evCats"></div>
+          <span class="muted" id="evCatHint"></span>
+        </div>
+        <div class="set-row ev-only" hidden>
+          <span class="set-label">整理範圍</span>
+          <label class="inline">從 <input type="date" id="evFrom"></label>
+          <label class="inline">到 <input type="date" id="evTo"></label>
+          <span class="muted">「到」空白就是到對話檔最後</span>
+        </div>
+        <div class="set-row ev-only" hidden>
+          <span class="set-label">目前事件欄</span>
+          <span class="ev-status" id="evSlotStatus"></span>
+          <button class="linkish" type="button" id="evSlotSetup">接續 app 裡的事件欄</button>
+        </div>
+        <div class="ev-slot-form" id="evSlotForm" hidden>
+          <p class="hint">卿卿我我裡已經有寫到一半的事件欄，就把那一欄的內文整段貼上，頁面會自動算出已用字數和下一個編號。</p>
+          <div class="row">
+            <label for="evSlotNo">欄號
+              <input type="number" id="evSlotNo" min="1" placeholder="例如 5">
+            </label>
+            <label for="evSlotStart">這欄的開始日期
+              <input type="date" id="evSlotStart">
+            </label>
+          </div>
+          <label class="hint" for="evSlotBase">那一欄目前的內文（選填）</label>
+          <textarea id="evSlotBase" rows="6" class="mono" placeholder="[FIR-05-01] 關鍵字&#10;時間：&#10;地點：&#10;細節：&#10;- ……"></textarea>
+          <div class="row-actions"><button class="btn primary" type="button" id="evSlotSave">儲存</button><button class="btn" type="button" id="evSlotCancel">取消</button></div>
+          <p class="result" id="evSlotResult" role="status"></p>
         </div>
       </div>
 
@@ -406,7 +475,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
           <span class="btn file-btn">上傳對話檔<input type="file" id="chatFile" accept=".txt,.md,.json,.html,text/plain" aria-label="上傳對話檔"></span>
         </li>
         <li class="flow-step">
-          <div class="flow-title">交給 AI 整理</div>
+          <div class="flow-title" id="flowStep2Title">交給 AI 整理</div>
           <p class="muted" id="promptNote">複製指令，連同對話檔一起交給妳的 AI。</p>
           <div class="flow-actions">
             <button class="btn primary" id="copyCompanionPrompt">複製指令</button>
@@ -415,14 +484,14 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
         </li>
         <li class="flow-step">
           <div class="flow-title">貼回 AI 的回覆</div>
-          <p class="muted">貼上後就會變成下面的記憶卡片。</p>
+          <p class="muted" id="flowStep3Note">貼上後就會變成下面的記憶卡片。</p>
           <button class="btn primary" id="importHere">貼上回覆</button>
         </li>
       </ol>
     </div>
 
     <div class="list-head" id="listHead">
-      <div class="list-title"><span class="latin">Memories</span><span class="stats" id="stats"></span></div>
+      <div class="list-title"><span class="latin" id="listLatin">Memories</span><span class="stats" id="stats"></span></div>
       <div class="seg" role="group" aria-label="顯示">
         <button id="showTodo" aria-pressed="true">待轉移</button>
         <button id="showDone" aria-pressed="false">已轉移</button>
@@ -489,6 +558,39 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
       <textarea id="extraNote" rows="2" placeholder="例如：關鍵對話最多挑三句"></textarea>
     </div>
     <div class="row-actions"><button class="btn" id="resetFormat">恢復預設格式</button></div>
+    <div class="step">
+      <div class="step-title"><span class="latin">03</span>事件格式</div>
+      <p class="hint">第一行是每則事件的編號行，{代號}、{欄號}、{則號}、{關鍵字} 會自動換掉。之後每行一個欄位；欄位名稱有「細節、經過、內容、對話」的，會變成多行的「- 」小項目。</p>
+      <textarea id="evFormatText" rows="5" class="mono"></textarea>
+      <div class="row">
+        <label for="evTitleTpl">大標
+          <input type="text" id="evTitleTpl">
+        </label>
+        <label for="evItemLimit">每則字數上限
+          <input type="number" id="evItemLimit" min="50" max="5000">
+        </label>
+        <label for="evSlotLimit">每欄內文上限
+          <input type="number" id="evSlotLimit" min="100" max="20000">
+        </label>
+        <label for="evSubtitleTpl" class="full">小標（{開始}、{結束} 會換成日期；還在寫的那欄，{結束} 是「現在」）
+          <input type="text" id="evSubtitleTpl">
+        </label>
+      </div>
+      <div class="set-row">
+        <span class="set-label">事件時間</span>
+        <div class="seg" role="group" aria-label="事件時間">
+          <button type="button" id="evTimeReal">現實時間</button>
+          <button type="button" id="evTimeStatus">狀態欄時間</button>
+        </div>
+      </div>
+      <label class="hint" for="evCatsText">事件代號（一行一個：代號｜名稱｜要記什麼）</label>
+      <textarea id="evCatsText" rows="5" class="mono"></textarea>
+      <label class="hint" for="evExtraNote">其他給 AI 的提醒（選填）</label>
+      <textarea id="evExtraNote" rows="2" placeholder="例如：細節最多寫四行"></textarea>
+      <div class="hint">預覽</div>
+      <pre class="ev-preview" id="evPreview"></pre>
+      <div class="row-actions"><button class="btn" id="resetEventFormat">恢復預設事件格式</button></div>
+    </div>
   </div>
 </div>
 
@@ -560,6 +662,9 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
         <li>妳的名字、接續方式、整理進度、AI 指令都跟著每位伴侶，各自獨立，都在伴侶頁面上方。</li>
         <li>每次都匯出完整對話就選「用輪數」接續；每次只匯出新的一段就選「用日期」。</li>
         <li>偶爾到「同步與備份」備份一份，比較安心。</li>
+        <li>伴侶頁上方可以切換「記憶｜事件」。事件：選代號（FIR、EV、DIA…）和日期範圍，複製指令交給 AI，貼回來會自動編號；一欄快滿時會自動開新的一欄，上一欄的小標也會換成結束日期。</li>
+        <li>卿卿我我裡已經有寫到一半的事件欄，在事件分頁按「接續 app 裡的事件欄」，把那一欄的內文貼上，就會接著編號。</li>
+        <li>事件的格式、大標、小標、字數上限和代號清單，都在「記憶格式與規則」最下面的「事件格式」改。</li>
       </ul>
     </div>
   </div>
@@ -630,7 +735,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
     <div class="step">
       <div class="step-title"><span class="latin">03</span>清除</div>
       <div class="row-actions">
-        <button class="btn danger" id="clearAll">清除全部記憶</button>
+        <button class="btn danger" id="clearAll">清除全部記憶與事件</button>
       </div>
       <p class="result" id="backupResult" role="status"></p>
     </div>
@@ -917,11 +1022,12 @@ const EXAMPLES = [
 
 let state = {
   memories: [],
+  events: [],
   settings: { format: DEFAULT_FORMAT, companionName: "", userName: "", roundsPer: 10, charLimit: 500, rangeNote: "", extraNote: "", customPrompt: null, promptEdits: [] },
   companions: [],
   /* companions: [{ name, userName, mode, lastRound, lastDate, promptEdits, files: [{ id, name, size, uploadedAt }] }] */
   meta: { updatedAt: 0, clearedAt: 0 },
-  current: null, view: "todo", saveOk: true
+  current: null, view: "todo", tab: "memory", saveOk: true
 };
 
 const OLD_DEFAULT_FORMAT = DEFAULT_FORMAT.replace(/^- /gm, "* ");
@@ -945,6 +1051,7 @@ function load() {
     if (raw) {
       const data = JSON.parse(raw);
       if (Array.isArray(data.memories)) state.memories = data.memories;
+      if (Array.isArray(data.events)) state.events = data.events;
       if (data.settings) state.settings = Object.assign(state.settings, migrate(data.settings));
       if (Array.isArray(data.companions)) state.companions = data.companions;
       if (data.meta) state.meta = Object.assign(state.meta, data.meta);
@@ -971,7 +1078,7 @@ function spreadGlobals() {
 let applyingRemote = false;
 function save() {
   if (!applyingRemote) { state.meta.updatedAt = Date.now(); if (typeof gistSchedule === "function") gistSchedule(); }
-  try { localStorage.setItem(STORE_KEY, JSON.stringify({ memories: state.memories, settings: state.settings, companions: state.companions, meta: state.meta })); state.saveOk = true; }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ memories: state.memories, events: state.events, settings: state.settings, companions: state.companions, meta: state.meta })); state.saveOk = true; }
   catch (e) { state.saveOk = false; }
 }
 const fields = () => parseFormat(state.settings.format);
@@ -1017,6 +1124,7 @@ function render() {
   const list = companions();
   if (!state.current || !list.some(c => c.name === state.current)) state.current = list[0] ? list[0].name : null;
 
+  $("listLatin").textContent = "Memories";
   const ul = $("companions"); ul.replaceChildren();
   for (const c of list) {
     const li = el("li"), b = el("button", "chip");
@@ -1045,6 +1153,7 @@ function render() {
     const guide = el("button", "btn", "看使用說明"); guide.onclick = () => openSheet("guideSheet");
     acts.append(add, guide); w.append(acts); box.append(w); return;
   }
+  if (state.tab === "event") { renderEventList(cur); return; }
   const items = state.memories
     .filter(m => m.companion === state.current && !!m.transferred === (state.view === "done"))
     .sort((a, b) => (a.seq || 0) - (b.seq || 0));
@@ -1159,6 +1268,14 @@ function importCore(text, fallbackCompanion) {
   return { ok: true, added, replaced, companion: state.current, lastRound: companionRecord(state.current).lastRound };
 }
 function importText(text) {
+  if (state.tab === "event") {
+    const r = importEventsCore(text, $("importCompanion").value.trim() || state.current || "");
+    if (!r.ok) { $("importResult").textContent = r.error; return; }
+    $("importResult").textContent = `匯入 ${r.added} 則` + (r.replaced ? `，更新 ${r.replaced} 則` : "") + "。"
+      + (r.opened.length ? `${r.opened.map(o => o.closed).join("、")} 滿了，開了新的一欄；記得把卿卿我我裡的小標改成「${r.opened.map(o => o.subtitle).join("」「")}」。` : "");
+    $("importText").value = "";
+    return;
+  }
   const r = importCore(text, $("importCompanion").value.trim() || state.current || "");
   if (!r.ok) { $("importResult").textContent = r.error; if (r.needsCompanion) $("importCompanion").focus(); return; }
   $("importResult").textContent = `匯入 ${r.added} 則` + (r.replaced ? `，更新 ${r.replaced} 則` : "") + "。";
@@ -1173,8 +1290,13 @@ function openSheet(id) {
   document.body.classList.add("locked");
   if (id === "formatSheet") syncFormatSheet();
   if (id === "guideSheet") renderGuideSample();
-  if (id === "promptSheet") { state.editingPrompt = false; updatePromptSheet(); }
-  if (id === "importSheet") { $("importResult").textContent = ""; $("importCompanion").value = state.current || ""; }
+  if (id === "promptSheet") { state.editingPrompt = false; state.promptKind = state.tab === "event" ? "event" : "memory"; updatePromptSheet(); }
+  if (id === "importSheet") {
+    const ev = state.tab === "event";
+    $("importResult").textContent = ""; $("importCompanion").value = state.current || "";
+    $("importTitle").textContent = ev ? `貼回 AI 整理的 ${catOf(state.current).code} 事件` : "貼回 AI 的回覆";
+    $("importText").placeholder = ev ? '[{"category": "FIR", "date": "2026-02-13", "keywords": "關鍵字", "fields": { ... }}]\n\n或\n\n[FIR-05-02] 關鍵字\n時間：……' : '[{"companion": "伴侶名字", "rounds": "1-10", "title": "標題", "fields": { ... }}]\n\n或\n\n# [標題]\n- 地點：……';
+  }
   if (id === "backupSheet") {
     $("backupResult").textContent = ""; $("syncResult").textContent = ""; disarmAll(); refreshSyncUI();
     if (gistOn()) $("backupHint").textContent = "記憶已同步到妳的 GitHub。備份是額外的保險；備份的內容可以從「貼上回覆」貼回來。";
@@ -1189,6 +1311,7 @@ function closeSheets() {
   if (lastFocus && lastFocus.focus) lastFocus.focus();
 }
 function syncFormatSheet() {
+  syncEventFormatSheet();
   $("formatText").value = state.settings.format;
   $("roundsPer").value = state.settings.roundsPer;
   $("charLimit").value = limitOf(state.settings);
@@ -1205,6 +1328,15 @@ function updatePrompt() {
   updatePromptSheet();
 }
 function updatePromptSheet() {
+  if (state.promptKind === "event" && state.current) {
+    const cat = catOf(state.current);
+    $("promptTitle").textContent = `${state.current} 的 ${cat.code} 事件指令`;
+    $("promptText").value = buildEventPrompt(state.current, cat.code);
+    $("customBadge").hidden = true;
+    $("promptHint").textContent = "依照事件格式、代號、日期範圍自動產生，直接複製就能用。想調整措辭，到「記憶格式與規則」的事件格式修改，或寫在「其他給 AI 的提醒」。";
+    $("promptText").readOnly = true; $("editPrompt").hidden = true; $("regenPrompt").hidden = true;
+    return;
+  }
   const rec = state.companions.find(x => x.name === state.current) || {};
   const edited = (rec.promptEdits || []).length > 0;
   const result = promptResult(state.current);
@@ -1289,7 +1421,8 @@ function renderCompanionPanel(cur) {
   $("who").closest(".head").hidden = !cur;
   $("listHead").hidden = !cur;
   $("companionSettings").hidden = !cur;
-  if (!cur) { $("progressText").textContent = ""; return; }
+  $("tabSeg").hidden = !cur;
+  if (!cur) { $("progressText").textContent = ""; renderEventPanel(null); return; }
   const rec = state.companions.find(x => x.name === cur.name) || { mode: "rounds", lastRound: 0, lastDate: "", files: [] };
   const prog = progressOf(cur.name), R = prog.lastRound;
   setModeButtons(rec.mode || "rounds");
@@ -1326,6 +1459,7 @@ function renderCompanionPanel(cur) {
   if (!files.length) ul.append(el("li", "muted", "還沒有上傳"));
   const latest = files[0];
   $("promptNote").textContent = latest ? `複製指令，連同 ${latest.name} 一起交給妳的 AI。` : "複製指令，連同對話檔一起交給妳的 AI。";
+  renderEventPanel(cur);
 }
 
 function setModeButtons(mode) {
@@ -1347,6 +1481,472 @@ function renderGuideSample() {
   box.append(c);
 }
 
+/* ---------- Events (事件) ----------
+   A companion has event columns per code (FIR, EV, DIA, …). Each column is one event in the
+   companion app: a big title [FIR-05], a subtitle with its date range, and a body that grows
+   by small events [FIR-05-01], [FIR-05-02] … until the body limit, then a new column opens. */
+const DEFAULT_EVENT_FORMAT = ["[{代號}-{欄號}-{則號}] {關鍵字}", "時間：", "地點：", "細節："].join("\n");
+const DEFAULT_EVENT_TITLE = "[{代號}-{欄號}]";
+const DEFAULT_EVENT_SUBTITLE = "{開始}-{結束}｜依事件地點進行已發生事件紀錄更新";
+const DEFAULT_EVENT_CATS = [
+  "FIR｜關係重大進展｜告白、承諾、吵架與和好、關係的轉折，會改變兩人關係的事",
+  "EV｜劇情進展｜主線或支線劇情的推進、重要的情節發展",
+  "DIA｜日常紀錄｜沒有重要到要寫 FIR，但希望{伴侶}記得的小事，例如誰送了誰什麼、照片放在哪裡",
+  "CS｜人物設定｜{我}的人物設定：外表、個性、喜好、習慣、身分",
+  "STORY｜人物故事｜{我}的過去和背景故事，以及和{伴侶}預設的過去關係"
+].join("\n");
+const EV_DEFAULTS = { format: DEFAULT_EVENT_FORMAT, title: DEFAULT_EVENT_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE,
+  itemLimit: 500, slotLimit: 2000, timeSource: "real", cats: DEFAULT_EVENT_CATS, extraNote: "" };
+const LIST_FIELD = /細節|經過|內容|對話|紀錄|描述|過程/;
+
+function evSet() {
+  const s = state.settings;
+  if (!s.events || typeof s.events !== "object") s.events = {};
+  for (const k of Object.keys(EV_DEFAULTS)) if (s.events[k] == null || s.events[k] === "") s.events[k] = EV_DEFAULTS[k];
+  return s.events;
+}
+const pad2 = n => String(Math.max(0, parseInt(n, 10) || 0)).padStart(2, "0");
+function isoDate(s) {
+  const m = String(s || "").match(/(\d{4})\s*[\/\-.年]\s*(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})/);
+  return m ? `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}` : "";
+}
+const slashDate = iso => iso ? iso.replace(/-/g, "/") : "";
+function addDays(iso, n) {
+  const d = new Date(iso + "T00:00:00"); if (isNaN(d)) return "";
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const liveEvents = () => state.events.filter(e => !e.deleted);
+
+function parseCats(text) {
+  const out = [];
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const parts = raw.split(/[｜|]/).map(x => x.trim());
+    const code = (parts[0] || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    if (!code || out.some(c => c.code === code)) continue;
+    out.push({ code, name: parts[1] || code, hint: parts.slice(2).join("｜") });
+  }
+  return out.length ? out : parseCats(DEFAULT_EVENT_CATS);
+}
+function parseEventFormat(text) {
+  const lines = String(text || "").split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let head = lines.find(l => /\{(代號|欄號|則號|關鍵字)\}/.test(l)) || "";
+  if (!head && lines[0] && !/[：:]\s*$/.test(lines[0])) head = lines[0];
+  if (!head) head = "[{代號}-{欄號}-{則號}] {關鍵字}";
+  const fields = [];
+  for (const l of lines) {
+    if (l === head) continue;
+    const m = l.match(/^[-*•・]?\s*(.+?)\s*[：:]\s*$/) || l.match(/^[-*•・]?\s*([^：:]{1,20}?)\s*[：:]/);
+    if (m && m[1] && !fields.some(f => f.label === m[1])) fields.push({ label: m[1], list: LIST_FIELD.test(m[1]) });
+  }
+  return { head, fields };
+}
+const evFormat = () => parseEventFormat(evSet().format);
+
+/* Turn one stored small event into the text the user pastes. */
+function eventText(ev) {
+  const fmt = evFormat(), comp = ev.companion, me = userOf(comp);
+  const head = nameLabel(fmt.head.replace(/\{代號\}/g, ev.cat || "").replace(/\{欄號\}/g, pad2(ev.slot)).replace(/\{則號\}/g, pad2(ev.idx))
+    .replace(/\{關鍵字\}/g, ev.keywords || ""), comp, me).trim();
+  const lines = [head];
+  const labels = fmt.fields.slice();
+  for (const k of Object.keys(ev.fields || {})) if (!labels.some(f => f.label === k)) labels.push({ label: k, list: LIST_FIELD.test(k) });
+  for (const f of labels) {
+    const v = (ev.fields || {})[f.label];
+    const items = (Array.isArray(v) ? v : String(v == null ? "" : v).split(/\n/)).map(x => String(x).trim().replace(/^[-*•・]\s*/, "")).filter(Boolean);
+    const name = nameLabel(f.label, comp, me);
+    if (f.list) { lines.push(name + "："); items.forEach(x => lines.push("- " + x)); }
+    else lines.push(name + "：" + items.join(" "));
+  }
+  return lines.join("\n");
+}
+
+/* Read pasted event text (from the AI or from the app) into small events. Lines starting
+   with "-" belong to the field above them, so a quote like "- 名字：「……」" stays a detail. */
+function parseEventBlocks(text) {
+  const items = []; let cur = null, key = null;
+  const push = () => { if (cur) items.push(cur); };
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const line = raw.replace(/\s+$/, "");
+    const h = line.match(/^\s*#{0,3}\s*\[([A-Za-z]+)[-－](\d+)(?:[-－](\d+))?\]\s*(.*)$/);
+    if (h) { push(); cur = { cat: h[1].toUpperCase(), slot: +h[2], idx: h[3] ? +h[3] : 0, keywords: h[4].trim(), fields: {} }; key = null; continue; }
+    if (!cur) continue;
+    const b = line.match(/^\s*[-*•・]\s*(.*)$/);
+    if (b && key) { cur.fields[key] += (cur.fields[key] ? "\n" : "") + b[1].trim(); continue; }
+    const f = line.match(/^\s*([^：:「」]{1,20}?)\s*[：:]\s*(.*)$/);
+    if (f && !b) { key = f[1].trim(); cur.fields[key] = f[2].trim(); continue; }
+    if (key && line.trim()) cur.fields[key] += (cur.fields[key] ? "\n" : "") + line.trim().replace(/^[-*•・]\s*/, "");
+  }
+  push();
+  return items;
+}
+
+function evRec(name, code) {
+  const rec = companionRecord(name);
+  if (!rec.ev || typeof rec.ev !== "object") rec.ev = {};
+  if (!rec.ev[code]) rec.ev[code] = { slots: [], from: "", to: "" };
+  if (!Array.isArray(rec.ev[code].slots)) rec.ev[code].slots = [];
+  return rec.ev[code];
+}
+const peekEv = (name, code) => (((state.companions.find(x => x.name === name) || {}).ev || {})[code]) || { slots: [], from: "", to: "" };
+const slotItems = (name, code, no) => liveEvents().filter(e => e.companion === name && e.cat === code && e.slot === no).sort((a, b) => (a.idx || 0) - (b.idx || 0));
+function slotBody(name, code, slot) {
+  return [String(slot.base || "").trim(), ...slotItems(name, code, slot.no).map(eventText)].filter(Boolean).join("\n\n");
+}
+function nextIdx(name, code, slot) {
+  return Math.max(slot.baseIdx || 0, ...slotItems(name, code, slot.no).map(e => e.idx || 0), 0) + 1;
+}
+function slotLastDate(name, code, slot) {
+  return slotItems(name, code, slot.no).reduce((d, e) => (e.date || "") > d ? e.date : d, "") || slot.start || "";
+}
+function newSlot(r) {
+  const s = { no: r.slots.reduce((n, x) => Math.max(n, x.no || 0), 0) + 1, start: "", end: "", closed: false, base: "", baseIdx: 0 };
+  r.slots.push(s); return s;
+}
+function slotTitle(code, slot) { return evSet().title.replace(/\{代號\}/g, code).replace(/\{欄號\}/g, pad2(slot.no)); }
+function slotSubtitle(slot) {
+  return evSet().subtitle.replace(/\{開始\}/g, slashDate(slot.start) || "YYYY/MM/DD").replace(/\{結束\}/g, slot.closed ? (slashDate(slot.end) || "YYYY/MM/DD") : "現在");
+}
+const slotLimit = () => Math.max(100, parseInt(evSet().slotLimit, 10) || 2000);
+const itemLimit = () => Math.max(50, parseInt(evSet().itemLimit, 10) || 500);
+function catOf(name) {
+  const cats = parseCats(evSet().cats), rec = state.companions.find(x => x.name === name) || {};
+  return cats.find(c => c.code === rec.evCat) || cats[0];
+}
+
+/* Normalise what the AI (or a person) gave back into small events. */
+function parseEventImport(text, fallbackCat) {
+  const t = stripFence(typeof text === "string" ? text : JSON.stringify(text));
+  if (!t) return { items: [], error: "沒有內容可以匯入。" };
+  const start = t.search(/^\s*[\[{]\s*["{\]]/m);
+  if (start !== -1 && !/^\s*\[[A-Za-z]+[-－]\d/.test(t)) {
+    const body = t.slice(start), end = Math.max(body.lastIndexOf("]"), body.lastIndexOf("}"));
+    let data;
+    try { data = JSON.parse(body.slice(0, end + 1)); }
+    catch (e) { return { items: [], error: "看起來是 JSON，但格式有誤，請確認是否完整複製了 AI 的回覆。" }; }
+    if (data && !Array.isArray(data)) data = Array.isArray(data.events) ? data.events : [data];
+    return { items: data.filter(x => x && typeof x === "object").map(x => {
+      const src = x.fields && typeof x.fields === "object" ? x.fields : {};
+      const fields = {};
+      for (const [k, v] of Object.entries(src)) fields[k] = Array.isArray(v) ? v.map(s => String(s).trim()).filter(Boolean).join("\n") : String(v == null ? "" : v).trim();
+      const time = fields["時間"] || x.time || "";
+      return { companion: String(x.companion || x["伴侶"] || "").trim(), cat: String(x.category || x.code || x["代號"] || fallbackCat || "").toUpperCase(),
+        keywords: String(x.keywords || x["關鍵字"] || x.title || "").trim(), date: isoDate(x.date || x["日期"] || time), fields,
+        transferred: typeof x.transferred === "boolean" ? x.transferred : undefined };
+    }) };
+  }
+  const blocks = parseEventBlocks(t);
+  if (!blocks.length) return { items: [], error: "找不到事件。JSON 請確認是陣列；文字請確認每則用 [代號-欄號-則號] 開頭。" };
+  return { items: blocks.map(b => ({ companion: "", cat: b.cat || fallbackCat, keywords: b.keywords, date: isoDate(b.fields["時間"] || ""), fields: b.fields })) };
+}
+
+/* Shared by the paste box and by agents (window.memoryShelf.importEvents). */
+function importEventsCore(text, companion, code) {
+  const name = String(companion || state.current || "").trim();
+  if (!name) return { ok: false, error: "請先選一位伴侶。" };
+  const fallback = code || catOf(name).code;
+  const { items, error } = parseEventImport(text, fallback);
+  if (error) return { ok: false, error };
+  const valid = items.filter(e => e.keywords || Object.values(e.fields).some(Boolean));
+  if (!valid.length) return { ok: false, error: "找不到事件。" };
+  const known = new Set(parseCats(evSet().cats).map(c => c.code));
+  const lim = slotLimit(), touched = [], opened = [];
+  let added = 0, replaced = 0;
+  const groups = new Map();
+  for (const e of valid) {
+    const comp = e.companion || name, cat = known.has(e.cat) ? e.cat : fallback;
+    const k = comp + "\u0000" + cat; if (!groups.has(k)) groups.set(k, []); groups.get(k).push({ ...e, companion: comp, cat });
+  }
+  for (const list of groups.values()) {
+    const comp = list[0].companion, cat = list[0].cat, r = evRec(comp, cat);
+    list.sort((a, b) => (a.date || "9999") < (b.date || "9999") ? -1 : (a.date || "9999") > (b.date || "9999") ? 1 : 0);
+    for (const e of list) {
+      const same = liveEvents().find(x => x.companion === comp && x.cat === cat && x.keywords === e.keywords && (x.date || "") === (e.date || ""));
+      if (same) {
+        same.fields = e.fields; if (typeof e.transferred === "boolean") same.transferred = e.transferred;
+        same.updatedAt = Date.now(); touched.push(same); replaced++; continue;
+      }
+      let slot = r.slots.find(s => !s.closed) || newSlot(r);
+      const probe = { ...e, slot: slot.no, idx: nextIdx(comp, cat, slot) };
+      const used = charCount(slotBody(comp, cat, slot));
+      if (used && used + 2 + charCount(eventText(probe)) > lim) {
+        slot.closed = true; slot.end = slotLastDate(comp, cat, slot) || e.date || "";
+        opened.push({ closed: slotTitle(cat, slot), subtitle: slotSubtitle(slot) });
+        slot = newSlot(r); slot.start = e.date || "";
+      }
+      if (!slot.start) slot.start = e.date || todayIso();
+      const ne = { id: "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), companion: comp, cat, slot: slot.no, idx: nextIdx(comp, cat, slot),
+        keywords: e.keywords, date: e.date || "", fields: e.fields, transferred: !!e.transferred, updatedAt: Date.now() };
+      state.events.push(ne); touched.push(ne); added++;
+    }
+    const maxDate = list.reduce((d, e) => (e.date || "") > d ? e.date : d, "");
+    const next = r.to ? addDays(r.to, 1) : (maxDate ? addDays(maxDate, 1) : r.from);
+    r.from = next || r.from; r.to = "";
+  }
+  save(); pushSettings(); syncEvents(touched);
+  state.current = valid[0].companion || name; state.tab = "event"; state.view = "todo";
+  render();
+  toast(`匯入 ${added + replaced} 則事件` + (opened.length ? `，${opened.map(o => o.closed).join("、")} 滿了，開了新的一欄` : ""));
+  return { ok: true, added, replaced, opened };
+}
+
+function buildEventPrompt(name, code) {
+  const es = evSet(), cats = parseCats(es.cats), cat = cats.find(c => c.code === code) || catOf(name);
+  const comp = (name || "").trim(), me = userOf(comp), r = peekEv(comp, cat.code);
+  const fmt = evFormat(), compWord = comp || "伴侶", meWord = me || "我";
+  const fill = s => nameLabel(s, compWord, meWord);
+  const range = r.from && r.to ? `只整理 ${slashDate(r.from)} 到 ${slashDate(r.to)}（含）之間的對話，範圍外的不要整理。`
+    : r.from ? `只整理 ${slashDate(r.from)}（含）之後的對話，前面的不要整理。`
+    : r.to ? `只整理 ${slashDate(r.to)}（含）之前的對話。` : "整理整個對話檔。";
+  const existing = liveEvents().filter(e => e.companion === comp && e.cat === cat.code).slice(-30).map(e => e.keywords).filter(Boolean);
+  const rules = [
+    comp ? `伴侶的名字是「${comp}」。` : "伴侶的名字請看檔名或對話內容。",
+    ...(me ? [`我的名字是「${me}」，對話裡的「${me}」就是我。`] : []),
+    range,
+    `這次只整理「${cat.code}｜${cat.name}」這一類：${fill(cat.hint || cat.name)}。`,
+    `不用每段對話都寫，只挑真正重要、之後希望${compWord}記得的事。沒有就少寫，一則都沒有也可以。`,
+    "一則事件寫一件事，照時間順序排列。",
+    es.timeSource === "status"
+      ? "時間：對話裡有狀態欄的時間就照狀態欄寫；沒有的話，寫對話的現實日期加上大概的時段，例如「2026/02/13 晚上」。"
+      : "時間：寫對話的現實日期加上大概的時段，例如「2026/02/13 晚上」，日期看對話檔裡訊息的時間。",
+    `細節分成幾行，可以混合寫事情的經過和關鍵對話；對話要保留說話者的名字，格式是「名字：「……」」。沒有特別重要的對話，就只寫經過。`,
+    "細節點到為止：親密的內容只寫發生了什麼，不要寫露骨的描寫。",
+    "關鍵字挑 1～3 個能代表這件事、之後能讓人想起來的詞，用「、」分隔。",
+    `每則（包含編號、欄位名稱、標點）不超過 ${itemLimit()} 字。`,
+    "只根據對話內容整理，不要自己補充或編造沒發生的事。",
+    "編號不用寫，頁面會自動接續。",
+    ...(existing.length ? [`這一類已經整理過的事件（不要重複）：${existing.join("；")}`] : []),
+    ...(es.extraNote && es.extraNote.trim() ? [es.extraNote.trim()] : [])
+  ];
+  const sampleFields = {};
+  for (const f of fmt.fields) sampleFields[fill(f.label)] = f.list ? ["……", "……"] : (f.label === "時間" ? "2026/02/13 晚上" : "……");
+  const sample = [{ companion: comp || "伴侶名字", category: cat.code, date: "YYYY-MM-DD", keywords: "關鍵字1、關鍵字2", fields: sampleFields }];
+  return [
+    `請幫我從附件中${me ? `我（${me}）` : "我"}和${comp || "伴侶"}的對話裡，整理出「${cat.name}」的事件。`,
+    "",
+    "【規則】",
+    ...rules.map((x, i) => `${i + 1}. ${x}`),
+    "",
+    "【每則事件的欄位】",
+    "- 關鍵字",
+    ...fmt.fields.map(f => `- ${fill(f.label)}${f.list ? "（分成幾行，用陣列）" : ""}`),
+    "- date：事件發生的日期（YYYY-MM-DD），頁面用來排順序和記錄整理到哪天",
+    "",
+    "【輸出格式】",
+    "請只輸出一個 JSON 陣列，不要加任何說明文字，格式如下：",
+    JSON.stringify(sample, null, 2)
+  ].join("\n");
+}
+
+/* ----- Event tab: settings rows and the list ----- */
+function renderEventPanel(cur) {
+  const ev = state.tab === "event";
+  document.querySelectorAll("#companionSettings .mem-only").forEach(n => n.hidden = ev);
+  document.querySelectorAll("#companionSettings .ev-only").forEach(n => n.hidden = !ev);
+  $("tabMem").setAttribute("aria-pressed", String(!ev));
+  $("tabEv").setAttribute("aria-pressed", String(ev));
+  $("flowStep2Title").textContent = ev ? "交給 AI 整理事件" : "交給 AI 整理";
+  $("flowStep3Note").textContent = ev ? "貼上後會自動編號，接在目前的事件欄後面。" : "貼上後就會變成下面的記憶卡片。";
+  if (!ev) $("evSlotForm").hidden = true;
+  if (!ev || !cur) return;
+  const cats = parseCats(evSet().cats), cat = catOf(cur.name), r = peekEv(cur.name, cat.code);
+  const seg = $("evCats"); seg.replaceChildren();
+  for (const c of cats) {
+    const b = el("button", null, c.code); b.type = "button"; b.title = c.name;
+    b.setAttribute("aria-pressed", String(c.code === cat.code));
+    b.onclick = () => { companionRecord(cur.name).evCat = c.code; $("evSlotForm").hidden = true; save(); pushSettings(); render(); };
+    seg.append(b);
+  }
+  $("evCatHint").textContent = `${cat.name}：${nameLabel(cat.hint || "", cur.name, userOf(cur.name))}`;
+  if (document.activeElement !== $("evFrom")) $("evFrom").value = r.from || "";
+  if (document.activeElement !== $("evTo")) $("evTo").value = r.to || "";
+  const slot = r.slots.find(s => !s.closed);
+  const lim = slotLimit();
+  if (slot) {
+    const used = charCount(slotBody(cur.name, cat.code, slot));
+    $("evSlotStatus").textContent = `${slotTitle(cat.code, slot)} · ${slotSubtitle(slot).split("｜")[0]} · 已用 ${used} / ${lim} 字 · 下一則 [${cat.code}-${pad2(slot.no)}-${pad2(nextIdx(cur.name, cat.code, slot))}]`;
+  } else {
+    const nextNo = r.slots.reduce((n, x) => Math.max(n, x.no || 0), 0) + 1;
+    $("evSlotStatus").textContent = `還沒有進行中的事件欄，下一則會從 [${cat.code}-${pad2(nextNo)}-01] 開始`;
+  }
+  const parts = [];
+  parts.push(userOf(cur.name) ? `妳是 ${userOf(cur.name)}` : "還沒填妳的名字");
+  parts.push(r.from ? `${cat.code} 下次從 ${slashDate(r.from)} 開始` : `${cat.code} 還沒整理過`);
+  $("progressText").textContent = parts.join(" · ");
+  const latest = (companionRecord(cur.name).files || []).slice().sort((a, b) => a.uploadedAt < b.uploadedAt ? 1 : -1)[0];
+  $("promptNote").textContent = latest ? `複製 ${cat.code} 的事件指令，連同 ${latest.name} 一起交給妳的 AI。` : `複製 ${cat.code} 的事件指令，連同對話檔一起交給妳的 AI。`;
+}
+
+function renderEventList(cur) {
+  const cat = catOf(cur.name), r = peekEv(cur.name, cat.code);
+  const mine = liveEvents().filter(e => e.companion === cur.name && e.cat === cat.code);
+  const todo = mine.filter(e => !e.transferred).length;
+  $("listLatin").textContent = "Events";
+  $("stats").textContent = `${cat.code} · 待轉移 ${todo} · 已轉移 ${mine.length - todo}` + (state.saveOk ? "" : " · 這個瀏覽器無法儲存，關掉頁面後事件會消失");
+  const box = $("cards"); box.replaceChildren();
+  const done = state.view === "done";
+  const slots = r.slots.slice().sort((a, b) => b.no - a.no).filter(s => {
+    const items = slotItems(cur.name, cat.code, s.no);
+    if (done) return items.some(e => e.transferred);
+    return !s.closed || items.some(e => !e.transferred);
+  });
+  if (!slots.length) {
+    const e = el("div", "empty panel");
+    if (done) e.append(el("strong", null, "還沒有轉移過的事件"), document.createTextNode("按下事件上的「已轉移」，它就會收到這裡。"));
+    else if (!mine.length) e.append(el("strong", null, `${cur.name} 還沒有 ${cat.code} 事件`), document.createTextNode("選好日期範圍，照上面 1、2、3 走完，事件就會出現在這裡。"));
+    else e.append(el("strong", null, "全部轉移完了"), document.createTextNode(`${cur.name} 的 ${cat.code} 事件都搬過去囉。`));
+    box.append(e); return;
+  }
+  for (const s of slots) box.append(slotCard(cur.name, cat.code, s, done));
+}
+
+function slotCard(name, code, slot, done) {
+  const c = el("article", "card panel slot" + (slot.closed ? " closed" : ""));
+  const lim = slotLimit(), body = slotBody(name, code, slot), used = charCount(body);
+  const head = el("div", "slot-head"), left = el("div", "card-top");
+  const eb = el("div", "eyebrow");
+  eb.append(el("span", "latin", "Event · " + code), el("span", null, slot.closed ? "已滿" : "進行中"));
+  left.append(eb, el("h2", null, slotTitle(code, slot)), el("div", "slot-sub", slotSubtitle(slot)));
+  const btns = el("div", "row-actions");
+  const ct = el("button", "btn", "複製大標"); ct.onclick = () => copyText(slotTitle(code, slot), ct, "複製大標");
+  const cs = el("button", "btn", "複製小標"); cs.onclick = () => copyText(slotSubtitle(slot), cs, "複製小標");
+  const cb = el("button", "btn", "複製整欄內文"); cb.onclick = () => copyText(body, cb, "複製整欄內文");
+  btns.append(ct, cs, cb);
+  if (!slot.closed) {
+    const end = el("button", "btn danger", "結束這欄");
+    armButton(end, "結束這欄", "再按一次，下一則開新欄", () => {
+      slot.closed = true; slot.end = slotLastDate(name, code, slot) || todayIso(); save(); pushSettings(); render();
+      toast(`${slotTitle(code, slot)} 結束了，記得把小標改成結束日期`);
+    });
+    btns.append(end);
+  }
+  head.append(left, btns);
+  const meter = el("div", "meter" + (used > lim ? " over" : "")), bar = el("i");
+  bar.style.width = Math.min(100, Math.round(used / lim * 100)) + "%"; meter.append(bar);
+  const usage = el("div", "slot-usage");
+  usage.append(meter, el("span", "count" + (used > lim ? " over" : ""), `內文 ${used} / ${lim} 字` + (slot.base ? ` · 含 app 裡原有的 ${charCount(String(slot.base).trim())} 字` : "")));
+  c.append(head, usage);
+  if (slot.closed) c.append(el("p", "slot-note", `這欄已滿：卿卿我我裡的小標要改成「${slotSubtitle(slot)}」，再用「複製大標／小標」開下一欄。`));
+  const list = el("div", "ev-items");
+  for (const e of slotItems(name, code, slot.no)) if (!!e.transferred === done) list.append(eventItem(e));
+  c.append(list);
+  return c;
+}
+
+function eventItem(e) {
+  const w = el("div", "ev-item" + (e.transferred ? " done" : ""));
+  const text = eventText(e), n = charCount(text), lim = itemLimit();
+  const view = () => {
+    w.replaceChildren();
+    const top = el("div", "ev-top");
+    top.append(el("span", "ev-code", `[${e.cat}-${pad2(e.slot)}-${pad2(e.idx)}]`), el("span", "ev-kw", e.keywords || "（沒有關鍵字）"));
+    const dl = el("dl", "fields ev-fields");
+    const fmt = evFormat(), labels = fmt.fields.slice();
+    for (const k of Object.keys(e.fields || {})) if (!labels.some(f => f.label === k)) labels.push({ label: k, list: LIST_FIELD.test(k) });
+    for (const f of labels) {
+      const v = String((e.fields || {})[f.label] || "").trim(); if (!v) continue;
+      const dd = el("dd");
+      if (f.list) { const ul = el("ul", "ev-list"); v.split(/\n/).map(x => x.replace(/^[-*•・]\s*/, "").trim()).filter(Boolean).forEach(x => ul.append(el("li", null, x))); dd.append(ul); }
+      else dd.textContent = v;
+      dl.append(el("dt", null, nameLabel(f.label, e.companion, userOf(e.companion))), dd);
+    }
+    const act = el("div", "actions");
+    act.append(el("span", "count" + (n > lim ? " over" : ""), n > lim ? `${n} / ${lim} 字 · 超過上限` : `${n} / ${lim} 字`));
+    const ed = el("button", "btn", "編輯"); ed.onclick = edit;
+    const mv = el("button", "btn", e.transferred ? "移回待轉移" : "已轉移");
+    mv.onclick = () => setEventTransferred(e, !e.transferred);
+    const cp = el("button", "btn primary", "複製這則"); cp.onclick = () => copyText(text, cp, "複製這則");
+    act.append(ed, mv, cp);
+    w.append(top, dl, act);
+  };
+  const edit = () => {
+    w.replaceChildren();
+    const ta = el("textarea", "mono"); ta.rows = Math.min(16, text.split("\n").length + 2); ta.value = text;
+    const act = el("div", "actions");
+    const del = el("button", "btn danger", "刪除");
+    armButton(del, "刪除", "再按一次確認刪除", () => {
+      e.deleted = true; e.updatedAt = Date.now(); save(); syncEvents([e]); render(); toast("刪除了一則事件");
+    });
+    const cancel = el("button", "btn", "取消"); cancel.onclick = view;
+    const ok = el("button", "btn primary", "儲存");
+    ok.onclick = () => {
+      const b = parseEventBlocks(ta.value)[0];
+      if (!b) { toast("第一行要保留 [代號-欄號-則號] 編號"); return; }
+      e.keywords = b.keywords; e.fields = b.fields;
+      const d = isoDate(b.fields["時間"] || ""); if (d) e.date = d;
+      e.updatedAt = Date.now(); save(); syncEvents([e]); render(); toast("已儲存");
+    };
+    act.append(del, el("span", "count"), cancel, ok);
+    w.append(ta, act); ta.focus();
+  };
+  view();
+  return w;
+}
+
+function setEventTransferred(e, value) {
+  const prev = !!e.transferred;
+  e.transferred = value; e.updatedAt = Date.now(); save(); render(); syncEvents([e]);
+  if (value) toast(`[${e.cat}-${pad2(e.slot)}-${pad2(e.idx)}] 已轉移`, () => setEventTransferred(e, prev));
+}
+
+/* Continue from what is already in the companion app. */
+function saveSlotSetup() {
+  const name = state.current; if (!name) return;
+  const code = catOf(name).code, r = evRec(name, code);
+  const base = $("evSlotBase").value.trim();
+  const blocks = parseEventBlocks(base).filter(b => !b.cat || b.cat === code);
+  let no = parseInt($("evSlotNo").value, 10) || (blocks.length ? blocks[blocks.length - 1].slot : 0);
+  if (!no) { $("evSlotResult").textContent = "請填欄號，或貼上 app 裡那一欄的內文。"; return; }
+  let start = $("evSlotStart").value || "";
+  if (!start) { const d = blocks.map(b => isoDate(b.fields["時間"] || "")).filter(Boolean).sort()[0]; if (d) start = d; }
+  const baseIdx = blocks.filter(b => b.slot === no).reduce((m, b) => Math.max(m, b.idx || 0), 0);
+  const open = r.slots.find(s => !s.closed);
+  if (open && !slotItems(name, code, open.no).length) r.slots = r.slots.filter(s => s !== open);
+  else if (open) { open.closed = true; open.end = slotLastDate(name, code, open) || ""; }
+  r.slots = r.slots.filter(s => s.no !== no || slotItems(name, code, s.no).length);
+  r.slots.push({ no, start, end: "", closed: false, base, baseIdx });
+  const lastBase = blocks.map(b => isoDate(b.fields["時間"] || "")).filter(Boolean).sort().pop();
+  if (lastBase && (!r.from || r.from <= lastBase)) r.from = addDays(lastBase, 1);
+  else if (!r.from && start) r.from = start;
+  save(); pushSettings();
+  $("evSlotForm").hidden = true; $("evSlotBase").value = ""; $("evSlotResult").textContent = "";
+  render();
+  toast(`接續 ${code}-${pad2(no)}，下一則是 [${code}-${pad2(no)}-${pad2(baseIdx + 1)}]`);
+}
+
+function syncEventFormatSheet() {
+  const es = evSet();
+  $("evFormatText").value = es.format;
+  $("evTitleTpl").value = es.title;
+  $("evSubtitleTpl").value = es.subtitle;
+  $("evItemLimit").value = itemLimit();
+  $("evSlotLimit").value = slotLimit();
+  $("evCatsText").value = es.cats;
+  $("evExtraNote").value = es.extraNote || "";
+  $("evTimeReal").setAttribute("aria-pressed", String(es.timeSource !== "status"));
+  $("evTimeStatus").setAttribute("aria-pressed", String(es.timeSource === "status"));
+  updateEventPreview();
+}
+function updateEventPreview() {
+  const comp = state.current || "伴侶";
+  const sample = { companion: comp, cat: parseCats(evSet().cats)[0].code, slot: 5, idx: 2, keywords: "關鍵字", fields: {} };
+  for (const f of evFormat().fields) sample.fields[f.label] = f.list ? "……\n……" : (f.label === "時間" ? "2026/02/13 晚上" : "……");
+  $("evPreview").textContent = slotTitle(sample.cat, { no: 5 }) + "\n" + slotSubtitle({ start: "2026-02-01", closed: false }) + "\n\n" + eventText(sample);
+}
+function onEventSettingsInput() {
+  const es = evSet();
+  es.format = $("evFormatText").value || DEFAULT_EVENT_FORMAT;
+  es.title = $("evTitleTpl").value || DEFAULT_EVENT_TITLE;
+  es.subtitle = $("evSubtitleTpl").value || DEFAULT_EVENT_SUBTITLE;
+  es.itemLimit = Math.max(50, parseInt($("evItemLimit").value, 10) || 500);
+  es.slotLimit = Math.max(100, parseInt($("evSlotLimit").value, 10) || 2000);
+  es.cats = $("evCatsText").value || DEFAULT_EVENT_CATS;
+  es.extraNote = $("evExtraNote").value;
+  updateEventPreview();
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); pushSettings(); }, 400);
+}
+
 /* ---------- For AI agents working in the browser ----------
    A browser agent can call these from the page's console, or use the buttons on screen. */
 window.memoryShelf = {
@@ -1357,7 +1957,11 @@ window.memoryShelf = {
       "prompt(companion) → 這位伴侶的整理指令（已含名字與進度）",
       "readFile(companion, fileId?) → 對話檔內容（不給 fileId 就讀最新上傳的）",
       "importMemories(jsonOrText, companion?) → 寫入記憶，回傳新增/更新筆數與最新進度",
-      "addCompanion(name, userName?) → 新增伴侶"
+      "addCompanion(name, userName?) → 新增伴侶",
+      "eventPrompt(companion, category?) → 這位伴侶某個事件代號（FIR、EV、DIA…）的整理指令（已含日期範圍）",
+      "setEventRange(companion, category, from, to) → 設定事件的整理日期範圍（YYYY-MM-DD，to 可留空）",
+      "importEvents(jsonOrText, companion?, category?) → 寫入事件，頁面自動編號、滿了自動開新欄",
+      "events(companion, category?) → 事件欄與每則事件的文字"
     ].join("\n");
   },
   list() {
@@ -1378,6 +1982,18 @@ window.memoryShelf = {
     return text;
   },
   importMemories(data, companion) { return importCore(data, companion || state.current || ""); },
+  eventPrompt(companion, category) { const n = companion || state.current; return buildEventPrompt(n, category ? String(category).toUpperCase() : catOf(n).code); },
+  setEventRange(companion, category, from, to) {
+    const n = companion || state.current, code = category ? String(category).toUpperCase() : catOf(n).code, r = evRec(n, code);
+    r.from = isoDate(from || "") || ""; r.to = isoDate(to || "") || ""; companionRecord(n).evCat = code;
+    save(); pushSettings(); render(); return { companion: n, category: code, from: r.from, to: r.to };
+  },
+  importEvents(data, companion, category) { return importEventsCore(data, companion || state.current || "", category ? String(category).toUpperCase() : undefined); },
+  events(companion, category) {
+    const n = companion || state.current, code = category ? String(category).toUpperCase() : catOf(n).code, r = peekEv(n, code);
+    return r.slots.map(s => ({ title: slotTitle(code, s), subtitle: slotSubtitle(s), closed: !!s.closed, used: charCount(slotBody(n, code, s)), limit: slotLimit(),
+      items: slotItems(n, code, s.no).map(e => ({ id: e.id, code: `${code}-${pad2(e.slot)}-${pad2(e.idx)}`, transferred: !!e.transferred, text: eventText(e) })) }));
+  },
   addCompanion(name, userName) {
     name = String(name || "").trim(); if (!name) throw new Error("需要伴侶名字");
     const r = companionRecord(name); if (userName) r.userName = String(userName).trim();
@@ -1407,7 +2023,7 @@ async function gh(path, opts) {
   return r.json();
 }
 const gistPayload = () => JSON.stringify({ app: "companion-memory-shelf", version: 1, updatedAt: state.meta.updatedAt || 0, clearedAt: state.meta.clearedAt || 0,
-  memories: state.memories, companions: state.companions, settings: state.settings });
+  memories: state.memories, events: state.events, companions: state.companions, settings: state.settings });
 async function gistRead() {
   const g = await gh("/gists/" + gist.id);
   const f = g.files && g.files[GIST_FILE];
@@ -1437,6 +2053,15 @@ function mergeRemote(remote) {
   let ahead = false;
   for (const [id, m] of byId) { const r = remoteMem.get(id); if (!r || (m.updatedAt || 0) > (r.updatedAt || 0)) { ahead = true; break; } }
   state.memories = [...byId.values()];
+  const remoteEv = new Map((remote.events || []).map(e => [e.id, e]));
+  const evById = new Map();
+  for (const e of (remote.events || []).concat(state.events)) {
+    if ((e.updatedAt || 0) < cleared) continue;
+    const cur = evById.get(e.id);
+    if (!cur || (e.updatedAt || 0) > (cur.updatedAt || 0)) evById.set(e.id, e);
+  }
+  if (!ahead) for (const [id, e] of evById) { const r = remoteEv.get(id); if (!r || (e.updatedAt || 0) > (r.updatedAt || 0)) { ahead = true; break; } }
+  state.events = [...evById.values()];
 
   const localFiles = new Map(state.companions.map(c => [c.name, c.files || []]));
   const next = [];
@@ -1448,6 +2073,7 @@ function mergeRemote(remote) {
       base.lastRound = Math.max(base.lastRound || 0, other.lastRound || 0);
       if ((other.lastDate || "") > (base.lastDate || "")) base.lastDate = other.lastDate;
       if (!base.userName && other.userName) base.userName = other.userName;
+      if (!base.ev && other.ev) base.ev = other.ev;
     }
     const ids = new Set((base.files || []).map(f => f.id));
     base.files = (base.files || []).concat(((other && other.files) || []).concat(localFiles.get(rc.name) || []).filter(f => !ids.has(f.id) && ids.add(f.id)));
@@ -1576,6 +2202,28 @@ document.querySelectorAll(".sheet-wrap").forEach(w => w.addEventListener("click"
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheets(); });
 
 $("doImport").onclick = () => importText($("importText").value);
+$("tabMem").onclick = () => { if (state.tab === "memory") return; state.tab = "memory"; disarmAll(); render(); };
+$("tabEv").onclick = () => { if (state.tab === "event") return; state.tab = "event"; disarmAll(); render(); };
+["evFrom", "evTo"].forEach(id => $(id).addEventListener("change", () => {
+  if (!state.current) return;
+  const r = evRec(state.current, catOf(state.current).code);
+  r.from = $("evFrom").value || ""; r.to = $("evTo").value || "";
+  save(); pushSettings(); render();
+}));
+$("evSlotSetup").onclick = () => {
+  const f = $("evSlotForm"); f.hidden = !f.hidden;
+  if (!f.hidden) { $("evSlotResult").textContent = ""; $("evSlotNo").value = ""; $("evSlotStart").value = ""; $("evSlotNo").focus(); }
+};
+$("evSlotSave").onclick = saveSlotSetup;
+$("evSlotCancel").onclick = () => { $("evSlotForm").hidden = true; };
+["evFormatText", "evTitleTpl", "evSubtitleTpl", "evItemLimit", "evSlotLimit", "evCatsText", "evExtraNote"].forEach(id => $(id).addEventListener("input", onEventSettingsInput));
+$("evTimeReal").onclick = () => { evSet().timeSource = "real"; syncEventFormatSheet(); save(); pushSettings(); };
+$("evTimeStatus").onclick = () => { evSet().timeSource = "status"; syncEventFormatSheet(); save(); pushSettings(); };
+$("resetEventFormat").onclick = () => {
+  const es = evSet();
+  Object.assign(es, { format: DEFAULT_EVENT_FORMAT, title: DEFAULT_EVENT_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE, itemLimit: 500, slotLimit: 2000, cats: DEFAULT_EVENT_CATS });
+  syncEventFormatSheet(); save(); pushSettings(); render(); toast("已恢復預設事件格式");
+};
 $("addCompanionBtn").onclick = () => { $("addCompanionBtn").hidden = true; $("addCompanionForm").hidden = false; $("newCompanion").focus(); };
 function addCompanion() {
   const name = $("newCompanion").value.trim();
@@ -1608,7 +2256,9 @@ $("chatFile").onchange = e => {
   r.onerror = () => toast("讀不到這個檔案");
   r.readAsText(f);
 };
-$("copyCompanionPrompt").onclick = e => copyText(currentPrompt(state.current), e.currentTarget, "複製指令");
+const panelPrompt = () => state.tab === "event" && state.current ? buildEventPrompt(state.current, catOf(state.current).code) : currentPrompt(state.current);
+const sheetPrompt = () => state.promptKind === "event" && state.current ? buildEventPrompt(state.current, catOf(state.current).code) : currentPrompt();
+$("copyCompanionPrompt").onclick = e => copyText(panelPrompt(), e.currentTarget, "複製指令");
 $("importFile").onchange = e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const r = new FileReader();
@@ -1616,7 +2266,7 @@ $("importFile").onchange = e => {
   r.onerror = () => { $("importResult").textContent = "讀不到這個檔案，請改用貼上的方式。"; };
   r.readAsText(f); e.target.value = "";
 };
-$("copyPrompt").onclick = e => copyText(currentPrompt(), e.currentTarget, "複製指令");
+$("copyPrompt").onclick = e => copyText(sheetPrompt(), e.currentTarget, "複製指令");
 $("promptText").addEventListener("input", onPromptEdit);
 $("editPrompt").onclick = () => { state.editingPrompt = true; updatePromptSheet(); $("promptText").focus(); };
 $("regenPrompt").onclick = () => {
@@ -1639,13 +2289,13 @@ function saveFile(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 $("downloadBackup").onclick = () => saveFile(`伴侶記憶備份-${new Date().toISOString().slice(0, 10)}.json`, backupJSON(), "application/json");
-$("downloadPrompt").onclick = () => saveFile("AGENT.md", currentPrompt() + "\n", "text/markdown");
+$("downloadPrompt").onclick = () => saveFile("AGENT.md", sheetPrompt() + "\n", "text/markdown");
 
-armButton($("clearAll"), "清除全部記憶", "再按一次確認全部清除", () => {
-  deleteMemories(state.memories.map(m => m.id));
+armButton($("clearAll"), "清除全部記憶與事件", "再按一次確認全部清除", () => {
+  deleteMemories(state.memories.map(m => m.id)); deleteEvents(state.events.map(e => e.id));
   state.meta.clearedAt = Date.now();
-  state.memories = []; state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; }); save(); render(); pushSettings();
-  $("backupResult").textContent = "已清除全部記憶，整理進度也歸零了。";
+  state.memories = []; state.events = []; state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; c.ev = {}; }); save(); render(); pushSettings();
+  $("backupResult").textContent = "已清除全部記憶和事件，整理進度也歸零了。";
 });
 
 render();
@@ -1677,8 +2327,18 @@ function syncMemories(list) {
   if (!remote.mem || !list.length) return;
   for (const m of list) remote.chain = remote.chain.then(() => remote.mem && remote.mem.doc(m.id).set(memBody(m))).catch(claudeSyncFailed);
 }
+const evBody = e => JSON.parse(JSON.stringify({ companion: e.companion, cat: e.cat, slot: e.slot || 0, idx: e.idx || 0, keywords: e.keywords || "", date: e.date || "",
+  fields: e.fields || {}, transferred: !!e.transferred, deleted: !!e.deleted, updatedAt: e.updatedAt || 0 }));
+function syncEvents(list) {
+  if (!remote.ev || !list.length) return;
+  for (const e of list) remote.chain = remote.chain.then(() => remote.ev && remote.ev.doc(e.id).set(evBody(e))).catch(claudeSyncFailed);
+}
+function deleteEvents(ids) {
+  if (!remote.ev || !ids.length) return;
+  for (const id of ids) remote.chain = remote.chain.then(() => remote.ev.doc(id).delete()).catch(() => {});
+}
 function claudeSyncFailed() {
-  remote.ref = null; remote.mem = null;
+  remote.ref = null; remote.mem = null; remote.ev = null;
   $("syncBadge").textContent = "只存在這個瀏覽器"; $("syncBadge").classList.remove("on");
 }
 function deleteMemories(ids) {
@@ -1745,6 +2405,27 @@ async function pushSettings() {
       const localOnly = state.memories.filter(m => !byId.has(m.id) && !remoteIds.has(m.id));
       state.memories = [...byId.values(), ...localOnly];
       qs.docs.forEach(d => remoteIds.add(d.id));
+      save(); render();
+    }, () => {});
+
+    /* Events live next to the memories. */
+    const evc = db.doc("data/users/" + id + "/shelf").collection("events");
+    const evs = await evc.get();
+    const remoteEvIds = new Set(evs.docs.map(d => d.id));
+    {
+      const byIdE = new Map(state.events.map(e => [e.id, e]));
+      for (const d of evs.docs) { const v = { ...d.data(), id: d.id }, l = byIdE.get(d.id); if (!l || (v.updatedAt || 0) >= (l.updatedAt || 0)) byIdE.set(d.id, v); }
+      state.events = [...byIdE.values()];
+    }
+    remote.ev = evc;
+    syncEvents(state.events.filter(e => !remoteEvIds.has(e.id)));
+    save(); render();
+    evc.onSnapshot(qs => {
+      if (qs.metadata.hasPendingWrites) return;
+      const byId = new Map(qs.docs.map(d => [d.id, { ...d.data(), id: d.id }]));
+      const localOnly = state.events.filter(e => !byId.has(e.id) && !remoteEvIds.has(e.id));
+      state.events = [...byId.values(), ...localOnly];
+      qs.docs.forEach(d => remoteEvIds.add(d.id));
       save(); render();
     }, () => {});
     ref.onSnapshot(sn => {
