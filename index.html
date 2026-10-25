@@ -2366,7 +2366,7 @@ function gistLoadCfg() { try { Object.assign(gist, JSON.parse(localStorage.getIt
 function gistSaveCfg() {
   try { localStorage.setItem(SYNC_KEY, JSON.stringify({ token: gist.token, id: gist.id, lastSeen: gist.lastSeen, lastPushed: gist.lastPushed, lastSyncAt: gist.lastSyncAt })); } catch (e) {}
 }
-const gistOn = () => !!gist.token && !!gist.id;
+const gistOn = () => !inClaudeViewer && !!gist.token && !!gist.id;   /* never sync from a non-official copy */
 async function gh(path, opts) {
   let r;
   try {

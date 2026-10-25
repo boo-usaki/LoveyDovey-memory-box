@@ -154,14 +154,3 @@
 使用者若已自訂格式，仍以伴侶頁面「複製指令」產生的版本為準。
 
 </details>
-
-<details>
-<summary><strong>架設自己的網址</strong></summary>
-
-1. Fork 這個 repository。
-2. 到 **Settings → Pages**。
-3. Source 選 **Deploy from a branch**。
-4. Branch 選 `main`，資料夾選 `/ (root)`，按 Save。
-5. 等一兩分鐘，GitHub Pages 會顯示妳自己的網址。
-
-</details>
