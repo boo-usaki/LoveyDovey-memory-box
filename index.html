@@ -226,7 +226,6 @@ textarea.mono { font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6;
 .guide.small b { font-size: 13.5px; }
 .sheet a { color: var(--pink-ink); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.guide-tabs { align-self: flex-start; }
 .agent-line { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
 .agent-line code { flex: 1 1 260px; min-width: 0; font-family: var(--f-body); font-size: 13px; background: var(--cream-soft); border-radius: 10px; padding: 8px 12px; white-space: pre-wrap; }
 .card.sample { background: var(--bg); padding: 16px 18px; }
@@ -384,11 +383,45 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
 .pal .name > span:first-child { white-space: nowrap; }
 .pal .on { font-size: 11.5px; color: var(--pink-ink); }
 .pal[aria-pressed="false"] .on { visibility: hidden; }
+/* Opened inside a Claude Artifact: the page only points to the official site. */
+#retiredNotice { display: none; }
+html.retired body > :not(#retiredNotice):not(script) { display: none !important; }
+html.retired #retiredNotice { display: grid; place-items: center; min-height: 100vh; padding: 24px; box-sizing: border-box; }
+.retired-card { max-width: 420px; width: 100%; padding: 28px 26px; box-sizing: border-box; }
+.retired-card h2 { font-size: 19px; font-weight: 500; margin: 4px 0 12px; letter-spacing: .06em; }
+.retired-card p { margin: 0 0 14px; line-height: 1.7; }
+.retired-card input { width: 100%; box-sizing: border-box; margin: 0 0 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk); color: var(--ink); font-size: 13px; }
+a.btn { text-decoration: none; display: inline-block; }
 </style>
 </head>
 <body>
 
-<p class="sr-only" id="agentNote">給 AI agent：這個頁面提供 window.memoryShelf，可以呼叫 help() 看用法。整理流程：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新對話檔、照指令整理成 JSON，再用 importMemories(JSON) 寫入。不能執行程式的話，也可以按畫面上伴侶頁面的「貼上回覆」，把 JSON 貼進輸入框按「匯入」。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。如果你是 Claude、能用 ArtifactData 寫入這個頁面：每則記憶寫成 collection「data/users/me/shelf/memories」裡的一份文件（id 用 m 開頭的英數字），欄位是 companion、seq、rounds（例如 "11-20"）、until、title、fields（欄位名稱照格式寫，含 {伴侶}、{我}）、transferred:false、updatedAt（毫秒時間戳）；整理指令、格式和進度可在「data/users/me/settings」讀到，進度會依 rounds 自動往前。</p>
+<div id="retiredNotice" role="alert">
+  <div class="panel retired-card">
+    <span class="dash"></span>
+    <div class="latin">Companion Memories</div>
+    <h2>伴侶記憶匣</h2>
+    <p>伴侶記憶匣只在正式網站更新，請改用正式版。</p>
+    <input id="retiredUrl" readonly value="https://boo-usaki.github.io/memory-box/" aria-label="正式版網址">
+    <div class="row-actions">
+      <a class="btn primary" id="retiredOpen" href="https://boo-usaki.github.io/memory-box/" target="_blank" rel="noopener">開啟正式版</a>
+      <button class="btn" type="button" id="retiredCopy">複製網址</button>
+    </div>
+  </div>
+</div>
+<script>
+/* 伴侶記憶匣只有一個正式版本（GitHub Pages）。在 Claude Artifact 裡打開時不啟動、不存資料，只指向正式網站。 */
+if (window.claude) {
+  document.documentElement.classList.add("retired");
+  document.getElementById("retiredCopy").onclick = function () {
+    var btn = this, url = document.getElementById("retiredUrl"), done = function () { btn.textContent = "已複製"; setTimeout(function () { btn.textContent = "複製網址"; }, 1600); };
+    var manual = function () { url.focus(); url.select(); try { if (document.execCommand("copy")) { done(); return; } } catch (e) {} btn.textContent = "請手動複製上方網址"; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url.value).then(done, manual); else manual();
+  };
+}
+</script>
+
+<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作伴侶 App。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -642,34 +675,19 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
     </div>
     <div class="step">
       <div class="step-title">先看這裡</div>
-      <p>不需要懂程式。流程就是：新增伴侶 → 選「記憶」或「事件」→ 把對話交給 AI 整理 → 複製到伴侶 App。</p>
-      <p class="hint">先選妳現在從哪裡打開記憶匣；下方只會顯示需要做的步驟。</p>
+      <p>不需要懂程式。流程是：在電腦上請 AI 整理對話 → 用手機打開同一個網址，複製貼進伴侶 App。</p>
+      <p class="hint">記憶匣只有一個正式網址：<a href="https://boo-usaki.github.io/memory-box/" target="_blank" rel="noopener">boo-usaki.github.io/memory-box</a>。電腦和手機都從這裡打開，建議加入書籤。</p>
     </div>
-    <div class="seg guide-tabs" role="group" aria-label="從哪裡使用">
-      <button type="button" id="tabClaude" aria-pressed="true">Claude 側邊欄</button>
-      <button type="button" id="tabCodex" aria-pressed="false">公開網頁</button>
-    </div>
-    <ol class="guide" id="flowClaude">
-      <li><div><b>確認這是妳自己的記憶匣</b>
-        <p>左上角已經顯示「已同步到 Claude 帳號」就可以跳到下一步。還沒有的話，只要在電腦設定一次：</p>
-        <ol class="sub">
-          <li><span id="dlSelfWrap">按這裡 <button class="linkish" id="dlSelf" type="button">下載頁面檔</button>，或</span>到 <a href="https://github.com/boo-usaki/memory-box/blob/main/index.html" target="_blank" rel="noopener">GitHub 專案頁面</a>點 <code>index.html</code>，再按右上角的下載按鈕。</li>
-          <li>開一個新的 Claude 對話，附上剛才下載的 <code>index.html</code>。</li>
-          <li>整句貼給 Claude：<span class="say">「請把附件的 index.html 發佈成我自己的 Artifact，開啟 db 和 user 功能，完成後幫我釘選到側邊欄。」</span></li>
-          <li>點開 Claude 做好的頁面卡片。左上角出現「已同步到 Claude 帳號」就完成了。</li>
-        </ol>
-        <p class="hint">Artifact、db 和 user 是給 Claude 辨認的詞，照貼即可，不需要自己理解或設定。別人分享的 Claude 頁面只能試看；要保存資料，請建立自己的那一份。</p></div></li>
-      <li><div><b>新增伴侶</b><p>按左側「＋ 新增伴侶」，輸入伴侶的名字；再到伴侶頁上方，填妳在這段對話裡的名字。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
-      <li><div><b>選擇「記憶」或「事件」</b><p>記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情。事件模式要再選類別和日期範圍。</p></div></li>
-      <li><div><b>把對話交給 Claude</b><p><strong>記憶：</strong>在伴侶頁按「複製指令」，回到 Claude 對話貼上指令、附上對話檔，再說「整理好直接寫進伴侶記憶匣」。</p><p><strong>事件：</strong>同樣把指令和對話檔交給 Claude；整理完成後，回到記憶匣按「貼上回覆」。頁面會自動編號，接在目前的事件欄後面。</p></div></li>
-      <li><div><b>複製到伴侶 App</b><p>在電腦或手機的 Claude 側邊欄打開這份記憶匣，按「複製整則」；事件則分別複製大標、小標和內文。貼好後按「已轉移」。</p></div></li>
-    </ol>
-    <ol class="guide" id="flowCodex" hidden>
-      <li><div><b>直接開始，或先設定同步</b><p>只在這個瀏覽器使用時，不用登入也不用設定同步。手機和電腦要共用同一份內容，才到左側「同步與備份」連上自己的 GitHub 私人儲存空間。</p></div></li>
-      <li><div><b>新增伴侶</b><p>按左側「＋ 新增伴侶」，輸入伴侶的名字；再到伴侶頁上方，填妳在這段對話裡的名字。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
-      <li><div><b>選擇「記憶」或「事件」</b><p>記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情。事件模式要再選類別和日期範圍。</p></div></li>
-      <li><div><b>上傳對話檔，交給 AI 整理</b><p>能操作網頁的 AI（例如 Codex）可以直接讀取並寫入，跟它說「幫我整理〇〇的對話，寫進記憶匣」即可。其他 AI 則按「複製指令」，整理完成後再按「貼上回覆」。</p></div></li>
-      <li><div><b>複製到伴侶 App</b><p>按「複製整則」；事件則分別複製大標、小標和內文。貼好後按「已轉移」。若已設定同步，手機第一次貼上連線碼後也能看到相同內容。</p></div></li>
+    <ol class="guide" id="flowMain">
+      <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。只在這台電腦使用時，不用登入，也不用設定。</p></div></li>
+      <li><div><b>需要手機共用時，設定一次同步</b><p>到左側「同步與備份」，照步驟連上妳自己的 GitHub，記憶會存進妳帳號裡的一份私人 Gist。只要在電腦設定一次。</p></div></li>
+      <li><div><b>新增伴侶，選「記憶」或「事件」</b><p>按左側「＋ 新增伴侶」輸入名字，再到伴侶頁上方填妳在這段對話裡的名字。記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情，要再選類別和日期範圍。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
+      <li><div><b>在電腦上傳對話檔，請 AI 整理</b>
+        <p><strong>能操作網頁的 AI：</strong>讓它打開這個網址，跟它說「幫我整理〇〇的對話，寫進記憶匣」，它會自己讀檔、整理、寫入。</p>
+        <p><strong>不能操作網頁的 AI：</strong>按「複製指令」，連同對話檔一起交給它；它回覆後，按「貼上回覆」貼回記憶匣。</p>
+        <p class="hint">事件會自動編號，接在目前的事件欄後面；放不下時，頁面會先問妳要改短還是開新欄。</p></div></li>
+      <li><div><b>手機打開同一個網址，貼上連線碼</b><p>在電腦的「同步與備份」按「複製手機連線碼」傳給自己；手機打開同一個網址，到「同步與備份」貼上，就會看到一樣的內容。只要第一次做。</p></div></li>
+      <li><div><b>在手機複製，貼進伴侶 App</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進伴侶 App。貼好後按「已轉移」，電腦那邊也會一起更新。</p></div></li>
     </ol>
     <div class="step">
       <div class="step-title">記憶卡片長這樣</div>
@@ -1033,7 +1051,7 @@ function applyEdits(lines, hunks) {
 }
 
 /* ---------- App ---------- */
-const inClaudeViewer = !!window.claude;
+const inClaudeViewer = !!window.claude;   /* only used to stop this page from running as a second copy */
 const STORE_KEY = "companion-memory-shelf.v1";
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
@@ -1107,6 +1125,7 @@ function spreadGlobals() {
 }
 let applyingRemote = false;
 function save() {
+  if (inClaudeViewer) return;   /* not the official site: never store anything */
   if (!applyingRemote) { state.meta.updatedAt = Date.now(); if (typeof gistSchedule === "function") gistSchedule(); }
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ memories: state.memories, events: state.events, evp: state.evp || null, settings: state.settings, companions: state.companions, meta: state.meta })); state.saveOk = true; }
   catch (e) { state.saveOk = false; }
@@ -1248,7 +1267,7 @@ function card(m, fs, opts) {
 
 function setTransferred(m, value) {
   const prev = !!m.transferred;
-  m.transferred = value; m.updatedAt = Date.now(); save(); render(); syncMemories([m]);
+  m.transferred = value; m.updatedAt = Date.now(); save(); render();
   if (value) toast(`「${m.title}」已轉移`, () => setTransferred(m, prev));
 }
 
@@ -1300,7 +1319,7 @@ function importCore(text, fallbackCompanion) {
     state.memories.push(nm); touched.push(nm);
     added++;
   }
-  save(); pushSettings(); syncMemories(touched);
+  save();
   state.current = valid[valid.length - 1].companion; state.view = "todo";
   render();
   toast(`匯入 ${added + replaced} 則記憶`);
@@ -1341,7 +1360,6 @@ function openSheet(id) {
     $("backupResult").textContent = ""; $("syncResult").textContent = ""; disarmAll(); refreshSyncUI();
     $("restoreBox").hidden = true;
     if (gistOn()) $("backupHint").textContent = "記憶已同步到妳的 GitHub。備份是額外的保險。";
-    if (remote.mem) $("backupHint").textContent = "在 Claude 裡打開時，記憶會同步到妳的帳號，電腦和手機都看得到。備份是額外的保險。";
   }
   const first = $(id).querySelector("textarea:not([readonly]), input:not([type=file]), button.primary");
   if (first) first.focus();
@@ -1408,7 +1426,7 @@ function onPromptEdit() {
   const edited = tokenize($("promptText").value, comp, me).split("\n");
   rec.promptEdits = diffLines(auto, edited);
   updatePromptSheet();
-  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); pushSettings(); }, 400);
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); }, 400);
 }
 let fmtTimer;
 function onSettingsInput() {
@@ -1418,7 +1436,7 @@ function onSettingsInput() {
   state.settings.rangeNote = $("rangeNote").value;
   state.settings.extraNote = $("extraNote").value;
   updatePrompt();
-  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); pushSettings(); }, 400);
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); }, 400);
 }
 
 /* Two-step destructive buttons (no browser dialogs). */
@@ -1484,16 +1502,14 @@ function renderCompanionPanel(cur) {
   for (const f of files) {
     const li = el("li");
     li.append(el("span", "fdate", `${fmtDate(f.uploadedAt)} 上傳`), el("span", "fname", f.name), el("span", "muted", fmtSize(f.size || 0)));
-    if (!inClaudeViewer) {
-      const dl = el("button", null, "下載"); dl.setAttribute("aria-label", `下載 ${f.name}`);
-      dl.onclick = async () => { try { const t = await fileDB.get(f.id); t ? saveFile(f.name, t, "text/plain") : toast("這個瀏覽器裡找不到檔案內容"); } catch (e) { toast("讀不到檔案內容"); } };
-      li.append(dl);
-    }
+    const dl = el("button", null, "下載"); dl.setAttribute("aria-label", `下載 ${f.name}`);
+    dl.onclick = async () => { try { const t = await fileDB.get(f.id); t ? saveFile(f.name, t, "text/plain") : toast("這個瀏覽器裡找不到檔案內容"); } catch (e) { toast("讀不到檔案內容"); } };
+    li.append(dl);
     const rm = el("button", null, "移除"); rm.setAttribute("aria-label", `移除 ${f.name}`);
     rm.onclick = () => {
       if (!rm.classList.contains("arm")) { rm.classList.add("arm"); rm.textContent = "確定移除"; setTimeout(() => { rm.classList.remove("arm"); rm.textContent = "移除"; }, 3000); return; }
       rec.files = rec.files.filter(x => x.id !== f.id); fileDB.del(f.id).catch(() => {});
-      save(); pushSettings(); render();
+      save(); render();
     };
     li.append(rm); ul.append(li);
   }
@@ -1510,7 +1526,7 @@ function setModeButtons(mode) {
 function setMode(mode) {
   const rec = companionRecord(state.current);
   if (rec.mode === mode) return;
-  rec.mode = mode; save(); pushSettings(); render();
+  rec.mode = mode; save(); render();
   toast(mode === "date" ? "改成用日期接續" : "改成用輪數接續");
 }
 
@@ -1568,8 +1584,6 @@ const getPending = () => (state.evp && state.evp.data) || null;
 function setPending(p) { state.evp = { at: Date.now(), data: p ? JSON.parse(JSON.stringify(p)) : null }; }
 function newerPending(a, b) { return ((b && b.at) || 0) > ((a && a.at) || 0) ? b : a; }
 function hashStr(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
-const stableJSON = v => JSON.stringify(v, (k, x) => x && typeof x === "object" && !Array.isArray(x)
-  ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
 function evCanonical(e) {
   const f = {}; for (const k of Object.keys(e.fields || {}).sort()) f[k] = evItems(e.fields[k]).join("\n");
   return [e.companion, e.cat, e.date || "", (e.keywords || "").trim(), JSON.stringify(f)].join("\u0001");
@@ -1847,7 +1861,7 @@ function placeQueue(queue, ctx) {
 }
 function finishPlacing(ctx, pending) {
   setPending(pending);
-  save(); pushSettings(); syncEvents(ctx.touched);
+  save();
   state.tab = "event"; state.view = "todo";
   if (pending) state.current = pending.companion;
   render();
@@ -2034,7 +2048,7 @@ function renderEventPanel(cur) {
   for (const c of cats) {
     const b = el("button", null, catLabel(c)); b.type = "button"; b.title = useCodes() ? `${c.name}：${c.hint}` : c.hint;
     b.setAttribute("aria-pressed", String(c.code === cat.code));
-    b.onclick = () => { companionRecord(cur.name).evCat = c.code; $("evSlotForm").hidden = true; save(); pushSettings(); render(); };
+    b.onclick = () => { companionRecord(cur.name).evCat = c.code; $("evSlotForm").hidden = true; save(); render(); };
     seg.append(b);
   }
   if (document.activeElement !== $("evFrom")) $("evFrom").value = r.from || "";
@@ -2131,7 +2145,7 @@ function slotCard(name, code, slot, done) {
     const foot = el("div", "slot-foot");
     const end = el("button", "linkish", "這欄先結束，下一則開新欄");
     armButton(end, "這欄先結束，下一則開新欄", "再按一次確認", () => {
-      closeSlot(name, code, slot); save(); pushSettings(); render();
+      closeSlot(name, code, slot); save(); render();
       toast(`${slotTitle(code, slot)} 結束了，記得把小標改成結束日期`);
     });
     foot.append(end); c.append(foot);
@@ -2172,7 +2186,7 @@ function eventItem(e) {
     const act = el("div", "ev-actions");
     const del = el("button", "btn sm danger", "刪除");
     armButton(del, "刪除", "再按一次確認刪除", () => {
-      e.deleted = true; e.updatedAt = Date.now(); save(); syncEvents([e]); render(); toast("刪除了一則事件");
+      e.deleted = true; e.updatedAt = Date.now(); save(); render(); toast("刪除了一則事件");
     });
     const cnt = el("span", "count"); const upd = () => { cnt.textContent = `${charCount(ta.value)} / ${lim} 字`; }; upd(); ta.addEventListener("input", upd);
     const cancel = el("button", "btn sm", "取消"); cancel.onclick = view;
@@ -2182,7 +2196,7 @@ function eventItem(e) {
       if (!b) { toast("第一行要保留事件的標題行"); return; }
       e.keywords = b.keywords || e.keywords; e.fields = b.fields;
       const d = isoDate(b.fields["時間"] || ""); if (d) e.date = d;
-      e.updatedAt = Date.now(); save(); syncEvents([e]); render(); toast("已儲存");
+      e.updatedAt = Date.now(); save(); render(); toast("已儲存");
     };
     act.append(cnt, del, cancel, ok);
     w.append(ta, act); ta.focus();
@@ -2193,7 +2207,7 @@ function eventItem(e) {
 
 function setEventTransferred(e, value) {
   const prev = !!e.transferred;
-  e.transferred = value; e.updatedAt = Date.now(); save(); render(); syncEvents([e]);
+  e.transferred = value; e.updatedAt = Date.now(); save(); render();
   if (value) toast(`「${e.keywords || "事件"}」已轉移`, () => setEventTransferred(e, prev));
 }
 
@@ -2225,7 +2239,7 @@ function saveSlotSetup() {
   const lastBase = blocks.map(b => isoDate(b.fields["時間"] || "")).filter(Boolean).sort().pop();
   if (lastBase && (!r.from || r.from <= lastBase)) r.from = addDays(lastBase, 1);
   else if (!r.from && start) r.from = start;
-  save(); pushSettings();
+  save();
   $("evSlotForm").hidden = true; $("evSlotBase").value = ""; $("evSlotResult").textContent = "";
   render();
   toast(`接續 ${slotTitle(code, { no })}，已用 ${charCount(base)} 字`);
@@ -2261,7 +2275,7 @@ function setUseCodes(on) {
   if (on) { if (es.format === PLAIN_FORMAT) es.format = CODE_FORMAT; if (es.title === PLAIN_TITLE) es.title = CODE_TITLE; }
   else { if (es.format === CODE_FORMAT) es.format = PLAIN_FORMAT; if (es.title === CODE_TITLE) es.title = PLAIN_TITLE; }
   es.useCodes = on;
-  syncEventFormatSheet(); save(); pushSettings(); render();
+  syncEventFormatSheet(); save(); render();
   toast(on ? "改成用代號編號" : "改成不用代號");
 }
 function onEventSettingsInput() {
@@ -2274,7 +2288,7 @@ function onEventSettingsInput() {
   es.cats = $("evCatsText").value || DEFAULT_EVENT_CATS;
   es.extraNote = $("evExtraNote").value;
   updateEventPreview();
-  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); pushSettings(); }, 400);
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); }, 400);
 }
 
 /* ---------- For AI agents working in the browser ----------
@@ -2326,7 +2340,7 @@ window.memoryShelf = {
     const f = isoDate(from || "") || "", t = isoDate(to || "") || "";
     if (f && t && f > t) throw new Error("「從」不能比「到」晚");
     const r = evRec(n, code); r.from = f; r.to = t; r.rangeAt = Date.now(); companionRecord(n).evCat = code;
-    save(); pushSettings(); render(); return { companion: n, category: code, from: r.from, to: r.to };
+    save(); render(); return { companion: n, category: code, from: r.from, to: r.to };
   },
   importEvents(data, companion, category, opts) { return importEventsCore(data, companion || state.current || "", category ? String(category).toUpperCase() : undefined, opts); },
   pendingEvent() { return pendingInfo(getPending()); },
@@ -2339,11 +2353,11 @@ window.memoryShelf = {
   addCompanion(name, userName) {
     name = String(name || "").trim(); if (!name) throw new Error("需要伴侶名字");
     const r = companionRecord(name); if (userName) r.userName = String(userName).trim();
-    state.current = name; save(); pushSettings(); render(); return this.list().find(c => c.name === name);
+    state.current = name; save(); render(); return this.list().find(c => c.name === name);
   }
 };
 
-/* ---------- GitHub Gist sync (when opened outside Claude) ----------
+/* ---------- GitHub Gist sync ----------
    Each person's own token (gist scope only) and a private gist in their own account. */
 const SYNC_KEY = "companion-memory-shelf.sync";
 const GIST_FILE = "memory-shelf.json", GIST_DESC = "伴侶記憶匣 sync";
@@ -2352,7 +2366,7 @@ function gistLoadCfg() { try { Object.assign(gist, JSON.parse(localStorage.getIt
 function gistSaveCfg() {
   try { localStorage.setItem(SYNC_KEY, JSON.stringify({ token: gist.token, id: gist.id, lastSeen: gist.lastSeen, lastPushed: gist.lastPushed, lastSyncAt: gist.lastSyncAt })); } catch (e) {}
 }
-const gistOn = () => !inClaudeViewer && !!gist.token && !!gist.id;
+const gistOn = () => !!gist.token && !!gist.id;
 async function gh(path, opts) {
   let r;
   try {
@@ -2480,10 +2494,6 @@ async function gistConnect(input) {
 const hhmm = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 function refreshSyncUI(busyText) {
   const badge = $("syncBadge");
-  if (inClaudeViewer) {
-    $("syncIntro").textContent = "在 Claude 裡打開時，記憶會自動同步到妳的 Claude 帳號，電腦和手機的 Claude 都看得到，不需要設定。";
-    $("ghSetup").hidden = true; $("ghLinked").hidden = true; return;
-  }
   const on = gistOn();
   $("ghSetup").hidden = on; $("ghLinked").hidden = !on;
   $("syncIntro").textContent = on
@@ -2522,25 +2532,11 @@ document.querySelectorAll(".pal").forEach(b => b.addEventListener("click", () =>
 }));
 $("openPalette").onclick = () => openSheet("paletteSheet");
 $("openGuide").onclick = () => openSheet("guideSheet");
-function setGuideTab(which) {
-  $("tabClaude").setAttribute("aria-pressed", String(which === "claude"));
-  $("tabCodex").setAttribute("aria-pressed", String(which !== "claude"));
-  $("flowClaude").hidden = which !== "claude";
-  $("flowCodex").hidden = which === "claude";
-}
-$("tabClaude").onclick = () => setGuideTab("claude");
-if (inClaudeViewer) $("dlSelfWrap").hidden = true;
-$("dlSelf").onclick = async () => {
-  try { const t = await (await fetch(location.href.split("#")[0])).text(); saveFile("index.html", t, "text/html"); }
-  catch (e) { toast("下載失敗，請改從 GitHub 下載 index.html"); }
-};
-$("tabCodex").onclick = () => setGuideTab("codex");
-setGuideTab(inClaudeViewer ? "claude" : "codex");
 $("viewCompanionPrompt").onclick = () => openSheet("promptSheet");
 $("panelUserName").addEventListener("input", () => {
   if (!state.current) return;
   companionRecord(state.current).userName = $("panelUserName").value;
-  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); pushSettings(); render(); }, 500);
+  clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); }, 500);
 });
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = closeSheets);
 document.querySelectorAll(".sheet-wrap").forEach(w => w.addEventListener("click", e => { if (e.target === w) closeSheets(); }));
@@ -2553,7 +2549,7 @@ $("tabEv").onclick = () => { if (state.tab === "event") return; state.tab = "eve
   if (!state.current) return;
   const r = evRec(state.current, catOf(state.current).code);
   r.from = $("evFrom").value || ""; r.to = $("evTo").value || ""; r.rangeAt = Date.now();
-  save(); pushSettings(); render();
+  save(); render();
 }));
 $("evCodesOn").onclick = () => setUseCodes(true);
 $("evCodesOff").onclick = () => setUseCodes(false);
@@ -2564,19 +2560,19 @@ $("evSlotSetup").onclick = () => {
 $("evSlotSave").onclick = saveSlotSetup;
 $("evSlotCancel").onclick = () => { $("evSlotForm").hidden = true; };
 ["evFormatText", "evTitleTpl", "evSubtitleTpl", "evItemLimit", "evSlotLimit", "evCatsText", "evExtraNote"].forEach(id => $(id).addEventListener("input", onEventSettingsInput));
-$("evTimeReal").onclick = () => { evSet().timeSource = "real"; syncEventFormatSheet(); save(); pushSettings(); };
-$("evTimeStatus").onclick = () => { evSet().timeSource = "status"; syncEventFormatSheet(); save(); pushSettings(); };
+$("evTimeReal").onclick = () => { evSet().timeSource = "real"; syncEventFormatSheet(); save(); };
+$("evTimeStatus").onclick = () => { evSet().timeSource = "status"; syncEventFormatSheet(); save(); };
 $("resetEventFormat").onclick = () => {
   const es = evSet();
   Object.assign(es, { format: useCodes() ? CODE_FORMAT : PLAIN_FORMAT, title: useCodes() ? CODE_TITLE : PLAIN_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE, itemLimit: 500, slotLimit: 2000, cats: DEFAULT_EVENT_CATS });
-  syncEventFormatSheet(); save(); pushSettings(); render(); toast("已恢復預設事件格式");
+  syncEventFormatSheet(); save(); render(); toast("已恢復預設事件格式");
 };
 $("addCompanionBtn").onclick = () => { $("addCompanionBtn").hidden = true; $("addCompanionForm").hidden = false; $("newCompanion").focus(); };
 function addCompanion() {
   const name = $("newCompanion").value.trim();
   $("addCompanionForm").hidden = true; $("addCompanionBtn").hidden = false; $("newCompanion").value = "";
   if (!name) return;
-  companionRecord(name); state.current = name; state.view = "todo"; save(); pushSettings(); render();
+  companionRecord(name); state.current = name; state.view = "todo"; save(); render();
   toast(`新增了 ${name}`);
 }
 $("addCompanionOk").onclick = addCompanion;
@@ -2588,7 +2584,7 @@ $("saveProgress").onclick = () => {
   rec.lastRound = Math.max(0, parseInt($("progRound").value, 10) || 0);
   rec.lastDate = $("progDate").value || "";
   rec.progressSetAt = Date.now();
-  save(); pushSettings(); render(); toast("進度已更新");
+  save(); render(); toast("進度已更新");
 };
 $("chatFile").onchange = e => {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f || !state.current) return;
@@ -2598,7 +2594,7 @@ $("chatFile").onchange = e => {
     const id = "f" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     try { await fileDB.put(id, String(r.result || "")); } catch (err) { /* list still records the upload */ }
     rec.files.push({ id, name: f.name, size: f.size, uploadedAt: new Date().toISOString() });
-    save(); pushSettings(); render(); toast(`已上傳 ${f.name}`);
+    save(); render(); toast(`已上傳 ${f.name}`);
   };
   r.onerror = () => toast("讀不到這個檔案");
   r.readAsText(f);
@@ -2622,7 +2618,7 @@ $("promptText").addEventListener("input", onPromptEdit);
 $("editPrompt").onclick = () => { state.editingPrompt = true; updatePromptSheet(); $("promptText").focus(); };
 $("regenPrompt").onclick = () => {
   if (state.current) companionRecord(state.current).promptEdits = [];
-  state.editingPrompt = false; save(); pushSettings();
+  state.editingPrompt = false; save();
   $("promptText").value = currentPrompt(); updatePromptSheet(); toast("已清除手動修改");
 };
 $("promptText").addEventListener("blur", () => { state.editingPrompt = false; updatePromptSheet(); });
@@ -2640,13 +2636,7 @@ async function restoreBackup(text) {
     const r = importCore(data, state.current || ""); return r.ok ? `這是舊版的備份（只有記憶），已匯入 ${r.added + (r.replaced || 0)} 則記憶。` : r.error;
   }
   if (!data || data.app !== "companion-memory-shelf" || !Array.isArray(data.memories)) return "這看起來不是伴侶記憶匣的備份。";
-  const cloud = await beginClaudeDestructive();
-  if (cloud === "loading") return "Claude 同步還在準備，資料沒有變動。請稍後再按一次還原。";
   const now = Date.now();
-  if (cloud === "ready") {
-    deleteMemories([...state.memories.map(m => m.id), ...remote.pendingMemDelete]);
-    deleteEvents([...state.events.map(e => e.id), ...remote.pendingEvDelete]);
-  }
   state.meta.clearedAt = now;
   const stamp = x => Object.assign(x, { updatedAt: now + 1 });
   state.memories = data.memories.filter(m => m && m.id).map(stamp);
@@ -2657,18 +2647,10 @@ async function restoreBackup(text) {
   }
   if (data.settings) state.settings = Object.assign(state.settings, migrate(data.settings));
   state.evp = { at: now, data: data.evp && data.evp.data ? data.evp.data : null };
-  save();
-  const settingsWrite = pushSettings();
-  if (cloud === "ready") { syncMemories(state.memories); syncEvents(state.events); }
-  render();
-  const result = await finishClaudeDestructive(cloud, settingsWrite);
-  const base = `已還原：${state.memories.length} 則記憶、${liveEvents().length} 則事件。`;
-  if (result.failed) return `${base} 但 Claude 帳號有 ${result.failed} 筆資料沒能完成取代，重新開啟時可能回來；請稍後再還原一次。`;
-  if (result.remoteUnavailable) return `${base} 目前無法寫入 Claude 帳號，只還原了這個瀏覽器；重新開啟時帳號裡的舊資料可能回來。`;
-  return base;
+  save(); render();
+  return `已還原：${state.memories.length} 則記憶、${liveEvents().length} 則事件。`;
 }
 $("copyBackup").onclick = e => copyText(backupJSON(), e.currentTarget, "複製備份內容");
-if (inClaudeViewer) { $("downloadBackup").hidden = true; $("downloadPrompt").hidden = true; }
 function saveFile(name, text, type) {
   const blob = new Blob([text], { type });
   const a = document.createElement("a");
@@ -2678,7 +2660,7 @@ function saveFile(name, text, type) {
 }
 $("openRestore").onclick = () => { $("restoreBox").hidden = !$("restoreBox").hidden; if (!$("restoreBox").hidden) $("restoreText").focus(); };
 armButton($("doRestore"), "用這份備份取代目前資料", "再按一次確認還原", async () => {
-  $("backupResult").textContent = inClaudeViewer ? "正在確認 Claude 帳號並還原…" : "正在還原…";
+  $("backupResult").textContent = "正在還原…";
   $("backupResult").textContent = await restoreBackup($("restoreText").value); $("restoreText").value = "";
 });
 $("restoreFile").onchange = e => {
@@ -2690,19 +2672,9 @@ $("downloadBackup").onclick = () => saveFile(`伴侶記憶備份-${new Date().to
 $("downloadPrompt").onclick = () => saveFile("AGENT.md", sheetPrompt() + "\n", "text/markdown");
 
 armButton($("clearAll"), "清除全部記憶與事件", "再按一次確認全部清除", async () => {
-  $("backupResult").textContent = inClaudeViewer ? "正在確認 Claude 帳號並清除…" : "正在清除…";
-  const cloud = await beginClaudeDestructive();
-  if (cloud === "loading") { $("backupResult").textContent = "Claude 同步還在準備，資料沒有變動。請稍後再按一次清除。"; return; }
-  if (cloud === "ready") {
-    deleteMemories([...state.memories.map(m => m.id), ...remote.pendingMemDelete]);
-    deleteEvents([...state.events.map(e => e.id), ...remote.pendingEvDelete]);
-  }
   state.meta.clearedAt = Date.now();
   state.memories = []; state.events = []; setPending(null); state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; c.ev = {}; }); save(); render();
-  const result = await finishClaudeDestructive(cloud, pushSettings());
-  if (result.failed) $("backupResult").textContent = `這個瀏覽器已清除，但 Claude 帳號裡還有 ${result.failed} 筆沒刪成功，重新開啟時可能回來。請稍後再按一次清除。`;
-  else if (result.remoteUnavailable) $("backupResult").textContent = "這個瀏覽器已清除，但目前無法寫入 Claude 帳號；重新開啟時帳號裡的資料可能回來。";
-  else $("backupResult").textContent = "已清除全部記憶和事件，整理進度也歸零了。";
+  $("backupResult").textContent = "已清除全部記憶和事件，整理進度也歸零了。";
 });
 
 render();
@@ -2723,192 +2695,8 @@ armButton($("ghDisconnect"), "中斷連線", "再按一次確認中斷", () => {
   try { localStorage.removeItem(SYNC_KEY); } catch (e) {}
   refreshSyncUI(); $("syncResult").textContent = "已中斷連線。這台裝置上的記憶還在，GitHub 上的那份也還在。";
 });
-
-/* ---------- Claude sync (only when opened inside Claude) ----------
-   Settings are mirrored to the viewer's private store so Claude can read them.
-   On GitHub or anywhere else this does nothing and the page uses the browser only. */
-let resolveRemoteInit;
-const remote = { ref: null, mem: null, ev: null, chain: Promise.resolve(), settingsChain: Promise.resolve(), failed: 0, replacing: false,
-  pendingMemDelete: new Set(), pendingEvDelete: new Set(), status: inClaudeViewer ? "loading" : "off", initDone: new Promise(resolve => { resolveRemoteInit = resolve; }) };
-function settleRemoteInit(status) {
-  if (remote.status !== "loading") return;
-  remote.status = status; resolveRemoteInit(status);
-}
-async function beginClaudeDestructive() {
-  if (!inClaudeViewer || remote.status === "off" || remote.status === "readonly") return remote.status;
-  if (remote.status === "loading") {
-    const status = await Promise.race([remote.initDone, new Promise(resolve => setTimeout(() => resolve("loading"), 8000))]);
-    if (status === "loading") return "loading";
-  }
-  if (remote.status !== "ready" || !remote.mem || !remote.ev) return "unavailable";
-  try { await remote.chain; } catch (e) {}
-  remote.failed = 0; remote.replacing = true;
-  return "ready";
-}
-async function finishClaudeDestructive(mode, settingsWrite) {
-  if (mode !== "ready") return { failed: 0, remoteUnavailable: inClaudeViewer && mode !== "off" && mode !== "readonly" };
-  try { await remote.chain; } catch (e) {}
-  const settingsOk = await settingsWrite;
-  const failed = (remote.failed || 0) + (settingsOk === false ? 1 : 0);
-  remote.failed = 0; remote.replacing = false;
-  return { failed, remoteUnavailable: false };
-}
-const memBody = m => JSON.parse(JSON.stringify({ companion: m.companion, seq: m.seq || 0, rounds: m.rounds || "", until: m.until || "", title: m.title || "", fields: m.fields || {}, transferred: !!m.transferred, updatedAt: m.updatedAt || 0 }));
-/* One write at a time, in order, so a burst of imports never overlaps on the same card. */
-function syncMemories(list) {
-  if (!remote.mem || !list.length) return;
-  for (const m of list) remote.chain = remote.chain.then(() => remote.mem && remote.mem.doc(m.id).set(memBody(m))).catch(() => {
-    if (remote.replacing) remote.failed = (remote.failed || 0) + 1;
-    claudeSyncFailed();
-  });
-}
-const evBody = e => JSON.parse(JSON.stringify({ companion: e.companion, cat: e.cat, slot: e.slot || 0, idx: e.idx || 0, keywords: e.keywords || "", date: e.date || "",
-  fields: e.fields || {}, transferred: !!e.transferred, deleted: !!e.deleted, updatedAt: e.updatedAt || 0 }));
-function syncEvents(list) {
-  if (!remote.ev || !list.length) return;
-  for (const e of list) remote.chain = remote.chain.then(() => remote.ev && remote.ev.doc(e.id).set(evBody(e))).catch(() => {
-    if (remote.replacing) remote.failed = (remote.failed || 0) + 1;
-    claudeSyncFailed();
-  });
-}
-function deleteEvents(ids) {
-  if (!remote.ev || !ids.length) return;
-  const collection = remote.ev;
-  for (const id of new Set(ids)) {
-    remote.pendingEvDelete.add(id);
-    remote.chain = remote.chain.then(() => collection.doc(id).delete()).then(() => remote.pendingEvDelete.delete(id)).catch(() => { remote.failed = (remote.failed || 0) + 1; });
-  }
-}
-function claudeSyncFailed() {
-  if (remote.status === "loading") settleRemoteInit("failed"); else remote.status = "failed";
-  remote.ref = null; remote.mem = null; remote.ev = null;
-  $("syncBadge").textContent = "只存在這個瀏覽器"; $("syncBadge").classList.remove("on");
-}
-function deleteMemories(ids) {
-  if (!remote.mem || !ids.length) return;
-  const collection = remote.mem;
-  for (const id of new Set(ids)) {
-    remote.pendingMemDelete.add(id);
-    remote.chain = remote.chain.then(() => collection.doc(id).delete()).then(() => remote.pendingMemDelete.delete(id)).catch(() => { remote.failed = (remote.failed || 0) + 1; });
-  }
-}
-function pushSettings() {
-  if (!remote.ref) return Promise.resolve(false);
-  const ref = remote.ref, body = { settings: JSON.parse(JSON.stringify(state.settings)), companions: JSON.parse(JSON.stringify(state.companions)),
-    evp: JSON.parse(JSON.stringify(state.evp || { at: 0, data: null })), updatedAt: new Date().toISOString() };
-  remote.settingsChain = remote.settingsChain.then(() => ref.set(body)).then(() => true).catch(() => { claudeSyncFailed(); return false; });
-  return remote.settingsChain;
-}
-(async () => {
-  if (!window.claude || !window.claude.use) { settleRemoteInit("off"); return; }
-  try {
-    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
-    if (!db || !user) { settleRemoteInit("unavailable"); return; }
-    const id = await user.id();
-    if (!id) { settleRemoteInit("unavailable"); return; }
-    /* Someone viewing another person's shared page can't save there; they stay on browser storage. */
-    let canWrite = null; try { canWrite = await user.can("data.write"); } catch (e) {}
-    if (canWrite === false) { settleRemoteInit("readonly"); return; }
-    const ref = db.doc("data/users/" + id + "/settings");
-    const snap = await ref.get();
-    if (snap.exists && snap.data() && snap.data().settings) {
-      const remoteSettings = migrate(JSON.parse(JSON.stringify(snap.data().settings)));
-      state.settings = Object.assign(state.settings, remoteSettings);
-      spreadGlobals();
-      const rc = snap.data().companions;
-      if (Array.isArray(rc)) {
-        for (const c of rc) {
-          const local = state.companions.find(x => x.name === c.name);
-          if (!local) state.companions.push(c);
-          else {
-            local.mode = c.mode || local.mode;
-            if (c.userName && !local.userName) local.userName = c.userName;
-            if ((c.promptEdits || []).length && !(local.promptEdits || []).length) local.promptEdits = c.promptEdits;
-            local.lastRound = Math.max(local.lastRound || 0, c.lastRound || 0);
-            if ((c.lastDate || "") > (local.lastDate || "")) local.lastDate = c.lastDate;
-            local.ev = mergeEvMeta(local.ev, c.ev);
-            const ids = new Set((local.files || []).map(f => f.id));
-            local.files = (local.files || []).concat((c.files || []).filter(f => !ids.has(f.id)));
-          }
-        }
-      }
-      state.evp = newerPending(state.evp, snap.data().evp);
-      save(); render();
-      if (!$("formatSheet").hidden) syncFormatSheet();
-    }
-    remote.ref = ref;
-    if (!snap.exists || !Array.isArray(snap.data().companions)) pushSettings();  /* first sync: copy this browser's data once */
-
-    /* Memories live in the same private place, so the phone sees what the computer imported. */
-    const mem = db.doc("data/users/" + id + "/shelf").collection("memories");
-    const ms = await mem.get();
-    const remoteIds = new Set(ms.docs.map(d => d.id));
-    remote.mem = mem;
-    $("syncBadge").textContent = "已同步到 Claude 帳號"; $("syncBadge").classList.add("on");
-    syncMemories(state.memories.filter(m => !remoteIds.has(m.id)));   /* first sync from this browser */
-    mem.onSnapshot(qs => {
-      if (remote.replacing || qs.metadata.hasPendingWrites) return;
-      const byId = new Map(qs.docs.map(d => [d.id, { ...d.data(), id: d.id }]));
-      const localOnly = state.memories.filter(m => !byId.has(m.id) && !remoteIds.has(m.id));
-      state.memories = [...byId.values(), ...localOnly];
-      qs.docs.forEach(d => remoteIds.add(d.id));
-      save(); render();
-    }, () => {});
-
-    /* Events live next to the memories. */
-    const evc = db.doc("data/users/" + id + "/shelf").collection("events");
-    const evs = await evc.get();
-    const remoteEvIds = new Set(evs.docs.map(d => d.id));
-    {
-      const byIdE = new Map(state.events.map(e => [e.id, e]));
-      for (const d of evs.docs) { const v = { ...d.data(), id: d.id }, l = byIdE.get(d.id); if (!l || (v.updatedAt || 0) >= (l.updatedAt || 0)) byIdE.set(d.id, v); }
-      state.events = [...byIdE.values()];
-    }
-    remote.ev = evc;
-    syncEvents(state.events.filter(e => !remoteEvIds.has(e.id)));
-    save(); render();
-    evc.onSnapshot(qs => {
-      if (remote.replacing || qs.metadata.hasPendingWrites) return;
-      const byId = new Map(qs.docs.map(d => [d.id, { ...d.data(), id: d.id }]));
-      const localOnly = state.events.filter(e => !byId.has(e.id) && !remoteEvIds.has(e.id));
-      state.events = [...byId.values(), ...localOnly];
-      qs.docs.forEach(d => remoteEvIds.add(d.id));
-      save(); render();
-    }, () => {});
-    ref.onSnapshot(sn => {
-      if (remote.replacing || sn.metadata.hasPendingWrites || !sn.exists) return;
-      const d = sn.data();
-      let needsPush = false;
-      if (Array.isArray(d.companions)) {
-        const localByName = new Map(state.companions.map(c => [c.name, c]));
-        const remoteNames = new Set(d.companions.map(c => c.name));
-        const merged = JSON.parse(JSON.stringify(d.companions)).map(c => {
-          const local = localByName.get(c.name);
-          if (!local) return c;
-          const ids = new Set((c.files || []).map(f => f.id));
-          c.files = (c.files || []).concat((local.files || []).filter(f => !ids.has(f.id)));
-          c.ev = mergeEvMeta(c.ev, local.ev);
-          if (!c.evCat && local.evCat) c.evCat = local.evCat;
-          c.lastRound = Math.max(c.lastRound || 0, local.lastRound || 0);
-          if ((local.lastDate || "") > (c.lastDate || "")) c.lastDate = local.lastDate;
-          if (!c.userName && local.userName) c.userName = local.userName;
-          if (!(c.promptEdits || []).length && (local.promptEdits || []).length) c.promptEdits = local.promptEdits;
-          if (stableJSON(c) !== stableJSON(d.companions.find(x => x.name === c.name))) needsPush = true;
-          return c;
-        });
-        for (const local of state.companions) {
-          if (!remoteNames.has(local.name)) { merged.push(JSON.parse(JSON.stringify(local))); needsPush = true; }
-        }
-        state.companions = merged;
-      }
-      state.evp = newerPending(state.evp, d.evp);
-      if (d.settings) state.settings = Object.assign(state.settings, migrate(JSON.parse(JSON.stringify(d.settings))));
-      save(); render();
-      if (needsPush) pushSettings();
-    }, () => {});
-    settleRemoteInit("ready");
-  } catch (e) { remote.ref = null; if (remote.status === "loading") settleRemoteInit("failed"); else remote.status = "failed"; }
-})();
+/* Inside a Claude Artifact the page is only a pointer to the official site: no agent API either. */
+if (inClaudeViewer) { try { delete window.memoryShelf; } catch (e) { window.memoryShelf = undefined; } }
 </script>
 
 </body>
