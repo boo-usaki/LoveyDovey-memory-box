@@ -1,3 +1,5 @@
+> 此為歷史審查紀錄；其中 Claude 同步相關內容已取消，以 [CURRENT_STATUS.md](../CURRENT_STATUS.md) 為準。
+
 # 「事件」功能唯讀審查
 
 審查基準：`main` commit `25a911d8c1bb408b658ebeb65388c2799c47511b`  
