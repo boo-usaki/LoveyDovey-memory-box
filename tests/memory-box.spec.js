@@ -90,8 +90,14 @@ test.describe('事件', () => {
       ['長一', '長二', '長三', '長四', '長五'].map((kw, i) => EV(kw, `2026-02-0${5 + i}`, 80)));
     expect(r.pending).toBeTruthy();
     expect(r.pending.canOpenNew).toBe(true);
+    await expect(page.locator('#evPendingBar')).toBeVisible();
+    await expect(page.locator('#evPendingBar')).toContainText('在等妳決定');
+    await expect(page.locator('.card.panel.overflow')).toBeVisible();
+    await page.waitForTimeout(2200); // 短暫提示消失後，處理提醒仍必須留著
+    await expect(page.locator('#evPendingBar')).toBeVisible();
     r = await page.evaluate(() => memoryShelf.resolveEventOverflow('new'));
     expect(r.ok).toBe(true);
+    await expect(page.locator('#evPendingBar')).toBeHidden();
     expect((await codes()).some(c => c.startsWith('FIR-02-01'))).toBe(true);
 
     // 單則超過上限：只能改短
@@ -196,6 +202,8 @@ test.describe('使用說明', () => {
     await page.evaluate(() => openSheet('guideSheet'));
     await expect(page.locator('#flowMain')).toBeVisible();
     await expect(page.locator('#flowMain > li')).toHaveCount(6);
+    await expect(page.locator('#flowMain')).toContainText('不用在手機安裝 GitHub');
+    await expect(page.locator('#flowMain')).toContainText('貼進「卿卿我我」');
     await expect(page.locator('#tabClaude')).toHaveCount(0);
     await context.close();
   });

@@ -274,7 +274,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 .ev-cats { flex-wrap: wrap; border-radius: 16px; max-width: 100%; }
 .muted.warn { color: var(--pink-ink); }
-.pending-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; border-radius: var(--r); border: 1px solid var(--pink); background: var(--pink-soft); color: var(--pink-ink); font-size: 13.5px; }
+.pending-bar { position: sticky; top: 8px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; border-radius: var(--r); border: 1px solid var(--pink); background: var(--pink-soft); box-shadow: var(--shadow); color: var(--pink-ink); font-size: 13.5px; }
 .pending-bar span { flex: 1 1 220px; }
 .restore-box { display: flex; flex-direction: column; gap: 8px; }
 
@@ -421,7 +421,7 @@ if (window.claude) {
 }
 </script>
 
-<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作伴侶 App。</p>
+<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作「卿卿我我」。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -447,7 +447,7 @@ if (window.claude) {
   </aside>
 
   <main class="main">
-    <div class="pending-bar" id="evPendingBar" hidden><span id="evPendingText"></span><button class="btn sm primary" type="button" id="evPendingGo">回去處理</button></div>
+    <div class="pending-bar" id="evPendingBar" role="alert" aria-live="assertive" hidden><span id="evPendingText"></span><button class="btn sm primary" type="button" id="evPendingGo">查看並處理</button></div>
     <div class="head panel">
       <div class="head-top">
         <div>
@@ -675,19 +675,19 @@ if (window.claude) {
     </div>
     <div class="step">
       <div class="step-title">先看這裡</div>
-      <p>不需要懂程式。流程是：在電腦上請 AI 整理對話 → 用手機打開同一個網址，複製貼進伴侶 App。</p>
+      <p>不需要懂程式。流程是：在電腦上請 AI 整理對話 → 用手機打開同一個網址，複製貼進「卿卿我我」。</p>
       <p class="hint">記憶匣只有一個正式網址：<a href="https://boo-usaki.github.io/LoveyDovey-memory-box/" target="_blank" rel="noopener">boo-usaki.github.io/LoveyDovey-memory-box</a>。電腦和手機都從這裡打開，建議加入書籤。</p>
     </div>
     <ol class="guide" id="flowMain">
       <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。只在這台電腦使用時，不用登入，也不用設定。</p></div></li>
-      <li><div><b>需要手機共用時，設定一次同步</b><p>到左側「同步與備份」，照步驟連上妳自己的 GitHub，記憶會存進妳帳號裡的一份私人 Gist。只要在電腦設定一次。</p></div></li>
+      <li><div><b>需要手機共用時，設定一次同步</b><p>到左側「同步與備份」，照步驟連上妳自己的 GitHub。GitHub 在這裡就像一個只有妳能讀取的雲端抽屜，會用一份私人 Gist 保存記憶。手機不用安裝 GitHub，也不用登入 GitHub。</p></div></li>
       <li><div><b>新增伴侶，選「記憶」或「事件」</b><p>按左側「＋ 新增伴侶」輸入名字，再到伴侶頁上方填妳在這段對話裡的名字。記憶會依對話順序整理成卡片；事件只挑出之後希望伴侶記得的重要事情，要再選類別和日期範圍。格式、輪數和字數都有預設值，想改再到「記憶格式與規則」。</p></div></li>
-      <li><div><b>在電腦上傳對話檔，請 AI 整理</b>
+      <li><div><b>在網頁上傳對話檔，請 AI 整理</b>
         <p><strong>這次對話能操作瀏覽器或電腦：</strong>Codex、Claude 或其他有這項能力的 AI 都可以直接完成。跟它說「打開伴侶記憶匣，幫我把〇〇的對話整理成記憶（或 FIR 事件），直接寫進去。」它會打開正式網站，讀取妳已上傳的對話檔，整理後寫進記憶匣；妳不用複製指令，也不用把 AI 回覆貼回來。</p>
         <p><strong>這次對話不能操作瀏覽器或電腦：</strong>按「複製指令」，連同對話檔一起交給 AI；它回覆後，按「貼上回覆」把整段回覆貼回記憶匣。</p>
         <p class="hint">事件會自動編號，接在目前的事件欄後面；放不下時，頁面會先問妳要改短還是開新欄。</p></div></li>
-      <li><div><b>手機打開同一個網址，貼上連線碼</b><p>在電腦的「同步與備份」按「複製手機連線碼」傳給自己；手機打開同一個網址，到「同步與備份」貼上，就會看到一樣的內容。只要第一次做。</p></div></li>
-      <li><div><b>在手機複製，貼進伴侶 App</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進伴侶 App。貼好後按「已轉移」，電腦那邊也會一起更新。</p></div></li>
+      <li><div><b>讓手機看到同一份內容</b><p>先在電腦網頁的「同步與備份」按「複製手機連線碼」，只傳給自己。接著用手機瀏覽器打開同一個正式網址，點「同步與備份」，把連線碼貼進「同步金鑰或連線碼」，再按「連線」。第一次完成後，手機與電腦就會讀取同一份私人 Gist；不用在手機安裝 GitHub，也不用登入 GitHub。</p></div></li>
+      <li><div><b>在手機複製，貼進「卿卿我我」</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進「卿卿我我」。貼好後按「已轉移」，電腦那邊也會一起更新。</p></div></li>
     </ol>
     <div class="step">
       <div class="step-title">記憶卡片長這樣</div>
@@ -700,7 +700,7 @@ if (window.claude) {
         <li>不調整任何設定也能使用。想換記憶格式、事件類別或字數，再到「記憶格式與規則」。</li>
         <li>「記憶」適合依順序保存長對話；「事件」適合挑出關係進展、劇情或人物設定等重要事情。</li>
         <li>每次都匯出完整對話就選「用輪數」接續；每次只匯出新的一段就選「用日期」。</li>
-        <li>事件欄快滿時，頁面會先問妳要改短還是開新欄，不會自己決定。</li>
+        <li>事件欄快滿時，頁面會留下醒目的提醒，直到妳選擇要改短還是開新欄，不會自己決定或咻一下消失。</li>
         <li>偶爾到「同步與備份」留一份備份；原始對話檔不會包含在同步或備份裡。</li>
       </ul>
     </div>
@@ -739,9 +739,9 @@ if (window.claude) {
       <p class="hint" id="syncIntro"></p>
       <div id="ghSetup" hidden>
         <ol class="guide small">
-          <li><div><b>到 GitHub 產生同步金鑰</b><p>登入 GitHub 後打開 <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%E4%BC%B4%E4%BE%B6%E8%A8%98%E6%86%B6%E5%8C%A3" target="_blank" rel="noopener">這個連結</a>，權限已經只勾好「gist」。有效期限（Expiration）選妳想要的長度，按最下面的「Generate token」。</p></div></li>
+          <li><div><b>到 GitHub 產生同步金鑰</b><p>登入 GitHub 後打開 <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%E4%BC%B4%E4%BE%B6%E8%A8%98%E6%86%B6%E5%8C%A3" target="_blank" rel="noopener">這個連結</a>，權限已經只勾好「gist」。<code>Expiration</code> 是有效期限：<code>7 / 30 / 60 / 90 days</code> 是幾天後到期，<code>Custom</code> 是自選日期，<code>No expiration</code> 是永不過期。建議選 <code>90 days</code>；到期後再產生一組新的即可。最後按頁面最下面的 <code>Generate token</code>（產生金鑰）。</p></div></li>
           <li><div><b>貼到下面按「連線」</b><p>複製 ghp_ 開頭的那串。頁面會在妳的 GitHub 建一份私人 Gist 存記憶。</p></div></li>
-          <li><div><b>手機或其他電腦</b><p>連線後按「複製手機連線碼」，傳給自己，在手機打開同一個網址、貼到這裡就好。</p></div></li>
+          <li><div><b>讓手機看到同一份內容</b><p>電腦連線後按「複製手機連線碼」，只傳給自己。接著用手機瀏覽器打開記憶匣，點「同步與備份」，把連線碼貼進下面的「同步金鑰或連線碼」，再按「連線」。手機不用安裝 GitHub App，也不用登入 GitHub。</p></div></li>
         </ol>
         <div class="row">
           <label for="ghToken">同步金鑰或連線碼
@@ -757,7 +757,8 @@ if (window.claude) {
           <button class="btn" id="ghCopyCode">複製手機連線碼</button>
           <button class="btn danger" id="ghDisconnect">中斷連線</button>
         </div>
-        <p class="hint">連線碼等同金鑰，只傳給自己，不要貼到公開的地方。借別人的電腦用完，記得按「中斷連線」。</p>
+        <p class="hint">連線碼等同金鑰。可以暫時傳到只有自己看得到的 LINE／Discord 私人訊息，但連線碼仍會經過並可能留存在該服務；手機貼好後請刪除，不要貼到群組或公開頻道。借別人的電腦用完，記得按「中斷連線」。</p>
+        <p class="hint">不想傳連線碼，可以改用下方的「下載備份」與「還原備份」搬到手機；這是一次性搬運，之後不會自動同步。</p>
       </div>
       <p class="result" id="syncResult" role="status"></p>
     </div>
@@ -1172,7 +1173,8 @@ function promptCtx(name) {
 function renderPendingBar() {
   const p = typeof getPending === "function" ? getPending() : null, bar = $("evPendingBar");
   const here = p && state.current === p.companion && state.tab === "event" && state.view === "todo" && catOf(p.companion).code === p.cat;
-  bar.hidden = !p || here;
+  bar.hidden = !p;
+  $("evPendingGo").textContent = here ? "查看並處理" : "前往處理";
   if (p) $("evPendingText").textContent = p.reason === "item"
     ? `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」超過每則字數上限，改短後才能繼續匯入。`
     : `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」在等妳決定（擠進 ${slotTitle(p.cat, { no: p.slotNo })} 或開新欄），處理完才能再匯入事件。`;
@@ -2094,6 +2096,7 @@ function renderEventList(cur) {
 /* Asks the user what to do with an event that doesn't fit. */
 function overflowCard(p) {
   const e = p.queue[0], c = el("article", "card panel overflow");
+  c.id = "evOverflowCard"; c.tabIndex = -1;
   const slot = (peekEv(p.companion, p.cat).slots.find(s => s.no === p.slotNo)) || { no: p.slotNo };
   const text = eventText({ ...e, slot: p.slotNo, idx: nextIdx(p.companion, p.cat, slot) });
   const itemTooLong = p.reason === "item", mustShorten = itemTooLong || p.empty, max = itemTooLong ? p.max : p.room;
@@ -2497,8 +2500,8 @@ function refreshSyncUI(busyText) {
   const on = gistOn();
   $("ghSetup").hidden = on; $("ghLinked").hidden = !on;
   $("syncIntro").textContent = on
-    ? "已用妳的 GitHub 同步。手機或其他電腦打開同一個網址、貼上連線碼，就會看到一樣的記憶。"
-    : "現在記憶只存在這個瀏覽器。想在手機也看到，可以用妳自己的 GitHub 帳號同步，設定一次就好：";
+    ? "已用妳的 GitHub 同步。手機或其他電腦用瀏覽器打開同一個網址，在「同步與備份」貼上連線碼並按「連線」，就會看到一樣的記憶；不用安裝 GitHub App。"
+    : "現在記憶只存在這個瀏覽器。想在手機也看到，可以用妳自己的 GitHub 帳號同步；手機不用安裝 GitHub，也不用登入 GitHub：";
   $("ghStatus").textContent = busyText || (gist.error ? "同步失敗：" + gist.error : (gist.lastSyncAt ? `已連線 · 上次同步 ${hhmm(gist.lastSyncAt)}` : "已連線"));
   badge.textContent = on ? (gist.error ? "GitHub 同步失敗" : "已同步到 GitHub") : "只存在這個瀏覽器";
   badge.classList.toggle("on", on && !gist.error);
@@ -2605,7 +2608,11 @@ $("copyCompanionPrompt").onclick = e => {
   if (state.tab === "event" && state.current && rangeBad(state.current, catOf(state.current).code)) { toast("整理範圍的「從」比「到」還晚，請先改一下"); return; }
   copyText(panelPrompt(), e.currentTarget, "複製指令");
 };
-$("evPendingGo").onclick = () => { const p = getPending(); if (!p) return; state.current = p.companion; companionRecord(p.companion).evCat = p.cat; state.tab = "event"; state.view = "todo"; render(); window.scrollTo(0, 0); };
+$("evPendingGo").onclick = () => {
+  const p = getPending(); if (!p) return;
+  state.current = p.companion; companionRecord(p.companion).evCat = p.cat; state.tab = "event"; state.view = "todo"; render();
+  requestAnimationFrame(() => { const card = $("evOverflowCard"); if (card) { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.focus({ preventScroll: true }); } });
+};
 $("importFile").onchange = e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const r = new FileReader();
