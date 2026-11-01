@@ -4,3 +4,6 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# 本機跨模型討論與驗收紀錄，不公開到產品 repo
+ai-workflow/

@@ -11,7 +11,7 @@ const BACKUP_PASSWORD = '只給自己的密碼123';
 
 const MEM = (from, title) => ({
   companion: '王小明', rounds: `${from}-${from + 9}`, title,
-  fields: { '地點': '家', '場景概要': '概要' + title, '關鍵詞': ['詞'], '關鍵對話': '王小明：「嗨」', '情感變化及影響': '平穩', '{伴侶}覺得重要的事': '記得' },
+  fields: { '地點': '家', '場景概要': '概要' + title, '關鍵詞': ['詞'], '關鍵對話': '王小明：「嗨」', '情感變化及影響': '平穩' },
 });
 const EV = (kw, date, len = 2) => ({
   category: 'FIR', date, keywords: kw,
@@ -54,6 +54,20 @@ test.describe('記憶', () => {
     expect(page.errors).toEqual([]);
     await context.close();
   });
+
+  test('舊預設格式會移除伴侶覺得重要的事', async ({ browser }) => {
+    const legacyDefault = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
+      memories: [], events: [], companions: [], meta: {}, settings: {
+        format: ['# [標題]', '', '- 地點：', '- 場景概要：', '- 關鍵詞：', '- 關鍵對話：', '- 情感變化及影響：', '- {伴侶}覺得重要的事：'].join('\n')
+      }
+    }));
+    const { context, page } = await openDevice(browser, { init: legacyDefault });
+    await page.evaluate(() => openSheet('formatSheet'));
+    expect(await page.locator('#formatText').inputValue()).not.toContain('{伴侶}覺得重要的事');
+    expect(await page.evaluate(() => buildPrompt(state.settings, promptCtx('王小明')))).not.toContain('覺得重要的事');
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
 });
 
 test.describe('事件', () => {
@@ -93,9 +107,190 @@ test.describe('事件', () => {
     expect(page.errors).toEqual([]);
     await context.close();
   });
+
+  test('事件格式保留預設與自訂，自訂代號可留空', async ({ browser }) => {
+    const { context, page } = await openDevice(browser);
+    await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
+    await page.click('#tabEv');
+    await expect(page.locator('#evCatRow')).toHaveCount(0);
+    await expect(page.locator('#progressText')).toContainText('事件還沒整理過');
+    await page.evaluate(() => openSheet('formatSheet'));
+    await expect(page.locator('#formatTabMem')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#formatMemoryPanel')).toBeVisible();
+    await expect(page.locator('#formatEventPanel')).toBeHidden();
+    expect(await page.locator('#formatText').inputValue()).not.toContain('{伴侶}覺得重要的事');
+    await page.click('#formatTabEv');
+    await expect(page.locator('#formatTabEv')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#formatMemoryPanel')).toBeHidden();
+    await expect(page.locator('#formatEventPanel')).toBeVisible();
+
+    await expect(page.locator('#evFormatDefault')).toHaveText('預設代號');
+    await expect(page.locator('#evFormatCustom')).toHaveText('自訂格式');
+    await expect(page.locator('#evFormatPlain')).toHaveCount(0);
+    await expect(page.locator('#evFormatDefault')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('label[for="evTitleFormat"]')).toContainText('大標');
+    await expect(page.locator('label[for="evSubtitleFormat"]')).toContainText('小標');
+    await expect(page.locator('label[for="evBodyFormat"]')).toHaveText('內文');
+    await expect(page.locator('#evTitleFormat')).toHaveAttribute('readonly', '');
+    await expect(page.locator('#evSubtitleFormat')).toHaveAttribute('readonly', '');
+    await expect(page.locator('#evBodyFormat')).toHaveAttribute('readonly', '');
+    await expect(page.locator('#evTitleFormat')).toHaveValue('[代號-第幾篇] 類別名稱');
+    await expect(page.locator('#evSubtitleFormat')).toHaveValue('YYYY/MM/DD-現在｜依事件地點進行已發生事件紀錄更新');
+    await expect(page.locator('#evBodyFormat')).toHaveValue([
+      '[代號-第幾篇-之幾] 關鍵字',
+      '時間：YYYY/MM/DD',
+      '地點：……',
+      '細節：',
+      '- ……',
+      '- ……'
+    ].join('\n'));
+    await expect(page.locator('#evCatsText')).toHaveValue(/EST｜資產｜紀錄角色已公開資產/);
+    await expect(page.locator('#evCatsText')).toHaveAttribute('readonly', '');
+    await expect(page.locator('#evTitleTpl')).toHaveCount(0);
+    await expect(page.locator('#evSubtitleTpl')).toHaveCount(0);
+    await expect(page.locator('#evPreview')).toHaveCount(0);
+
+    await page.click('#evFormatCustom');
+    await expect(page.locator('#evFormatCustom')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#evTitleFormat')).toBeEditable();
+    await expect(page.locator('#evSubtitleFormat')).toBeEditable();
+    await expect(page.locator('#evBodyFormat')).toBeEditable();
+    await expect(page.locator('#evTitleFormat')).toHaveValue('');
+    await expect(page.locator('#evSubtitleFormat')).toHaveValue('');
+    await expect(page.locator('#evBodyFormat')).toHaveValue('');
+    expect(await page.locator('#evTitleFormat').getAttribute('placeholder')).toBeNull();
+    expect(await page.locator('#evSubtitleFormat').getAttribute('placeholder')).toBeNull();
+    expect(await page.locator('#evBodyFormat').getAttribute('placeholder')).toBeNull();
+    await expect(page.locator('#evCatsConfig')).toBeVisible();
+    await expect(page.locator('#evCatsText')).toBeEditable();
+    await expect(page.locator('#evCatsText')).toHaveValue('');
+    await page.fill('#evTitleFormat', '[第幾篇]');
+    await page.fill('#evBodyFormat', '[第幾篇-之幾] 關鍵字\n內容：');
+    await page.waitForTimeout(450);
+    const plainPrompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    expect(plainPrompt).not.toContain('category 固定寫');
+    expect(plainPrompt).not.toContain('這次只整理「事件」這一類');
+    expect(plainPrompt).not.toContain('使用對話的現實時間');
+    expect(plainPrompt).toContain('date：記憶匣接續整理用的日期');
+
+    await page.fill('#evTitleFormat', '[代號-第幾篇]');
+    await page.fill('#evBodyFormat', '[代號-第幾篇-之幾] 關鍵字\n內容：');
+    await page.fill('#evCatsText', 'MY｜我的類別｜照我的方式整理');
+    await page.waitForTimeout(450);
+    expect(await page.evaluate(() => memoryShelf.eventPrompt('王小明'))).toContain('MY｜我的類別');
+    await page.click('#resetEventFormat');
+    await expect(page.locator('#evTitleFormat')).toHaveValue('[代號-第幾篇] 類別名稱');
+    await expect(page.locator('#evCatsText')).toHaveValue(/EST｜資產｜紀錄角色已公開資產/);
+    await page.setViewportSize({ width: 375, height: 812 });
+    expect(await page.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
+
+  test('匯入前可改分類，確認後才編號，內文用分隔線', async ({ browser }) => {
+    const { context, page } = await openDevice(browser);
+    await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
+    const prompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    expect(prompt).toContain('【這次整理】');
+    expect(prompt).toContain('對話裡真的出現、之後能觸發這段事件的字詞');
+    expect(prompt).toContain('時間：使用對話的現實時間');
+    expect(prompt).toContain('date：記憶匣接續整理用的日期');
+    expect(prompt).not.toContain('親密的內容');
+    expect(prompt).not.toContain('不要自己補充或編造');
+    expect(prompt.split('\n').filter(line => /^\d+\./.test(line))).toHaveLength(4);
+    const review = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '王小明'), [
+      EV('個體、附屬品', '2026-02-13'),
+      { ...EV('送照片', '2026-02-14'), category: 'DIA' }
+    ]);
+    expect(review.needsReview).toBe(true);
+    await expect(page.locator('#eventReviewSheet')).toBeVisible();
+    await expect(page.locator('#eventReviewList .ev-review-item')).toHaveCount(2);
+    await expect(page.locator('#eventReviewList pre').first()).toContainText('[FIR-第幾篇-之幾] 個體、附屬品');
+    await page.locator('#eventReviewList select').first().selectOption('DIA');
+    await page.click('#confirmEventReview');
+    expect(await page.evaluate(() => liveEvents().map(e => e.cat))).toEqual(['DIA', 'DIA']);
+    const slot = await page.evaluate(() => memoryShelf.events('王小明', 'DIA')[0]);
+    expect(slot.title).toBe('[DIA-01] 日常紀錄');
+    expect(await page.evaluate(() => slotBody('王小明', 'DIA', peekEv('王小明', 'DIA').slots[0]))).toContain('\n\n---\n\n');
+
+    const beyondTwenty = await page.evaluate(ev => {
+      state.events = []; const rec = companionRecord('王小明'); rec.ev = {};
+      const r = evRec('王小明', 'FIR');
+      r.slots = Array.from({ length: 20 }, (_, i) => ({ no: i + 1, start: '2026-01-01', end: '2026-01-02', closed: true, base: '已有內容', baseIdx: 1, hw: 1, updatedAt: 1 }));
+      save(); return memoryShelf.importEvents(JSON.stringify([ev]), '王小明', 'FIR');
+    }, EV('第21欄', '2026-03-01'));
+    expect(beyondTwenty.pending).toBeNull();
+    expect(await page.evaluate(() => peekEv('王小明', 'FIR').slots.some(slot => slot.no === 21))).toBe(true);
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
+
+  test('事件時間依設定使用現實或狀態欄時間', async ({ browser }) => {
+    const { context, page } = await openDevice(browser);
+    await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
+    const realPrompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    expect(realPrompt).toContain('時間：使用對話的現實時間');
+    expect(realPrompt).toContain('填同一段對話的現實日期');
+    const statusPrompt = await page.evaluate(() => {
+      evSet().timeSource = 'status'; save();
+      return memoryShelf.eventPrompt('王小明');
+    });
+    expect(statusPrompt).toContain('時間：使用對話狀態欄的時間；沒有狀態欄時間時，使用對話的現實時間');
+    expect(statusPrompt).toContain('填同一段對話的狀態欄日期，沒有狀態欄日期時填現實日期');
+    expect(statusPrompt).not.toContain('聊到往事');
+    expect(statusPrompt).not.toContain('18 歲時');
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
+
+  test('舊版不用代號設定會保留', async ({ browser }) => {
+    const legacyPlain = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
+      memories: [], events: [], companions: [], meta: {}, settings: { events: {
+        useCodes: false,
+        format: ['【{關鍵字}】', '時間：', '地點：', '細節：'].join('\n'),
+        title: '{名稱}｜{欄號}',
+        subtitle: '{開始}-{結束}｜依事件地點進行已發生事件紀錄更新',
+        cats: 'FIR｜關係重大進展｜關係的轉折'
+      } }
+    }));
+    const { context, page } = await openDevice(browser, { init: legacyPlain });
+    await page.evaluate(() => openSheet('formatSheet'));
+    await page.click('#formatTabEv');
+    await expect(page.locator('#evFormatCustom')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#evTitleFormat')).toHaveValue('');
+    await expect(page.locator('#evSubtitleFormat')).toHaveValue('');
+    await expect(page.locator('#evBodyFormat')).toHaveValue('');
+    await expect(page.locator('#evCatsConfig')).toBeVisible();
+    await expect(page.locator('#evCatsText')).toHaveValue('');
+    await page.fill('#evTitleFormat', '[代號-第幾篇]');
+    await page.fill('#evBodyFormat', '[代號-第幾篇-之幾] 關鍵字\n內容：');
+    await page.fill('#evCatsText', 'FIR｜關係重大進展｜關係的轉折');
+    await expect(page.locator('#evCatsText')).toHaveValue('FIR｜關係重大進展｜關係的轉折');
+    expect(await page.locator('#evCatsText').inputValue()).not.toContain('EST｜資產');
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
 });
 
 test.describe('備份', () => {
+  test('下載時使用低調檔名', async ({ browser }) => {
+    const { context, page } = await openDevice(browser);
+    await page.evaluate(() => {
+      window.__savedBackup = null;
+      saveFile = (name, text, type) => { window.__savedBackup = { name, text, type }; };
+      openSheet('backupSheet');
+    });
+    await page.fill('#backupPassword', BACKUP_PASSWORD);
+    await page.fill('#backupPasswordAgain', BACKUP_PASSWORD);
+    await page.click('#downloadBackup');
+    await expect(page.locator('#backupResult')).toContainText('已下載加密備份');
+    const saved = await page.evaluate(() => window.__savedBackup);
+    expect(saved.name).toMatch(/^memory_box-backup-\d{4}-\d{2}-\d{2}\.memorybox$/);
+    expect(saved.type).toBe('application/json');
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
+
   test('清除、復原，重新整理後資料還在', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     await page.evaluate(([mems, evs]) => {
@@ -123,7 +318,7 @@ test.describe('備份', () => {
   });
 });
 
-test.describe('加密手機備份', () => {
+test.describe('加密備份與搬移', () => {
   test('電腦加密、錯誤密碼擋下、手機復原與操作', async ({ browser }) => {
     const pc = await openDevice(browser);
     const A = pc.page;
@@ -148,11 +343,11 @@ test.describe('加密手機備份', () => {
     const downloadReady = A.waitForEvent('download');
     await A.click('#downloadBackup');
     const download = await downloadReady;
-    expect(download.suggestedFilename()).toMatch(/^伴侶記憶匣-手機備份-\d{4}-\d{2}-\d{2}\.memorybox$/);
+    expect(download.suggestedFilename()).toMatch(/^memory_box-backup-\d{4}-\d{2}-\d{2}\.memorybox$/);
     const chunks = [], stream = await download.createReadStream();
     for await (const chunk of stream) chunks.push(chunk);
     const encrypted = Buffer.concat(chunks).toString('utf8');
-    await expect(A.locator('#backupResult')).toContainText('已下載加密手機備份');
+    await expect(A.locator('#backupResult')).toContainText('已下載加密備份');
     const envelope = JSON.parse(encrypted);
     expect(envelope.app).toBe('companion-memory-shelf-encrypted-backup');
     expect(envelope.encryption.name).toBe('AES-GCM');
@@ -165,7 +360,7 @@ test.describe('加密手機備份', () => {
     const phone = await openDevice(browser, { viewport: { width: 375, height: 812 }, mobile: true });
     const P = phone.page;
     await P.evaluate(() => openSheet('backupSheet'));
-    await P.locator('#restoreFile').setInputFiles({ name: '手機備份.memorybox', mimeType: 'application/json', buffer: Buffer.from(encrypted) });
+    await P.locator('#restoreFile').setInputFiles({ name: 'memory_box-backup-test.memorybox', mimeType: 'application/json', buffer: Buffer.from(encrypted) });
     await P.fill('#restorePassword', BACKUP_PASSWORD);
     await P.click('#doRestore'); await P.click('#doRestore');
     await expect(P.locator('#backupResult')).toContainText('已復原');
@@ -192,12 +387,30 @@ test.describe('使用說明', () => {
     const { context, page } = await openDevice(browser);
     await page.evaluate(() => openSheet('guideSheet'));
     await expect(page.locator('#flowMain')).toBeVisible();
-    await expect(page.locator('#flowMain > li')).toHaveCount(6);
+    await expect(page.locator('#flowMain > li')).toHaveCount(10);
     await expect(page.locator('#flowMain')).toContainText('不用建立 GitHub 帳號');
-    await expect(page.locator('#flowMain')).toContainText('下載手機備份');
-    await expect(page.locator('#flowMain')).toContainText('密碼不會被記住或上傳');
+    await expect(page.locator('#flowMain')).toContainText('新增一位伴侶');
+    await expect(page.locator('#flowMain')).toContainText('右邊會自動打開這位伴侶的頁面');
+    await expect(page.locator('#flowMain')).toContainText('填妳在這段關係中的名字');
+    await expect(page.locator('#flowMain')).toContainText('設定整理格式，或直接使用預設');
+    await expect(page.locator('#flowMain')).toContainText('選擇「記憶」或「事件」');
+    await expect(page.locator('#flowMain')).toContainText('直接請 AI 讀取這個網頁');
+    await expect(page.locator('#flowMain')).toContainText('AI 只能在對話裡回覆文字時');
+    await expect(page.locator('#flowMain')).toContainText('下載備份');
+    await expect(page.locator('#flowMain')).toContainText('memory_box-backup-YYYY-MM-DD.memorybox');
+    await expect(page.locator('#flowMain')).toContainText('不會被記住、上傳或寫進備份檔');
     await expect(page.locator('#flowMain')).toContainText('貼進「卿卿我我」');
+    await expect(page.locator('#flowMain')).toContainText('把手機進度帶回電腦');
+    await expect(page.locator('#flowMain')).toContainText('接著手機最新的「已轉移」狀態繼續');
     await page.evaluate(() => { closeSheets(); openSheet('backupSheet'); });
+    await expect(page.locator('#backupTitle')).toHaveText('備份與搬移');
+    await expect(page.locator('#downloadBackup')).toHaveText('下載備份');
+    await expect(page.locator('#backupSheet .file-btn')).toContainText('選擇備份檔');
+    await expect(page.locator('#restoreFile')).toHaveAttribute('aria-label', '選擇備份檔');
+    await expect(page.locator('#backupSheet')).toContainText('在這台裝置下載備份');
+    await expect(page.locator('#backupSheet')).toContainText('在另一台裝置復原');
+    await expect(page.locator('#backupSheet')).toContainText('把電腦進度帶到手機');
+    await expect(page.locator('#backupSheet')).toContainText('手機進度帶回電腦');
     await expect(page.locator('#backupSheet')).toContainText('備份會先在這台裝置加密');
     await expect(page.locator('#backupSheet')).toContainText('網站不會把密碼傳給作者、GitHub 或傳送備份檔的服務');
     await expect(page.locator('#backupSheet')).toContainText('不含上傳的原始對話檔');
