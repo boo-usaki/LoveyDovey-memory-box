@@ -1617,10 +1617,17 @@ const DEFAULT_EVENT_CATS = [
   "EV｜劇情進展紀錄｜主線或支線劇情的推進、重要的情節發展",
   "DIA｜日常紀錄｜沒有重要到要寫進關係重大進展，但希望{伴侶}記得的小事，例如誰送了誰什麼、照片放在哪裡",
   "CS｜人物設定｜{我}的人物設定：外表、個性、喜好、習慣、身分",
-  "STORY｜人物故事｜{我}的過去和背景故事，以及和{伴侶}預設的過去關係",
+  "STY｜人物故事｜{我}的過去和背景故事，以及和{伴侶}預設的過去關係",
   EST_EVENT_CAT
 ].join("\n");
-const EVENT_FORMAT_VERSION = 2;
+const EVENT_CODE_ALIASES = { STORY: "STY" };
+const canonicalEventCode = value => EVENT_CODE_ALIASES[String(value || "").trim().toUpperCase()] || String(value || "").trim().toUpperCase();
+const migrateCategoryText = text => String(text || "").split(/\r?\n/).map(line => {
+  const parts = line.split(/([｜|])/);
+  if (String(parts[0] || "").trim().toUpperCase() === "STORY") parts[0] = parts[0].replace(/STORY/i, "STY");
+  return parts.join("");
+}).join("\n");
+const EVENT_FORMAT_VERSION = 3;
 const EV_DEFAULTS = { format: CODE_FORMAT, title: CODE_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE, cats: DEFAULT_EVENT_CATS,
   itemLimit: "", slotLimit: "", timeSource: "real", extraNote: "", previewFirst: false, unifiedFormat: true,
   formatVersion: EVENT_FORMAT_VERSION };
@@ -1640,8 +1647,8 @@ function splitEventFormat(text) {
   };
 }
 function presetCategoryList(text) {
-  const codes = String(text || "").split(/\r?\n/).map(x => (x.split(/[｜|]/)[0] || "").trim().toUpperCase()).filter(Boolean);
-  return ["FIR", "EV", "DIA", "CS", "STORY"].every(x => codes.includes(x)) && codes.every(x => ["FIR", "EV", "DIA", "CS", "STORY", "EST"].includes(x));
+  const codes = String(text || "").split(/\r?\n/).map(x => canonicalEventCode(x.split(/[｜|]/)[0])).filter(Boolean);
+  return ["FIR", "EV", "DIA", "CS", "STY"].every(x => codes.includes(x)) && codes.every(x => ["FIR", "EV", "DIA", "CS", "STY", "EST"].includes(x));
 }
 function eventTextForEditor(text) {
   return String(text || "").replace(/\{代號\}/g, "代號").replace(/\{名稱\}/g, "類別名稱")
@@ -1702,10 +1709,11 @@ function evSet() {
   }
   /* Repair the first unified-form release: it could save an empty code list even though
      the retained title/body still used {代號}, hiding every existing coded event. */
-  if ((Number(e.formatVersion) || 0) < EVENT_FORMAT_VERSION && !String(e.cats || "").trim()
+  if ((Number(e.formatVersion) || 0) < 2 && !String(e.cats || "").trim()
       && /\{代號\}/.test(`${e.title || ""}\n${e.format || ""}`)) {
     e.cats = DEFAULT_EVENT_CATS;
   }
+  if ((Number(e.formatVersion) || 0) < 3) e.cats = migrateCategoryText(e.cats);
   e.formatVersion = EVENT_FORMAT_VERSION;
   for (const [k, v] of Object.entries(EV_DEFAULTS)) if (!has(k) || e[k] == null) e[k] = v;
   return e;
@@ -1718,6 +1726,87 @@ const effectiveEventFormatText = eventFormatText;
 const effectiveEventTitleTemplate = eventTitleTemplate;
 const effectiveEventSubtitleTemplate = eventSubtitleTemplate;
 const pad2 = n => String(Math.max(0, parseInt(n, 10) || 0)).padStart(2, "0");
+
+/* STORY was the original default code. Move it to the shorter STY without changing the
+   user's category description, column numbers, or event text. If STY already exists, keep
+   both sets by moving colliding STORY columns to the next free number. */
+function migrateLegacyEventCodes() {
+  const maps = new Map();
+  const names = new Set(state.companions.map(c => c.name));
+  state.events.filter(e => canonicalEventCode(e.cat) === "STY").forEach(e => names.add(e.companion));
+  for (const name of names) {
+    if (!name) continue;
+    const rec = companionRecord(name);
+    if (!rec.ev || typeof rec.ev !== "object") rec.ev = {};
+    const old = rec.ev.STORY, current = rec.ev.STY;
+    const oldEvents = state.events.filter(e => e.companion === name && String(e.cat || "").toUpperCase() === "STORY");
+    if (!old && !oldEvents.length) {
+      if (String(rec.evCat || "").toUpperCase() === "STORY") rec.evCat = "STY";
+      continue;
+    }
+    const oldSlots = old && Array.isArray(old.slots) ? old.slots : [];
+    const sourceNos = [...new Set(oldSlots.map(s => s.no).concat(oldEvents.map(e => e.slot)).filter(Boolean))].sort((a, b) => a - b);
+    const slotMap = new Map();
+    let target = current;
+    if (!target) {
+      target = old || { slots: [], from: "", to: "" };
+      if (!Array.isArray(target.slots)) target.slots = [];
+      target.slots.forEach(slot => { if (slot.base) slot.base = String(slot.base).replace(/\[STORY(?=[-－]\d)/gi, "[STY"); });
+      rec.ev.STY = target;
+      sourceNos.forEach(no => slotMap.set(no, no));
+    } else {
+      if (!Array.isArray(target.slots)) target.slots = [];
+      const used = new Set(target.slots.map(s => s.no)), byNo = new Map(oldSlots.map(s => [s.no, s]));
+      let next = Math.max(...used, 0);
+      for (const no of sourceNos) {
+        let moved = no;
+        if (used.has(moved)) { do { moved = ++next; } while (used.has(moved)); }
+        used.add(moved); next = Math.max(next, moved); slotMap.set(no, moved);
+        const source = byNo.get(no), items = oldEvents.filter(e => e.slot === no), dates = items.map(e => e.date).filter(Boolean).sort();
+        const copy = source ? { ...source, no: moved } : { no: moved, start: dates[0] || "", end: dates[dates.length - 1] || "", closed: false,
+          base: "", baseIdx: 0, hw: Math.max(...items.map(e => e.idx || 0), 0), updatedAt: 1 };
+        if (copy.base) copy.base = String(copy.base).replace(/\[STORY(?=[-－]\d)/gi, "[STY");
+        target.slots.push(copy);
+      }
+      if (old) {
+        if (!target.from && old.from) target.from = old.from;
+        if (!target.to && old.to) target.to = old.to;
+        target.rangeAt = Math.max(target.rangeAt || 0, old.rangeAt || 0);
+      }
+    }
+    oldEvents.forEach(e => { e.cat = "STY"; e.slot = slotMap.get(e.slot) || e.slot; });
+    delete rec.ev.STORY;
+    if (String(rec.evCat || "").toUpperCase() === "STORY") rec.evCat = "STY";
+    maps.set(name, slotMap);
+  }
+  const fixItem = (item, name) => {
+    if (!item || typeof item !== "object") return;
+    const wasStory = String(item.cat || item.category || "").toUpperCase() === "STORY";
+    if (String(item.cat || "").toUpperCase() === "STORY") item.cat = "STY";
+    if (String(item.category || "").toUpperCase() === "STORY") item.category = "STY";
+    if (wasStory && item.slot && maps.get(name || item.companion)?.has(item.slot)) item.slot = maps.get(name || item.companion).get(item.slot);
+  };
+  const pending = state.evp && state.evp.data;
+  if (pending) {
+    const wasStory = String(pending.cat || "").toUpperCase() === "STORY";
+    if (wasStory) {
+      pending.cat = "STY";
+      if (maps.get(pending.companion)?.has(pending.slotNo)) pending.slotNo = maps.get(pending.companion).get(pending.slotNo);
+    }
+    (pending.queue || []).forEach(e => fixItem(e, e.companion || pending.companion));
+    (pending.groups || []).forEach(g => fixItem(g, g.companion || pending.companion));
+    for (const grouped of [pending.range, pending.dateCheck && pending.dateCheck.byGroup]) {
+      if (!grouped || typeof grouped !== "object") continue;
+      for (const key of Object.keys(grouped)) if (key.endsWith("\u0000STORY")) {
+        const next = key.slice(0, -5) + "STY";
+        if (!Object.prototype.hasOwnProperty.call(grouped, next)) grouped[next] = grouped[key];
+        delete grouped[key];
+      }
+    }
+  }
+  const review = state.evr && state.evr.data;
+  if (review) (review.items || []).forEach(e => fixItem(e, e.companion || review.companion));
+}
 function isoDate(s) {
   const m = String(s || "").match(/(\d{4})\s*[\/\-.年]\s*(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})/);
   return m ? `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}` : "";
@@ -1749,7 +1838,7 @@ function parseCats(text, useDefault) {
   for (const raw of String(text || "").split(/\r?\n/)) {
     const parts = raw.split(/[｜|]/).map(x => x.trim());
     if (!parts[0]) continue;
-    let code = parts[0].replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    let code = canonicalEventCode(parts[0].replace(/[^A-Za-z0-9]/g, ""));
     const name = parts[1] || parts[0];
     if (!code) code = "C" + (out.length + 1);   /* a category written only by name */
     if (out.some(c => c.code === code)) continue;
@@ -1774,6 +1863,7 @@ function parseEventFormat(text) {
 }
 const evFormat = () => parseEventFormat(effectiveEventFormatText());
 function catByCode(code) {
+  code = canonicalEventCode(code);
   return eventCats().find(c => c.code === code)
     || parseCats(evSet().cats, false).find(c => c.code === code)
     || parseCats(DEFAULT_EVENT_CATS, false).find(c => c.code === code)
@@ -1788,7 +1878,7 @@ function visibleCats(name) {
   for (const code of codes) if (!have.has(code)) extra.push({ code, name: `${code}（已不在清單）`, hint: "這一類已經從「事件格式」的清單拿掉了，資料還在。", orphan: true });
   return cats.concat(extra);
 }
-const knownCat = (name, code) => visibleCats(name).some(c => c.code === code);
+const knownCat = (name, code) => visibleCats(name).some(c => c.code === canonicalEventCode(code));
 function fillHead(tpl, ev) {
   return tpl.replace(/\{代號\}/g, ev.cat || "").replace(/\{名稱\}/g, catByCode(ev.cat).name).replace(/\{欄號\}/g, pad2(ev.slot))
     .replace(/\{則號\}/g, pad2(ev.idx)).replace(/\{關鍵字\}/g, ev.keywords || "");
@@ -1824,7 +1914,7 @@ function headMatcher() {
     if (/[：:]\s*$/.test(line) && !/\{關鍵字\}[：:]/.test(tpl)) return null;
     const m = line.match(rx); if (!m) return null;
     const o = { cat: "", slot: 0, idx: 0, keywords: "" };
-    order.forEach((t, i) => { const v = m[i + 1] || ""; if (t === "代號") o.cat = v.toUpperCase(); else if (t === "欄號") o.slot = +v; else if (t === "則號") o.idx = +v; else if (t === "關鍵字") o.keywords = v.trim(); });
+    order.forEach((t, i) => { const v = m[i + 1] || ""; if (t === "代號") o.cat = canonicalEventCode(v); else if (t === "欄號") o.slot = +v; else if (t === "則號") o.idx = +v; else if (t === "關鍵字") o.keywords = v.trim(); });
     if (!o.keywords && !o.cat && !o.slot) return null;
     return o;
   };
@@ -1836,7 +1926,7 @@ function parseEventBlocks(text, firstIsHead) {
   const match = headMatcher();
   const codeHead = line => {
     const h = line.match(/^\s*#{0,3}\s*\[([A-Za-z0-9]+)[-－](\d+)(?:[-－](\d+))?\]\s*(.*)$/);
-    return h ? { cat: h[1].toUpperCase(), slot: +h[2], idx: h[3] ? +h[3] : 0, keywords: h[4].trim() } : null;
+    return h ? { cat: canonicalEventCode(h[1]), slot: +h[2], idx: h[3] ? +h[3] : 0, keywords: h[4].trim() } : null;
   };
   const push = () => { if (cur) items.push(cur); };
   const lines = String(text || "").split(/\r?\n/);
@@ -1860,13 +1950,14 @@ function parseEventBlocks(text, firstIsHead) {
 }
 
 function evRec(name, code) {
+  code = canonicalEventCode(code);
   const rec = companionRecord(name);
   if (!rec.ev || typeof rec.ev !== "object") rec.ev = {};
   if (!rec.ev[code]) rec.ev[code] = { slots: [], from: "", to: "" };
   if (!Array.isArray(rec.ev[code].slots)) rec.ev[code].slots = [];
   return rec.ev[code];
 }
-const peekEv = (name, code) => (((state.companions.find(x => x.name === name) || {}).ev || {})[code]) || { slots: [], from: "", to: "" };
+const peekEv = (name, code) => (((state.companions.find(x => x.name === name) || {}).ev || {})[canonicalEventCode(code)]) || { slots: [], from: "", to: "" };
 function eventRange(name) {
   const rec = companionRecord(name);
   if (!rec.eventRange || typeof rec.eventRange !== "object") {
@@ -1945,7 +2036,7 @@ function parseEventImport(text, fallbackCat) {
       for (const [k, v] of Object.entries(src)) fields[k] = Array.isArray(v) ? v.map(s => String(s).trim()).filter(Boolean).join("\n") : String(v == null ? "" : v).trim();
       const time = fields["時間"] || x.time || "", rawDate = x.date || x["日期"] || "";
       const explicitDate = isoDate(rawDate), timeDate = isoDate(time);
-      return { companion: String(x.companion || x["伴侶"] || "").trim(), cat: String(x.category || x.code || x["代號"] || fallbackCat || "").toUpperCase(),
+      return { companion: String(x.companion || x["伴侶"] || "").trim(), cat: canonicalEventCode(x.category || x.code || x["代號"] || fallbackCat || ""),
         keywords: String(x.keywords || x["關鍵字"] || x.title || "").trim(), date: explicitDate || timeDate, dateIssue: rawDate && !explicitDate ? "invalid" : "", fields,
         transferred: typeof x.transferred === "boolean" ? x.transferred : undefined };
     }) };
@@ -2107,6 +2198,7 @@ function confirmEventReview() {
    import pauses for the user's classification review before anything is placed. */
 function importEventsCore(text, companion, code, opts) {
   opts = opts || {};
+  code = code ? canonicalEventCode(code) : code;
   const name = String(companion || state.current || "").trim();
   if (!name) return { ok: false, error: "請先選一位伴侶。" };
   const pend = getPending();
@@ -2585,24 +2677,24 @@ window.memoryShelf = {
   },
   importMemories(data, companion) { return importCore(data, companion || state.current || ""); },
   eventPrompt(companion, category) {
-    const n = companion || state.current, code = category ? String(category).toUpperCase() : "";
+    const n = companion || state.current, code = category ? canonicalEventCode(category) : "";
     if (code && !knownCat(n, code)) throw new Error(`沒有「${code}」這個事件類別`);
     if (!code && rangeBad(n)) throw new Error("整理範圍的「從」比「到」還晚，請先修正");
     return buildEventPrompt(n, code || undefined);
   },
   setEventRange(companion, category, from, to) {
-    const n = companion || state.current, code = category ? String(category).toUpperCase() : "";
+    const n = companion || state.current, code = category ? canonicalEventCode(category) : "";
     if (code && !knownCat(n, code)) throw new Error(`沒有「${code}」這個事件類別`);
     const f = isoDate(from || "") || "", t = isoDate(to || "") || "";
     if (f && t && f > t) throw new Error("「從」不能比「到」晚");
     const r = code ? evRec(n, code) : eventRange(n); r.from = f; r.to = t; r.rangeAt = Date.now();
     save(); render(); return { companion: n, category: code || null, from: r.from, to: r.to };
   },
-  importEvents(data, companion, category, opts) { return importEventsCore(data, companion || state.current || "", category ? String(category).toUpperCase() : undefined, opts); },
+  importEvents(data, companion, category, opts) { return importEventsCore(data, companion || state.current || "", category ? canonicalEventCode(category) : undefined, opts); },
   pendingEvent() { return pendingInfo(getPending()); },
   resolveEventOverflow(choice, text) { return resolveEventOverflow(choice, text); },
   events(companion, category) {
-    const n = companion || state.current, code = category ? String(category).toUpperCase() : catOf(n).code, r = peekEv(n, code);
+    const n = companion || state.current, code = category ? canonicalEventCode(category) : catOf(n).code, r = peekEv(n, code);
     return r.slots.map(s => ({ title: slotTitle(code, s), subtitle: slotSubtitle(s), closed: !!s.closed, used: charCount(slotBody(n, code, s)), limit: slotLimit(),
       items: slotItems(n, code, s.no).map(e => ({ id: e.id, code: `${code}-${pad2(e.slot)}-${pad2(e.idx)}`, transferred: !!e.transferred, text: eventText(e) })) }));
   },
@@ -2616,7 +2708,7 @@ window.memoryShelf = {
 /* ---------- Wire up ---------- */
 /* Remove the retired Gist token if this browser ever tested the old sync design. */
 try { localStorage.removeItem("companion-memory-shelf.sync"); } catch (e) {}
-load(); evSet(); save();
+load(); migrateLegacyEventCodes(); evSet(); save();
 
 $("showTodo").onclick = () => { state.view = "todo"; render(); };
 $("showDone").onclick = () => { state.view = "done"; render(); };
@@ -2764,6 +2856,7 @@ async function restoreBackup(text) {
   if (data.settings) state.settings = Object.assign(state.settings, migrate(data.settings));
   state.evp = { at: now, data: data.evp && data.evp.data ? data.evp.data : null };
   state.evr = { at: now, data: data.evr && data.evr.data ? data.evr.data : null };
+  migrateLegacyEventCodes(); evSet();
   save(); render();
   return `已復原：${state.memories.length} 則記憶體、${liveEvents().length} 段事件內文。`;
 }
