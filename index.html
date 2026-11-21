@@ -1617,17 +1617,17 @@ const DEFAULT_EVENT_CATS = [
   "EV｜劇情進展紀錄｜主線或支線劇情的推進、重要的情節發展",
   "DIA｜日常紀錄｜沒有重要到要寫進關係重大進展，但希望{伴侶}記得的小事，例如誰送了誰什麼、照片放在哪裡",
   "CS｜人物設定｜{我}的人物設定：外表、個性、喜好、習慣、身分",
-  "STY｜人物故事｜{我}的過去和背景故事，以及和{伴侶}預設的過去關係",
+  "STORY｜人物故事｜{我}的過去和背景故事，以及和{伴侶}預設的過去關係",
   EST_EVENT_CAT
 ].join("\n");
-const EVENT_CODE_ALIASES = { STORY: "STY" };
+const EVENT_CODE_ALIASES = { STY: "STORY" };
 const canonicalEventCode = value => EVENT_CODE_ALIASES[String(value || "").trim().toUpperCase()] || String(value || "").trim().toUpperCase();
 const migrateCategoryText = text => String(text || "").split(/\r?\n/).map(line => {
   const parts = line.split(/([｜|])/);
-  if (String(parts[0] || "").trim().toUpperCase() === "STORY") parts[0] = parts[0].replace(/STORY/i, "STY");
+  if (String(parts[0] || "").trim().toUpperCase() === "STY") parts[0] = parts[0].replace(/STY/i, "STORY");
   return parts.join("");
 }).join("\n");
-const EVENT_FORMAT_VERSION = 3;
+const EVENT_FORMAT_VERSION = 4;
 const EV_DEFAULTS = { format: CODE_FORMAT, title: CODE_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE, cats: DEFAULT_EVENT_CATS,
   itemLimit: "", slotLimit: "", timeSource: "real", extraNote: "", previewFirst: false, unifiedFormat: true,
   formatVersion: EVENT_FORMAT_VERSION };
@@ -1648,7 +1648,7 @@ function splitEventFormat(text) {
 }
 function presetCategoryList(text) {
   const codes = String(text || "").split(/\r?\n/).map(x => canonicalEventCode(x.split(/[｜|]/)[0])).filter(Boolean);
-  return ["FIR", "EV", "DIA", "CS", "STY"].every(x => codes.includes(x)) && codes.every(x => ["FIR", "EV", "DIA", "CS", "STY", "EST"].includes(x));
+  return ["FIR", "EV", "DIA", "CS", "STORY"].every(x => codes.includes(x)) && codes.every(x => ["FIR", "EV", "DIA", "CS", "STORY", "EST"].includes(x));
 }
 function eventTextForEditor(text) {
   return String(text || "").replace(/\{代號\}/g, "代號").replace(/\{名稱\}/g, "類別名稱")
@@ -1713,7 +1713,7 @@ function evSet() {
       && /\{代號\}/.test(`${e.title || ""}\n${e.format || ""}`)) {
     e.cats = DEFAULT_EVENT_CATS;
   }
-  if ((Number(e.formatVersion) || 0) < 3) e.cats = migrateCategoryText(e.cats);
+  if ((Number(e.formatVersion) || 0) < 4) e.cats = migrateCategoryText(e.cats);
   e.formatVersion = EVENT_FORMAT_VERSION;
   for (const [k, v] of Object.entries(EV_DEFAULTS)) if (!has(k) || e[k] == null) e[k] = v;
   return e;
@@ -1727,21 +1727,21 @@ const effectiveEventTitleTemplate = eventTitleTemplate;
 const effectiveEventSubtitleTemplate = eventSubtitleTemplate;
 const pad2 = n => String(Math.max(0, parseInt(n, 10) || 0)).padStart(2, "0");
 
-/* STORY was the original default code. Move it to the shorter STY without changing the
-   user's category description, column numbers, or event text. If STY already exists, keep
-   both sets by moving colliding STORY columns to the next free number. */
+/* STY was briefly published as the default code. Move it back to the clearer STORY without
+   changing the user's category description, column numbers, or event text. If STORY already
+   exists, keep both sets by moving colliding STY columns to the next free number. */
 function migrateLegacyEventCodes() {
   const maps = new Map();
   const names = new Set(state.companions.map(c => c.name));
-  state.events.filter(e => canonicalEventCode(e.cat) === "STY").forEach(e => names.add(e.companion));
+  state.events.filter(e => canonicalEventCode(e.cat) === "STORY").forEach(e => names.add(e.companion));
   for (const name of names) {
     if (!name) continue;
     const rec = companionRecord(name);
     if (!rec.ev || typeof rec.ev !== "object") rec.ev = {};
-    const old = rec.ev.STORY, current = rec.ev.STY;
-    const oldEvents = state.events.filter(e => e.companion === name && String(e.cat || "").toUpperCase() === "STORY");
+    const old = rec.ev.STY, current = rec.ev.STORY;
+    const oldEvents = state.events.filter(e => e.companion === name && String(e.cat || "").toUpperCase() === "STY");
     if (!old && !oldEvents.length) {
-      if (String(rec.evCat || "").toUpperCase() === "STORY") rec.evCat = "STY";
+      if (String(rec.evCat || "").toUpperCase() === "STY") rec.evCat = "STORY";
       continue;
     }
     const oldSlots = old && Array.isArray(old.slots) ? old.slots : [];
@@ -1751,8 +1751,8 @@ function migrateLegacyEventCodes() {
     if (!target) {
       target = old || { slots: [], from: "", to: "" };
       if (!Array.isArray(target.slots)) target.slots = [];
-      target.slots.forEach(slot => { if (slot.base) slot.base = String(slot.base).replace(/\[STORY(?=[-－]\d)/gi, "[STY"); });
-      rec.ev.STY = target;
+      target.slots.forEach(slot => { if (slot.base) slot.base = String(slot.base).replace(/\[STY(?=[-－]\d)/gi, "[STORY"); });
+      rec.ev.STORY = target;
       sourceNos.forEach(no => slotMap.set(no, no));
     } else {
       if (!Array.isArray(target.slots)) target.slots = [];
@@ -1765,7 +1765,7 @@ function migrateLegacyEventCodes() {
         const source = byNo.get(no), items = oldEvents.filter(e => e.slot === no), dates = items.map(e => e.date).filter(Boolean).sort();
         const copy = source ? { ...source, no: moved } : { no: moved, start: dates[0] || "", end: dates[dates.length - 1] || "", closed: false,
           base: "", baseIdx: 0, hw: Math.max(...items.map(e => e.idx || 0), 0), updatedAt: 1 };
-        if (copy.base) copy.base = String(copy.base).replace(/\[STORY(?=[-－]\d)/gi, "[STY");
+        if (copy.base) copy.base = String(copy.base).replace(/\[STY(?=[-－]\d)/gi, "[STORY");
         target.slots.push(copy);
       }
       if (old) {
@@ -1774,31 +1774,31 @@ function migrateLegacyEventCodes() {
         target.rangeAt = Math.max(target.rangeAt || 0, old.rangeAt || 0);
       }
     }
-    oldEvents.forEach(e => { e.cat = "STY"; e.slot = slotMap.get(e.slot) || e.slot; });
-    delete rec.ev.STORY;
-    if (String(rec.evCat || "").toUpperCase() === "STORY") rec.evCat = "STY";
+    oldEvents.forEach(e => { e.cat = "STORY"; e.slot = slotMap.get(e.slot) || e.slot; });
+    delete rec.ev.STY;
+    if (String(rec.evCat || "").toUpperCase() === "STY") rec.evCat = "STORY";
     maps.set(name, slotMap);
   }
   const fixItem = (item, name) => {
     if (!item || typeof item !== "object") return;
-    const wasStory = String(item.cat || item.category || "").toUpperCase() === "STORY";
-    if (String(item.cat || "").toUpperCase() === "STORY") item.cat = "STY";
-    if (String(item.category || "").toUpperCase() === "STORY") item.category = "STY";
-    if (wasStory && item.slot && maps.get(name || item.companion)?.has(item.slot)) item.slot = maps.get(name || item.companion).get(item.slot);
+    const wasSty = String(item.cat || item.category || "").toUpperCase() === "STY";
+    if (String(item.cat || "").toUpperCase() === "STY") item.cat = "STORY";
+    if (String(item.category || "").toUpperCase() === "STY") item.category = "STORY";
+    if (wasSty && item.slot && maps.get(name || item.companion)?.has(item.slot)) item.slot = maps.get(name || item.companion).get(item.slot);
   };
   const pending = state.evp && state.evp.data;
   if (pending) {
-    const wasStory = String(pending.cat || "").toUpperCase() === "STORY";
-    if (wasStory) {
-      pending.cat = "STY";
+    const wasSty = String(pending.cat || "").toUpperCase() === "STY";
+    if (wasSty) {
+      pending.cat = "STORY";
       if (maps.get(pending.companion)?.has(pending.slotNo)) pending.slotNo = maps.get(pending.companion).get(pending.slotNo);
     }
     (pending.queue || []).forEach(e => fixItem(e, e.companion || pending.companion));
     (pending.groups || []).forEach(g => fixItem(g, g.companion || pending.companion));
     for (const grouped of [pending.range, pending.dateCheck && pending.dateCheck.byGroup]) {
       if (!grouped || typeof grouped !== "object") continue;
-      for (const key of Object.keys(grouped)) if (key.endsWith("\u0000STORY")) {
-        const next = key.slice(0, -5) + "STY";
+      for (const key of Object.keys(grouped)) if (key.endsWith("\u0000STY")) {
+        const next = key.slice(0, -3) + "STORY";
         if (!Object.prototype.hasOwnProperty.call(grouped, next)) grouped[next] = grouped[key];
         delete grouped[key];
       }
