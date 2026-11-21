@@ -31,7 +31,7 @@ async function openDevice(browser, { viewport = { width: 1280, height: 1000 }, m
   return { context, page };
 }
 
-test.describe('記憶', () => {
+test.describe('記憶體', () => {
   test('agent 匯入、重複匯入會更新、貼上回覆、標記已轉移', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     const r = await page.evaluate(list => { memoryShelf.addCompanion('王小明', '張小美'); return memoryShelf.importMemories(JSON.stringify(list), '王小明'); }, [MEM(1, '雨夜'), MEM(11, '晴天')]);
@@ -42,6 +42,9 @@ test.describe('記憶', () => {
     await page.evaluate(m => memoryShelf.importMemories(JSON.stringify([m]), '王小明'), MEM(11, '晴天改'));
     const titles = await page.evaluate(() => state.memories.filter(m => !m.example).map(m => m.title).sort());
     expect(titles).toEqual(['晴天改', '雨夜']);
+
+    await page.evaluate(() => { state.settings.previewFirst = true; save(); });
+    expect(await page.evaluate(() => memoryShelf.prompt('王小明'))).toContain('先只整理第一則作為預覽');
 
     await page.click('#importHere');
     await page.fill('#importText', JSON.stringify([MEM(21, '貼上的')]));
@@ -71,9 +74,12 @@ test.describe('記憶', () => {
 });
 
 test.describe('事件', () => {
-  test('自動編號、日期進度、開新欄與改短', async ({ browser }) => {
+  test('自動編號、日期進度、新增一篇事件與改短', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
-    await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
+    await page.evaluate(() => {
+      memoryShelf.addCompanion('王小明', '張小美');
+      Object.assign(evSet(), { itemLimit: '500', slotLimit: '2000' });
+    });
     const codes = () => page.evaluate(() => memoryShelf.events('王小明', 'FIR').flatMap(s => s.items.map(i => i.code)));
 
     let r = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR'), [EV('一', '2026-02-01'), EV('二', '2026-02-02'), EV('三', '2026-02-03')]);
@@ -81,10 +87,11 @@ test.describe('事件', () => {
     expect(await codes()).toEqual(['FIR-01-01', 'FIR-01-02', 'FIR-01-03']);
     expect(await page.evaluate(() => evRec('王小明', 'FIR').from)).toBe('2026-02-04');
 
-    // 一欄放不下：先停下來問，選「開新欄」後接到 [FIR-02]
+    // 這篇事件的內文放不下：先停下來問，選「新增一篇事件」後接到 [FIR-02]
     r = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR'),
       ['長一', '長二', '長三', '長四', '長五'].map((kw, i) => EV(kw, `2026-02-0${5 + i}`, 80)));
     expect(r.pending).toBeTruthy();
+    expect((await codes()).some(c => c === 'FIR-01-04')).toBe(true);
     expect(r.pending.canOpenNew).toBe(true);
     await expect(page.locator('#evPendingBar')).toBeVisible();
     await expect(page.locator('#evPendingBar')).toContainText('在等妳決定');
@@ -108,7 +115,7 @@ test.describe('事件', () => {
     await context.close();
   });
 
-  test('事件格式保留預設與自訂，自訂代號可留空', async ({ browser }) => {
+  test('事件格式直接編輯、限制可留空、代號可留空', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
     await page.click('#tabEv');
@@ -124,16 +131,17 @@ test.describe('事件', () => {
     await expect(page.locator('#formatMemoryPanel')).toBeHidden();
     await expect(page.locator('#formatEventPanel')).toBeVisible();
 
-    await expect(page.locator('#evFormatDefault')).toHaveText('預設代號');
-    await expect(page.locator('#evFormatCustom')).toHaveText('自訂格式');
+    await expect(page.locator('#evFormatDefault')).toHaveCount(0);
+    await expect(page.locator('#evFormatCustom')).toHaveCount(0);
     await expect(page.locator('#evFormatPlain')).toHaveCount(0);
-    await expect(page.locator('#evFormatDefault')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('label[for="evTitleFormat"]')).toContainText('大標');
     await expect(page.locator('label[for="evSubtitleFormat"]')).toContainText('小標');
     await expect(page.locator('label[for="evBodyFormat"]')).toHaveText('內文');
-    await expect(page.locator('#evTitleFormat')).toHaveAttribute('readonly', '');
-    await expect(page.locator('#evSubtitleFormat')).toHaveAttribute('readonly', '');
-    await expect(page.locator('#evBodyFormat')).toHaveAttribute('readonly', '');
+    await expect(page.locator('label[for="evItemLimit"]')).toContainText('每段內文的字數上限（含標點）');
+    await expect(page.locator('label[for="evSlotLimit"]')).toContainText('每篇事件的總字數上限（含標點）');
+    await expect(page.locator('#evTitleFormat')).toBeEditable();
+    await expect(page.locator('#evSubtitleFormat')).toBeEditable();
+    await expect(page.locator('#evBodyFormat')).toBeEditable();
     await expect(page.locator('#evTitleFormat')).toHaveValue('[代號-第幾篇] 類別名稱');
     await expect(page.locator('#evSubtitleFormat')).toHaveValue('YYYY/MM/DD-現在｜依事件地點進行已發生事件紀錄更新');
     await expect(page.locator('#evBodyFormat')).toHaveValue([
@@ -145,25 +153,16 @@ test.describe('事件', () => {
       '- ……'
     ].join('\n'));
     await expect(page.locator('#evCatsText')).toHaveValue(/EST｜資產｜紀錄角色已公開資產/);
-    await expect(page.locator('#evCatsText')).toHaveAttribute('readonly', '');
+    await expect(page.locator('#evCatsText')).toBeEditable();
+    await expect(page.locator('#evItemLimit')).toHaveValue('');
+    await expect(page.locator('#evSlotLimit')).toHaveValue('');
+    const unlimited = await page.evaluate(ev => memoryShelf.importEvents(JSON.stringify([ev]), '王小明', 'FIR'), EV('不限制長度', '2026-03-01', 520));
+    expect(unlimited.pending).toBeNull();
     await expect(page.locator('#evTitleTpl')).toHaveCount(0);
     await expect(page.locator('#evSubtitleTpl')).toHaveCount(0);
     await expect(page.locator('#evPreview')).toHaveCount(0);
 
-    await page.click('#evFormatCustom');
-    await expect(page.locator('#evFormatCustom')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#evTitleFormat')).toBeEditable();
-    await expect(page.locator('#evSubtitleFormat')).toBeEditable();
-    await expect(page.locator('#evBodyFormat')).toBeEditable();
-    await expect(page.locator('#evTitleFormat')).toHaveValue('');
-    await expect(page.locator('#evSubtitleFormat')).toHaveValue('');
-    await expect(page.locator('#evBodyFormat')).toHaveValue('');
-    expect(await page.locator('#evTitleFormat').getAttribute('placeholder')).toBeNull();
-    expect(await page.locator('#evSubtitleFormat').getAttribute('placeholder')).toBeNull();
-    expect(await page.locator('#evBodyFormat').getAttribute('placeholder')).toBeNull();
-    await expect(page.locator('#evCatsConfig')).toBeVisible();
-    await expect(page.locator('#evCatsText')).toBeEditable();
-    await expect(page.locator('#evCatsText')).toHaveValue('');
+    await page.fill('#evCatsText', '');
     await page.fill('#evTitleFormat', '[第幾篇]');
     await page.fill('#evBodyFormat', '[第幾篇-之幾] 關鍵字\n內容：');
     await page.waitForTimeout(450);
@@ -172,6 +171,14 @@ test.describe('事件', () => {
     expect(plainPrompt).not.toContain('這次只整理「事件」這一類');
     expect(plainPrompt).not.toContain('使用對話的現實時間');
     expect(plainPrompt).toContain('date：記憶匣接續整理用的日期');
+    expect(plainPrompt).not.toContain('每段內文控制在');
+
+    await page.fill('#evItemLimit', '650');
+    await page.check('#evPreviewFirst');
+    await page.waitForTimeout(450);
+    const previewPrompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    expect(previewPrompt).toContain('每段內文控制在 650 字以內');
+    expect(previewPrompt).toContain('先只整理第一段內文作為預覽');
 
     await page.fill('#evTitleFormat', '[代號-第幾篇]');
     await page.fill('#evBodyFormat', '[代號-第幾篇-之幾] 關鍵字\n內容：');
@@ -181,6 +188,8 @@ test.describe('事件', () => {
     await page.click('#resetEventFormat');
     await expect(page.locator('#evTitleFormat')).toHaveValue('[代號-第幾篇] 類別名稱');
     await expect(page.locator('#evCatsText')).toHaveValue(/EST｜資產｜紀錄角色已公開資產/);
+    await expect(page.locator('#evItemLimit')).toHaveValue('');
+    await expect(page.locator('#evSlotLimit')).toHaveValue('');
     await page.setViewportSize({ width: 375, height: 812 });
     expect(await page.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     expect(page.errors).toEqual([]);
@@ -192,12 +201,13 @@ test.describe('事件', () => {
     await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
     const prompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
     expect(prompt).toContain('【這次整理】');
-    expect(prompt).toContain('對話裡真的出現、之後能觸發這段事件的字詞');
+    expect(prompt).toContain('對話裡真的出現、之後能觸發這段內文的字詞');
     expect(prompt).toContain('時間：使用對話的現實時間');
     expect(prompt).toContain('date：記憶匣接續整理用的日期');
+    expect(prompt).not.toContain('每段內文控制在');
     expect(prompt).not.toContain('親密的內容');
     expect(prompt).not.toContain('不要自己補充或編造');
-    expect(prompt.split('\n').filter(line => /^\d+\./.test(line))).toHaveLength(4);
+    expect(prompt.split('\n').filter(line => /^\d+\./.test(line))).toHaveLength(3);
     const review = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '王小明'), [
       EV('個體、附屬品', '2026-02-13'),
       { ...EV('送照片', '2026-02-14'), category: 'DIA' }
@@ -256,10 +266,9 @@ test.describe('事件', () => {
     const { context, page } = await openDevice(browser, { init: legacyPlain });
     await page.evaluate(() => openSheet('formatSheet'));
     await page.click('#formatTabEv');
-    await expect(page.locator('#evFormatCustom')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#evTitleFormat')).toHaveValue('');
-    await expect(page.locator('#evSubtitleFormat')).toHaveValue('');
-    await expect(page.locator('#evBodyFormat')).toHaveValue('');
+    await expect(page.locator('#evTitleFormat')).toHaveValue('類別名稱｜第幾篇');
+    await expect(page.locator('#evSubtitleFormat')).toHaveValue('YYYY/MM/DD-現在｜依事件地點進行已發生事件紀錄更新');
+    await expect(page.locator('#evBodyFormat')).toHaveValue('【關鍵字】\n時間：\n地點：\n細節：');
     await expect(page.locator('#evCatsConfig')).toBeVisible();
     await expect(page.locator('#evCatsText')).toHaveValue('');
     await page.fill('#evTitleFormat', '[代號-第幾篇]');
@@ -390,12 +399,16 @@ test.describe('使用說明', () => {
     await expect(page.locator('#flowMain > li')).toHaveCount(10);
     await expect(page.locator('#flowMain')).toContainText('不用建立 GitHub 帳號');
     await expect(page.locator('#flowMain')).toContainText('新增一位伴侶');
-    await expect(page.locator('#flowMain')).toContainText('右邊會自動打開這位伴侶的頁面');
+    await expect(page.locator('#flowMain')).toContainText('畫面會自動開啟這位伴侶的頁面');
     await expect(page.locator('#flowMain')).toContainText('填妳在這段關係中的名字');
     await expect(page.locator('#flowMain')).toContainText('設定整理格式，或直接使用預設');
-    await expect(page.locator('#flowMain')).toContainText('選擇「記憶」或「事件」');
-    await expect(page.locator('#flowMain')).toContainText('直接請 AI 讀取這個網頁');
+    await expect(page.locator('#flowMain')).toContainText('選擇「記憶體」或「事件」');
+    await expect(page.locator('#flowMain')).toContainText('再請 AI 讀取這個網頁');
     await expect(page.locator('#flowMain')).toContainText('AI 只能在對話裡回覆文字時');
+    await expect(page.locator('#flowMain')).toContainText('不用把檔案上傳到記憶匣');
+    await expect(page.locator('#guideSheet')).toContainText('頁面會開啟分類確認畫面');
+    await expect(page.locator('#guideSheet')).not.toContainText('上限預設為 2000 字');
+    await expect(page.locator('#guideSheet')).toContainText('記憶體、事件和設定會儲存在妳目前使用的這個瀏覽器裡');
     await expect(page.locator('#flowMain')).toContainText('下載備份');
     await expect(page.locator('#flowMain')).toContainText('memory_box-backup-YYYY-MM-DD.memorybox');
     await expect(page.locator('#flowMain')).toContainText('不會被記住、上傳或寫進備份檔');
