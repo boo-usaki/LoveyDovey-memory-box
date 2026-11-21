@@ -302,30 +302,30 @@ test.describe('事件', () => {
     await context.close();
   });
 
-  test('STORY 會轉成 STY 並保留使用者改過的分類說明與內容', async ({ browser }) => {
-    const legacyStory = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
+  test('STY 會接回 STORY 並保留使用者改過的分類說明與內容', async ({ browser }) => {
+    const shortLivedSty = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
       memories: [],
-      events: [{ id: 'old-story', companion: '王小明', cat: 'STORY', slot: 1, idx: 1, keywords: '中山區的大小姐', date: '2026-02-13', fields: { '細節': '這是原本的故事內容' } }],
-      companions: [{ name: '王小明', userName: '張小美', evCat: 'STORY', ev: {
-        STORY: { from: '', slots: [{ no: 1, start: '2026-02-13', end: '', closed: false, base: '[STORY-01-01] 舊內文' }] }
+      events: [{ id: 'short-sty', companion: '王小明', cat: 'STY', slot: 1, idx: 1, keywords: '中山區的大小姐', date: '2026-02-13', fields: { '細節': '這是原本的故事內容' } }],
+      companions: [{ name: '王小明', userName: '張小美', evCat: 'STY', ev: {
+        STY: { from: '', slots: [{ no: 1, start: '2026-02-13', end: '', closed: false, base: '[STY-01-01] 舊內文' }] }
       } }],
       meta: {}, settings: { events: {
-        unifiedFormat: true, formatVersion: 2,
+        unifiedFormat: true, formatVersion: 3,
         title: '[{代號}-{欄號}] {名稱}', format: '[{代號}-{欄號}-{則號}] {關鍵字}\n細節：', subtitle: '{開始}-{結束}',
-        cats: 'STORY｜人物故事｜洛夫人剛剛改過的要記什麼'
+        cats: 'STY｜人物故事｜洛夫人剛剛改過的要記什麼'
       } }
     }));
-    const { context, page } = await openDevice(browser, { init: legacyStory });
+    const { context, page } = await openDevice(browser, { init: shortLivedSty });
     await page.evaluate(() => openSheet('formatSheet'));
     await page.click('#formatTabEv');
-    await expect(page.locator('#evCatsText')).toHaveValue('STY｜人物故事｜洛夫人剛剛改過的要記什麼');
-    expect(await page.evaluate(() => Object.keys(state.companions[0].ev))).toEqual(['STY']);
-    expect(await page.evaluate(() => state.companions[0].evCat)).toBe('STY');
-    expect(await page.evaluate(() => state.companions[0].ev.STY.slots[0].base)).toContain('[STY-01-01]');
-    const sty = await page.evaluate(() => memoryShelf.events('王小明', 'STY'));
-    expect(sty[0].title).toBe('[STY-01] 人物故事');
-    expect(sty[0].items[0].text).toContain('這是原本的故事內容');
-    expect(await page.evaluate(() => memoryShelf.events('王小明', 'STORY')[0].items[0].code)).toBe('STY-01-01');
+    await expect(page.locator('#evCatsText')).toHaveValue('STORY｜人物故事｜洛夫人剛剛改過的要記什麼');
+    expect(await page.evaluate(() => Object.keys(state.companions[0].ev))).toEqual(['STORY']);
+    expect(await page.evaluate(() => state.companions[0].evCat)).toBe('STORY');
+    expect(await page.evaluate(() => state.companions[0].ev.STORY.slots[0].base)).toContain('[STORY-01-01]');
+    const story = await page.evaluate(() => memoryShelf.events('王小明', 'STORY'));
+    expect(story[0].title).toBe('[STORY-01] 人物故事');
+    expect(story[0].items[0].text).toContain('這是原本的故事內容');
+    expect(await page.evaluate(() => memoryShelf.events('王小明', 'STY')[0].items[0].code)).toBe('STORY-01-01');
     expect(await page.evaluate(() => memoryShelf.eventPrompt('王小明'))).toContain('洛夫人剛剛改過的要記什麼');
     expect(page.errors).toEqual([]);
     await context.close();
