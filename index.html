@@ -1620,8 +1620,10 @@ const DEFAULT_EVENT_CATS = [
   "STORY｜人物故事｜{我}的過去和背景故事，以及和{伴侶}預設的過去關係",
   EST_EVENT_CAT
 ].join("\n");
+const EVENT_FORMAT_VERSION = 2;
 const EV_DEFAULTS = { format: CODE_FORMAT, title: CODE_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE, cats: DEFAULT_EVENT_CATS,
-  itemLimit: "", slotLimit: "", timeSource: "real", extraNote: "", previewFirst: false, unifiedFormat: true };
+  itemLimit: "", slotLimit: "", timeSource: "real", extraNote: "", previewFirst: false, unifiedFormat: true,
+  formatVersion: EVENT_FORMAT_VERSION };
 const LIST_FIELD = /細節|經過|內容|對話|紀錄|描述|過程/;
 const EVENT_TOKENS = /\{(?:代號|名稱|欄號|則號|關鍵字|開始|結束)\}/g;
 
@@ -1675,7 +1677,11 @@ function evSet() {
       e.format = has("customFormat") ? e.customFormat : (e.format || "");
       e.title = has("customTitle") ? e.customTitle : (e.title || "");
       e.subtitle = has("customSubtitle") ? e.customSubtitle : (e.subtitle || "");
-      e.cats = has("customCats") ? e.customCats : (e.cats || "");
+      const customCats = has("customCats") ? String(e.customCats || "") : "";
+      const codedFormat = /\{代號\}/.test(`${e.title}\n${e.format}`);
+      /* Some older custom-format records kept the active preset codes in `cats` while
+         leaving `customCats` empty. A coded title/body still means those codes were in use. */
+      e.cats = customCats || (codedFormat ? (e.cats || DEFAULT_EVENT_CATS) : "");
     } else if (mode === "plain") {
       e.format = has("plainFormat") ? e.plainFormat : (e.format || PLAIN_FORMAT);
       e.title = has("plainTitle") ? e.plainTitle : (e.title || PLAIN_TITLE);
@@ -1694,6 +1700,13 @@ function evSet() {
     }
     e.unifiedFormat = true;
   }
+  /* Repair the first unified-form release: it could save an empty code list even though
+     the retained title/body still used {代號}, hiding every existing coded event. */
+  if ((Number(e.formatVersion) || 0) < EVENT_FORMAT_VERSION && !String(e.cats || "").trim()
+      && /\{代號\}/.test(`${e.title || ""}\n${e.format || ""}`)) {
+    e.cats = DEFAULT_EVENT_CATS;
+  }
+  e.formatVersion = EVENT_FORMAT_VERSION;
   for (const [k, v] of Object.entries(EV_DEFAULTS)) if (!has(k) || e[k] == null) e[k] = v;
   return e;
 }
@@ -1769,7 +1782,6 @@ function catByCode(code) {
 /* Categories in the list, plus any that still hold this companion's events after being removed from it. */
 function visibleCats(name) {
   const cats = eventCats(), have = new Set(cats.map(c => c.code)), extra = [];
-  if (!useCodes()) return cats;
   const rec = state.companions.find(x => x.name === name) || {};
   const codes = new Set(Object.keys(rec.ev || {}).filter(k => ((rec.ev[k] || {}).slots || []).length));
   liveEvents().forEach(e => { if (e.companion === name) codes.add(e.cat); });
