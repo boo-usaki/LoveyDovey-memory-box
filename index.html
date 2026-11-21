@@ -6,7 +6,7 @@
 <meta name="author" content="Boo_usaki">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>伴侶記憶匣</title>
-<meta name="description" content="把和伴侶的對話整理成記憶卡片：自訂格式、交給 AI 整理、一鍵複製、標記已轉移。">
+<meta name="description" content="把和伴侶的對話整理成記憶體卡片：調整格式、交給 AI 整理、一鍵複製、標記已轉移。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -50,7 +50,7 @@
 * { box-sizing: border-box; }
 body {
   background: var(--bg); color: var(--ink);
-  font-family: var(--f-body); font-size: 14.5px; line-height: 1.8; letter-spacing: .02em;
+  font-family: var(--f-body); font-size: 16.5px; line-height: 1.75; letter-spacing: .015em;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 32px 64px;
@@ -61,21 +61,21 @@ button { cursor: pointer; }
 button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--berry); outline-offset: 2px; }
 
 .app {
-  max-width: 1040px; margin: 0 auto;
-  display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; align-items: start;
+  max-width: 1120px; margin: 0 auto;
+  display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start;
 }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
 
 .dash { display: block; width: 28px; height: 2px; border-radius: 2px; background: var(--pink); margin-bottom: 14px; }
 .dash.sky { background: var(--sky); }
-.eyebrow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
-.latin { font-family: var(--f-latin); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--pink-ink); }
+.eyebrow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; font-size: 13.5px; color: var(--muted); }
+.latin { font-family: var(--f-latin); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--pink-ink); }
 
 /* Shelf */
-.shelf { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 32px); padding: 22px 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+.shelf { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 32px); padding: 24px 18px 18px; display: flex; flex-direction: column; gap: 16px; }
 .brand { padding: 0 6px; }
-.brand h2 { font-size: 19px; font-weight: 500; margin: 4px 0 0; letter-spacing: .06em; line-height: 1.4; }
-.brand p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.brand h2 { font-size: 21px; font-weight: 500; margin: 4px 0 0; letter-spacing: .06em; line-height: 1.4; }
+.brand p { margin: 3px 0 0; font-size: 14px; color: var(--muted); }
 .companions { display: flex; flex-direction: column; gap: 2px; list-style: none; margin: 0; padding: 0; }
 .chip {
   display: flex; align-items: center; gap: 10px; width: 100%;
@@ -85,50 +85,50 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .chip[aria-current="true"] { background: var(--pink-soft); border-color: var(--pink); }
 .avatar {
   flex: none; width: 28px; height: 28px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 12.5px; font-weight: 500;
+  display: grid; place-items: center; font-size: 14px; font-weight: 500;
   background: var(--sunk); color: var(--pink-ink); border: 1px solid var(--line);
 }
 .chip[aria-current="true"] .avatar { background: var(--surface); border-color: var(--pink); }
-.chip-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-.chip-count { font-family: var(--f-latin); font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.chip-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15.5px; }
+.chip-count { font-family: var(--f-latin); font-size: 13.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .tools { display: flex; flex-direction: column; gap: 6px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .tool {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 7px 12px; font-size: 13.5px;
+  border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 8px 12px; font-size: 15px;
 }
 .tool:hover { background: var(--sunk); }
-.tool .latin { margin-left: auto; font-size: 10px; color: var(--faint); }
+.tool .latin { margin-left: auto; font-size: 11.5px; color: var(--faint); }
 .tool.main-tool { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-ink); font-weight: 500; }
 .tool.main-tool:hover { background: var(--pink); }
 
 /* Main */
-.main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-.head { padding: 22px 24px 18px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
-.head h1 { font-size: 21px; font-weight: 500; margin: 4px 0 0; line-height: 1.4; letter-spacing: .06em; }
-.stats { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.head { padding: 24px 26px 20px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.head h1 { font-size: 24px; font-weight: 500; margin: 4px 0 0; line-height: 1.4; letter-spacing: .06em; }
+.stats { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .seg { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); }
-.seg button { border: 0; background: transparent; padding: 3px 14px; border-radius: 999px; font-size: 13px; color: var(--muted); }
+.seg button { border: 0; background: transparent; padding: 4px 16px; border-radius: 999px; font-size: 15px; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--pink-soft); color: var(--pink-ink); }
 
-.cards { display: flex; flex-direction: column; gap: 12px; }
-.card { padding: 20px 24px 14px; display: flex; flex-direction: column; gap: 12px; }
+.cards { display: flex; flex-direction: column; gap: 16px; }
+.card { padding: 22px 26px 16px; display: flex; flex-direction: column; gap: 14px; }
 .card.done { opacity: .65; }
 .card-top { display: flex; flex-direction: column; gap: 2px; }
-.card h2 { font-size: 17px; font-weight: 700; margin: 0; line-height: 1.5; letter-spacing: .04em; min-width: 0; }
-.tag-ex { font-size: 11px; color: var(--pink-ink); background: var(--pink-soft); padding: 0 9px; border-radius: 999px; line-height: 1.8; }
+.card h2 { font-size: 19px; font-weight: 700; margin: 0; line-height: 1.5; letter-spacing: .04em; min-width: 0; }
+.tag-ex { font-size: 12.5px; color: var(--pink-ink); background: var(--pink-soft); padding: 0 9px; border-radius: 999px; line-height: 1.8; }
 
 dl.fields { margin: 0; display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 6px 18px; }
-dl.fields dt { font-size: 12.5px; color: var(--muted); padding-top: 1px; }
+dl.fields dt { font-size: 14.5px; color: var(--muted); padding-top: 1px; }
 dl.fields dd { margin: 0; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
 .kw { display: flex; flex-wrap: wrap; gap: 6px; }
-.kw span { font-size: 12.5px; padding: 0 10px; border-radius: 999px; background: var(--cream-soft); color: var(--ink); line-height: 1.9; }
+.kw span { font-size: 14px; padding: 0 11px; border-radius: 999px; background: var(--cream-soft); color: var(--ink); line-height: 1.9; }
 dd.quote { padding-left: 14px; border-left: 2px solid var(--pink); }
 
 .actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--line); padding-block: 12px 0; }
-.count { margin-right: auto; align-self: center; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.count { margin-right: auto; align-self: center; font-size: 13.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .count.over { color: var(--pink-ink); background: var(--pink-soft); padding: 0 10px; border-radius: 999px; }
-.btn { border: 1px solid var(--line); background: var(--surface); padding: 4px 16px; border-radius: 999px; font-size: 13.5px; color: var(--muted); }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 5px 17px; border-radius: 999px; font-size: 15px; color: var(--muted); }
 .btn:hover { background: var(--sunk); color: var(--ink); }
 .btn.primary { background: var(--pink-soft); color: var(--pink-ink); border-color: var(--pink); font-weight: 500; }
 .btn.primary:hover { background: var(--pink); }
@@ -137,7 +137,7 @@ dd.quote { padding-left: 14px; border-left: 2px solid var(--pink); }
 .btn.danger.arm { background: var(--pink); color: var(--ink); border-color: var(--pink); }
 
 .empty { padding: 36px 24px; text-align: center; color: var(--muted); border-style: dashed; }
-.empty strong { display: block; font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.empty strong { display: block; font-size: 17px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
 .empty .btn { margin-top: 12px; }
 
 /* Sheets (import / format) */
@@ -147,48 +147,48 @@ dd.quote { padding-left: 14px; border-left: 2px solid var(--pink); }
   padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
 .sheet {
-  width: min(680px, 100%); max-height: 100%; overflow-y: auto;
-  padding: 24px; display: flex; flex-direction: column; gap: 18px;
+  width: min(760px, 100%); max-height: 100%; overflow-y: auto;
+  padding: 26px; display: flex; flex-direction: column; gap: 22px;
 }
 .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.sheet-head h3 { margin: 4px 0 0; font-size: 18px; font-weight: 500; letter-spacing: .06em; }
-.x { border: 0; background: transparent; font-size: 20px; line-height: 1; padding: 4px 8px; color: var(--muted); border-radius: 8px; }
+.sheet-head h3 { margin: 4px 0 0; font-size: 21px; font-weight: 500; letter-spacing: .06em; }
+.x { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 5px 9px; color: var(--muted); border-radius: 8px; }
 .x:hover { background: var(--sunk); }
-.step { display: flex; flex-direction: column; gap: 8px; }
+.step { display: flex; flex-direction: column; gap: 10px; }
 .step-title { display: flex; align-items: baseline; gap: 10px; font-weight: 500; }
-.step-title .latin { font-size: 10.5px; }
-.hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+.step-title .latin { font-size: 12px; }
+.hint { font-size: 15px; color: var(--muted); margin: 0; }
 textarea, input[type="text"], input[type="number"] {
   width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--bg);
-  padding: 10px 12px; font-size: 14px; line-height: 1.7; resize: vertical;
+  padding: 11px 13px; font-size: 16px; line-height: 1.65; resize: vertical;
 }
-textarea.mono { font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6; }
+textarea.mono { font-family: var(--f-mono); font-size: 14.5px; line-height: 1.65; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; }
-.row > label { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+.row > label { flex: 1 1 200px; display: flex; flex-direction: column; gap: 5px; font-size: 14.5px; color: var(--muted); min-width: 0; }
 .row > label.full { flex-basis: 100%; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .file-btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; }
 .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.result { font-size: 13px; color: var(--pink-ink); margin: 0; min-height: 1.8em; }
+.result { font-size: 14.5px; color: var(--pink-ink); margin: 0; min-height: 1.8em; }
 .fieldlist { display: flex; flex-wrap: wrap; gap: 6px; }
-.fieldlist span { font-size: 12px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); line-height: 1.9; }
+.fieldlist span { font-size: 14px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); line-height: 1.9; }
 .fieldlist span i { font-style: normal; color: var(--faint); margin-left: 4px; }
 
 .add-row { display: flex; gap: 6px; }
-.add-row input { padding: 5px 10px; font-size: 13.5px; border-radius: 10px; }
-.add-btn { border: 1px dashed var(--line); background: transparent; border-radius: 12px; padding: 6px 12px; font-size: 13px; color: var(--muted); text-align: left; }
+.add-row input { padding: 6px 11px; font-size: 16px; border-radius: 10px; }
+.add-btn { border: 1px dashed var(--line); background: transparent; border-radius: 12px; padding: 7px 13px; font-size: 15px; color: var(--muted); text-align: left; }
 .add-btn:hover { background: var(--sunk); color: var(--ink); }
 .head { flex-direction: column; align-items: stretch; }
 .head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-.settings-box { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
-.set-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--muted); }
+.settings-box { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.set-row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 14px; font-size: 15px; color: var(--muted); }
 .set-row > label, .set-label { min-width: 9.5em; }
-.set-row input[type="text"], .set-row input[type="number"], .set-row input[type="date"] { width: 12em; max-width: 100%; padding: 5px 10px; font-size: 13.5px; }
+.set-row input[type="text"], .set-row input[type="number"], .set-row input[type="date"] { width: 12em; max-width: 100%; padding: 6px 11px; font-size: 16px; }
 .set-row label.inline { min-width: 0; display: inline-flex; align-items: center; gap: 8px; }
-.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; counter-reset: flow; }
-.flow-step { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); min-width: 0; }
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; counter-reset: flow; }
+.flow-step { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); min-width: 0; }
 .flow-title { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-.flow-title::before { counter-increment: flow; content: counter(flow); width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--pink-soft); color: var(--pink-ink); font-family: var(--f-latin); font-size: 12px; font-weight: 500; }
+.flow-title::before { counter-increment: flow; content: counter(flow); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--pink-soft); color: var(--pink-ink); font-family: var(--f-latin); font-size: 13.5px; font-weight: 500; }
 .flow-step p { margin: 0; }
 .flow-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .flow .files { flex-direction: column; align-items: stretch; width: 100%; }
@@ -197,56 +197,64 @@ textarea.mono { font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6;
 .list-title { display: flex; align-items: baseline; gap: 10px; }
 .cp { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--line); width: 100%; }
 .cp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.cp-label { font-size: 12px; color: var(--muted); min-width: 4.5em; }
-.cp-progress { font-size: 14px; }
+.cp-label { font-size: 14px; color: var(--muted); min-width: 4.5em; }
+.cp-progress { font-size: 16px; }
 .cp-progress b { font-weight: 500; color: var(--pink-ink); font-variant-numeric: tabular-nums; }
-.linkish { border: 0; background: transparent; padding: 0 2px; font-size: 12.5px; color: var(--pink-ink); text-decoration: underline; text-underline-offset: 3px; }
+.linkish { border: 0; background: transparent; padding: 0 2px; font-size: 14px; color: var(--pink-ink); text-decoration: underline; text-underline-offset: 3px; }
 .files { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
-.files li { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 2px 6px 2px 12px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); max-width: 100%; }
+.files li { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; padding: 3px 7px 3px 13px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); max-width: 100%; }
 .files .fdate { color: var(--pink-ink); font-variant-numeric: tabular-nums; }
 .files .fname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.files button { border: 0; background: transparent; font-size: 12px; color: var(--muted); padding: 0 6px; border-radius: 999px; }
+.files button { border: 0; background: transparent; font-size: 13.5px; color: var(--muted); padding: 0 6px; border-radius: 999px; }
 .files button:hover { background: var(--sunk); color: var(--ink); }
 .files button.arm { background: var(--pink); color: var(--ink); }
 .edit-progress { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
-.edit-progress label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-.edit-progress input { width: 9em; padding: 5px 10px; font-size: 13.5px; }
-.muted { color: var(--muted); font-size: 12.5px; }
-.credit { max-width: 1040px; margin: 40px auto 0; display: flex; flex-direction: column; align-items: center; }
+.edit-progress label { display: flex; flex-direction: column; gap: 5px; font-size: 14px; color: var(--muted); }
+.edit-progress input { width: 9em; padding: 6px 11px; font-size: 16px; }
+.muted { color: var(--muted); font-size: 14.5px; }
+.credit { max-width: 1120px; margin: 44px auto 0; display: flex; flex-direction: column; align-items: center; }
 .credit .dash { margin-bottom: 10px; }
-.storage { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px !important; font-size: 11.5px !important; color: var(--muted); }
+.storage { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px !important; font-size: 13px !important; color: var(--muted); }
 .storage::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
 .guide.small { gap: 10px; }
-.guide .sub { margin: 6px 0 4px; padding-left: 1.3em; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.guide .sub { margin: 7px 0 5px; padding-left: 1.3em; font-size: 15px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
 .guide .sub li { display: list-item; }
 .guide .sub li::before { content: none; }
 .say { color: var(--ink); background: var(--cream-soft); border-radius: 6px; padding: 0 4px; }
-.guide.small b { font-size: 13.5px; }
+.guide.small b { font-size: 15.5px; }
 .sheet a { color: var(--pink-ink); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .agent-line { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
-.agent-line code { flex: 1 1 260px; min-width: 0; font-family: var(--f-body); font-size: 13px; background: var(--cream-soft); border-radius: 10px; padding: 8px 12px; white-space: pre-wrap; }
+.agent-line code { flex: 1 1 260px; min-width: 0; font-family: var(--f-body); font-size: 15px; background: var(--cream-soft); border-radius: 10px; padding: 9px 13px; white-space: pre-wrap; }
 .card.sample { background: var(--bg); padding: 16px 18px; }
 .welcome { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 24px; text-align: center; }
-.welcome h2 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: .06em; }
+.welcome h2 { margin: 0; font-size: 23px; font-weight: 500; letter-spacing: .06em; }
 .welcome p { margin: 0; color: var(--muted); max-width: 32em; }
 .welcome .row-actions { margin-top: 12px; justify-content: center; }
-input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size: 13.5px; }
-.guide { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; counter-reset: g; }
+input.inline-input { width: 12em; max-width: 100%; padding: 6px 11px; font-size: 16px; }
+.guide { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 18px; counter-reset: g; }
 .guide li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: start; }
-.guide li::before { counter-increment: g; content: counter(g); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--pink-soft); color: var(--pink-ink); font-family: var(--f-latin); font-size: 13px; }
+.guide li::before { counter-increment: g; content: counter(g); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--pink-soft); color: var(--pink-ink); font-family: var(--f-latin); font-size: 14px; }
 .guide b { font-weight: 500; display: block; }
-.guide p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
-.tips { margin: 0; padding-left: 1.2em; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
-.name-box { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+.guide p { margin: 4px 0 0; font-size: 15px; color: var(--muted); }
+.guide-choices { display: grid; gap: 10px; margin-top: 10px; }
+.guide-choice { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.guide-choice strong { display: block; font-size: 15.5px; font-weight: 500; color: var(--ink); }
+.guide-choice p { margin-top: 5px; }
+.guide-substeps { margin: 9px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: 15px; color: var(--muted); }
+.guide .guide-substeps li { display: block; padding: 2px 0 2px 13px; border-left: 2px solid var(--pink); }
+.guide .guide-substeps li::before { content: none; }
+.guide-substeps strong { display: inline; margin-right: .35em; font-weight: 500; color: var(--ink); }
+.tips { margin: 0; padding-left: 1.2em; font-size: 15px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.name-box { flex: 1 1 200px; display: flex; flex-direction: column; gap: 5px; font-size: 14.5px; color: var(--muted); min-width: 0; }
 .name-value { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 12px; background: var(--sunk); padding: 10px 12px; line-height: 1.7; }
-.name-value b { font-size: 14px; font-weight: 500; color: var(--ink); }
+.name-value b { font-size: 16px; font-weight: 500; color: var(--ink); }
 
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%) translateY(20px);
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   background: var(--surface); color: var(--ink); border: 1px solid var(--pink); padding: 7px 10px 7px 18px; border-radius: 999px;
-  display: flex; align-items: center; gap: 12px; font-size: 13.5px;
+  display: flex; align-items: center; gap: 12px; font-size: 15px;
   opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 40; max-width: calc(100% - 32px);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
@@ -272,39 +280,39 @@ input.inline-input { width: 12em; max-width: 100%; padding: 5px 10px; font-size:
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 .ev-review-list { display: flex; flex-direction: column; gap: 12px; max-height: min(58vh, 620px); overflow: auto; padding-right: 4px; }
 .ev-review-item { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--sunk); display: flex; flex-direction: column; gap: 8px; }
-.ev-review-item label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
-.ev-review-item pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.65; color: var(--ink); }
+.ev-review-item label { display: flex; flex-direction: column; gap: 5px; font-size: 14.5px; color: var(--muted); }
+.ev-review-item pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono); font-size: 14.5px; line-height: 1.7; color: var(--ink); }
 .muted.warn { color: var(--pink-ink); }
-.pending-bar { position: sticky; top: 8px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; border-radius: var(--r); border: 1px solid var(--pink); background: var(--pink-soft); box-shadow: var(--shadow); color: var(--pink-ink); font-size: 13.5px; }
+.pending-bar { position: sticky; top: 8px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 11px 17px; border-radius: var(--r); border: 1px solid var(--pink); background: var(--pink-soft); box-shadow: var(--shadow); color: var(--pink-ink); font-size: 15px; }
 .pending-bar span { flex: 1 1 220px; }
 .restore-box { display: flex; flex-direction: column; gap: 8px; }
 
 /* Events */
 .tab-seg { align-self: flex-start; }
-#formatMemoryPanel, #formatEventPanel { display: flex; flex-direction: column; gap: 18px; }
+#formatMemoryPanel, #formatEventPanel { display: flex; flex-direction: column; gap: 22px; }
 .ev-cats button { padding: 3px 12px; }
-input[type="date"] { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); padding: 5px 10px; font: inherit; font-size: 13.5px; color: inherit; }
-.row > label input[type="date"] { width: 100%; padding: 8px 12px; font-size: 14px; }
+input[type="date"] { border: 1px solid var(--line); border-radius: 12px; background: var(--bg); padding: 6px 11px; font: inherit; font-size: 16px; color: inherit; }
+.row > label input[type="date"] { width: 100%; padding: 9px 13px; font-size: 16px; }
 .ev-slot-form { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 12px; border: 1px dashed var(--line); background: var(--surface); }
-.btn.sm { padding: 2px 12px; font-size: 12.5px; }
+.btn.sm { padding: 3px 13px; font-size: 14px; }
 .slot { gap: 10px; }
 .slot-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 16px; }
-.slot-sub { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.slot-sub { font-size: 15px; color: var(--muted); overflow-wrap: anywhere; }
 .copy-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .copy-row .muted { margin-right: 2px; }
 .meter { height: 3px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .meter i { display: block; height: 100%; background: var(--pink); border-radius: inherit; }
 .meter.over i { background: var(--pink-ink); }
-.slot-note { margin: 0; font-size: 12.5px; color: var(--pink-ink); }
+.slot-note { margin: 0; font-size: 14.5px; color: var(--pink-ink); }
 .ev-items { display: flex; flex-direction: column; }
 .ev-item { padding: 12px 0 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
 .ev-item.done { opacity: .65; }
 .ev-items .ev-item:first-child { border-top: 0; padding-top: 4px; }
 .ev-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-.ev-code { font-family: var(--f-latin); font-size: 12px; letter-spacing: .06em; color: var(--pink-ink); font-variant-numeric: tabular-nums; }
+.ev-code { font-family: var(--f-latin); font-size: 14px; letter-spacing: .06em; color: var(--pink-ink); font-variant-numeric: tabular-nums; }
 .ev-kw { font-weight: 700; }
-.ev-meta { font-size: 12.5px; color: var(--muted); }
-.ev-label { font-size: 12.5px; color: var(--muted); }
+.ev-meta { font-size: 14.5px; color: var(--muted); }
+.ev-label { font-size: 14.5px; color: var(--muted); }
 .ev-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 2px; }
 .ev-list li::marker { color: var(--faint); }
 .ev-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
@@ -315,12 +323,12 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
 .overflow { border-color: var(--pink); gap: 10px; }
 .overflow h2 { margin-top: 2px; }
 .overflow p { margin: 0; }
-.ev-preview { margin: 0; white-space: pre-wrap; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; color: var(--ink); }
+.ev-preview { margin: 0; white-space: pre-wrap; font-family: var(--f-mono); font-size: 14.5px; line-height: 1.7; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; color: var(--ink); }
 @media (max-width: 760px) {
   .slot { padding: 16px; }
   .slot-head { align-items: flex-start; }
 }
-.credit .credit-sub { margin-top: 4px; font-size: 9.5px; color: var(--faint); }
+.credit .credit-sub { margin-top: 4px; font-size: 11.5px; color: var(--faint); }
 
 /* Palette: 法式桃紅 — all white, sky-blue lines, rose-pink text, tinted page (always light) */
 :root[data-palette="peach"] {
@@ -380,10 +388,10 @@ input[type="date"] { border: 1px solid var(--line); border-radius: 12px; backgro
 .pal[aria-pressed="true"] { border-color: var(--pink); background: var(--pink-soft); }
 .pal .dots { display: flex; gap: 6px; }
 .pal .dots i { width: 22px; height: 22px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 1px rgba(0,0,0,.07); }
-.pal .name { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13.5px; }
-.pal .name .latin { font-size: 10px; color: var(--faint); }
+.pal .name { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 15.5px; }
+.pal .name .latin { font-size: 11.5px; color: var(--faint); }
 .pal .name > span:first-child { white-space: nowrap; }
-.pal .on { font-size: 11.5px; color: var(--pink-ink); }
+.pal .on { font-size: 13.5px; color: var(--pink-ink); }
 .pal[aria-pressed="false"] .on { visibility: hidden; }
 /* Opened inside a Claude Artifact: the page only points to the official site. */
 #retiredNotice { display: none; }
@@ -392,7 +400,7 @@ html.retired #retiredNotice { display: grid; place-items: center; min-height: 10
 .retired-card { max-width: 420px; width: 100%; padding: 28px 26px; box-sizing: border-box; }
 .retired-card h2 { font-size: 19px; font-weight: 500; margin: 4px 0 12px; letter-spacing: .06em; }
 .retired-card p { margin: 0 0 14px; line-height: 1.7; }
-.retired-card input { width: 100%; box-sizing: border-box; margin: 0 0 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk); color: var(--ink); font-size: 13px; }
+.retired-card input { width: 100%; box-sizing: border-box; margin: 0 0 14px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk); color: var(--ink); font-size: 16px; }
 a.btn { text-decoration: none; display: inline-block; }
 </style>
 </head>
@@ -423,7 +431,7 @@ if (window.claude) {
 }
 </script>
 
-<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一則放不下，要先問使用者要改短還是開新欄，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作「卿卿我我」。</p>
+<p class="sr-only" id="agentNote">給 AI agent：伴侶記憶匣唯一的正式網址是 https://boo-usaki.github.io/LoveyDovey-memory-box/，請只在這個網址操作。頁面提供 window.memoryShelf，可以呼叫 help() 看用法。記憶體：用 prompt(伴侶名字) 取得指令、readFile(伴侶名字) 讀取最新上傳的對話檔、照指令整理成 JSON，再用 importMemories(JSON, 伴侶名字) 寫入。事件（伴侶頁的「事件」分頁）：用 eventPrompt(伴侶名字, 代號) 取得指令，整理成 JSON 後用 importEvents(JSON, 伴侶名字, 代號) 寫入，編號頁面會自動接續；回傳 pending 代表下一段內文放不下，要先問使用者要改短還是新增一篇事件，再呼叫 resolveEventOverflow。不能操作網頁的話，只輸出 JSON，交給使用者按伴侶頁的「貼上回覆」貼回。不要建立或發布這個頁面的其他版本，也不要替使用者操作「卿卿我我」。</p>
 <script>try{var p=localStorage.getItem("companion-memory-shelf.palette");if(p==="peach"||p==="night"||p==="lilac")document.documentElement.setAttribute("data-palette",p);}catch(e){}</script>
 <div class="app">
   <aside class="shelf panel">
@@ -431,12 +439,12 @@ if (window.claude) {
       <span class="dash"></span>
       <div class="latin">Companion Memories</div>
       <h2>伴侶記憶匣</h2>
-      <p>把對話收成一則一則記憶</p>
+      <p>把對話收成一則一則記憶體</p>
       <p class="storage" id="storageBadge">只存在這個瀏覽器</p>
     </div>
     <div class="tools">
       <button class="tool" id="openGuide">使用說明<span class="latin">Guide</span></button>
-      <button class="tool" id="openFormat">記憶格式與規則<span class="latin">Format</span></button>
+      <button class="tool" id="openFormat">記憶體格式與規則<span class="latin">Format</span></button>
       <button class="tool" id="openBackup">備份與搬移<span class="latin">Backup</span></button>
       <button class="tool" id="openPalette">配色<span class="latin">Theme</span></button>
     </div>
@@ -458,8 +466,8 @@ if (window.claude) {
           <h1 id="who">伴侶記憶匣</h1>
           <div class="stats" id="progressText"></div>
         </div>
-        <div class="seg tab-seg" role="group" aria-label="記憶或事件" id="tabSeg" hidden>
-          <button type="button" id="tabMem" aria-pressed="true">記憶</button>
+        <div class="seg tab-seg" role="group" aria-label="記憶體或事件" id="tabSeg" hidden>
+          <button type="button" id="tabMem" aria-pressed="true">記憶體</button>
           <button type="button" id="tabEv" aria-pressed="false">事件</button>
         </div>
       </div>
@@ -491,7 +499,7 @@ if (window.claude) {
         </div>
         <div class="set-row ev-only" hidden>
           <span class="set-label"></span>
-          <button class="linkish" type="button" id="evSlotSetup">卿卿我我裡有寫到一半的事件欄？接著寫</button>
+          <button class="linkish" type="button" id="evSlotSetup">卿卿我我裡有寫到一半的事件？接著寫</button>
         </div>
         <div class="ev-slot-form" id="evSlotForm" hidden>
           <p class="hint">把卿卿我我裡那一欄的內文整段貼上，頁面會算出已用多少字，接著往下寫。</p>
@@ -502,7 +510,7 @@ if (window.claude) {
             <label for="evSlotCat">事件類別
               <select id="evSlotCat"></select>
             </label>
-            <label for="evSlotStart">這欄的開始日期
+            <label for="evSlotStart">這篇事件的開始日期
               <input type="date" id="evSlotStart">
             </label>
           </div>
@@ -529,7 +537,7 @@ if (window.claude) {
         </li>
         <li class="flow-step">
           <div class="flow-title">貼回 AI 的回覆</div>
-          <p class="muted" id="flowStep3Note">貼上後就會變成下面的記憶卡片。</p>
+          <p class="muted" id="flowStep3Note">貼上後就會變成下面的記憶體卡片。</p>
           <button class="btn primary" id="importHere">貼上回覆</button>
         </li>
       </ol>
@@ -554,10 +562,10 @@ if (window.claude) {
       <button class="x" data-close aria-label="關閉">×</button>
     </div>
     <div class="step">
-      <p class="hint">AI 先替每則事件選了一類。妳可以逐則改正；確認後，頁面才會接續編號並放進對應的事件欄。</p>
+      <p class="hint">AI 先替每段內文選了一類。妳可以逐段改正；確認後，頁面才會接續編號並放進對應事件的內文。</p>
       <div class="ev-review-list" id="eventReviewList"></div>
       <div class="row-actions">
-        <button class="btn primary" id="confirmEventReview">確認分類並放入事件欄</button>
+        <button class="btn primary" id="confirmEventReview">確認分類並放入事件內文</button>
         <button class="btn" id="cancelEventReview">取消這次匯入</button>
       </div>
       <p class="result" id="eventReviewResult" role="status"></p>
@@ -595,16 +603,16 @@ if (window.claude) {
 <div class="sheet-wrap" id="formatSheet" hidden>
   <div class="sheet panel" role="dialog" aria-modal="true" aria-labelledby="formatTitle">
     <div class="sheet-head">
-      <div><span class="dash sky"></span><div class="latin">Format</div><h3 id="formatTitle">記憶格式與規則</h3></div>
+      <div><span class="dash sky"></span><div class="latin">Format</div><h3 id="formatTitle">記憶體格式與規則</h3></div>
       <button class="x" data-close aria-label="關閉">×</button>
     </div>
-    <div class="seg tab-seg" role="group" aria-label="記憶或事件格式">
-      <button type="button" id="formatTabMem" aria-pressed="true" aria-controls="formatMemoryPanel">記憶</button>
+    <div class="seg tab-seg" role="group" aria-label="記憶體或事件格式">
+      <button type="button" id="formatTabMem" aria-pressed="true" aria-controls="formatMemoryPanel">記憶體</button>
       <button type="button" id="formatTabEv" aria-pressed="false" aria-controls="formatEventPanel">事件</button>
     </div>
     <div id="formatMemoryPanel">
       <div class="step">
-        <div class="step-title"><span class="latin">01</span>妳習慣的記憶格式</div>
+        <div class="step-title"><span class="latin">01</span>妳習慣的記憶體格式</div>
         <p class="hint">照妳平常的寫法就好，{伴侶} 和 {我} 會自動換成名字。</p>
         <textarea id="formatText" rows="9" class="mono"></textarea>
         <div class="fieldlist" id="fieldPreview" aria-label="目前欄位"></div>
@@ -623,6 +631,7 @@ if (window.claude) {
             <input type="text" id="rangeNote" placeholder="例如：只整理到 2026/9/1 之前">
           </label>
         </div>
+        <div class="set-row"><label class="inline"><input type="checkbox" id="memPreviewFirst"> 先試整理一則給我確認</label></div>
         <label for="extraNote" class="hint">其他給 AI 的提醒（選填）</label>
         <textarea id="extraNote" rows="2" placeholder="例如：關鍵對話最多挑三句"></textarea>
       </div>
@@ -631,14 +640,7 @@ if (window.claude) {
     <div id="formatEventPanel" hidden>
       <div class="step">
       <div class="step-title"><span class="latin">01</span>事件格式</div>
-      <div class="set-row">
-        <span class="set-label">格式選擇</span>
-        <div class="seg" role="group" aria-label="事件格式選擇">
-          <button type="button" id="evFormatDefault">預設代號</button>
-          <button type="button" id="evFormatCustom">自訂格式</button>
-        </div>
-      </div>
-      <p class="hint" id="evFormatChoiceHint"></p>
+      <p class="hint">直接修改成妳使用的格式；不需要的欄位可以留空。</p>
       <div class="row">
         <label for="evTitleFormat">大標
           <input type="text" id="evTitleFormat" class="mono">
@@ -650,11 +652,11 @@ if (window.claude) {
       <label class="hint" for="evBodyFormat">內文</label>
       <textarea id="evBodyFormat" rows="7" class="mono"></textarea>
       <div class="row">
-        <label for="evItemLimit">每則字數上限
-          <input type="number" id="evItemLimit" min="50" max="5000">
+        <label for="evItemLimit">每段內文的字數上限（含標點）
+          <input type="number" id="evItemLimit" min="1" max="50000" placeholder="選填">
         </label>
-        <label for="evSlotLimit">每欄內文上限
-          <input type="number" id="evSlotLimit" min="100" max="20000">
+        <label for="evSlotLimit">每篇事件的總字數上限（含標點）
+          <input type="number" id="evSlotLimit" min="1" max="1000000" placeholder="選填">
         </label>
       </div>
       <div class="set-row">
@@ -668,6 +670,7 @@ if (window.claude) {
         <label class="hint" for="evCatsText" id="evCatsHint">事件代號與類別（選填；一行一個：代號｜名稱｜要記什麼）</label>
         <textarea id="evCatsText" rows="6" class="mono"></textarea>
       </div>
+      <div class="set-row"><label class="inline"><input type="checkbox" id="evPreviewFirst"> 先試整理一段內文給我確認</label></div>
       <label class="hint" for="evExtraNote">其他給 AI 的提醒（選填）</label>
       <textarea id="evExtraNote" rows="2" placeholder="例如：細節最多寫四行"></textarea>
       <div class="row-actions"><button class="btn" id="resetEventFormat">恢復預設事件格式</button></div>
@@ -711,32 +714,41 @@ if (window.claude) {
     </div>
     <ol class="guide" id="flowMain">
       <li><div><b>在電腦打開正式網站</b><p>用電腦的瀏覽器打開上面的網址。不用登入，也不用建立 GitHub 帳號。</p></div></li>
-      <li><div><b>新增一位伴侶</b><p>按左側「＋ 新增伴侶」，輸入對方的名字，再按「新增」。右邊會自動打開這位伴侶的頁面。</p></div></li>
-      <li><div><b>填妳在這段關係中的名字</b><p>在右邊頁面的最上方，填入妳在這段關係中的名字。</p></div></li>
-      <li><div><b>設定整理格式，或直接使用預設</b><p>打開左側「記憶格式與規則」，用上方的「記憶／事件」切換要調整的設定。想自訂就修改；不想改就保留預設。</p></div></li>
-      <li><div><b>選擇「記憶」或「事件」</b><p>回到伴侶頁，依這次想整理的內容切換。一般對話選「記憶」；只整理特定重點時選「事件」，再設定日期範圍。AI 會替每則事件建議類別，匯入前可以逐則改正。</p></div></li>
-      <li><div><b>上傳對話檔，請 AI 整理</b>
-        <p><strong>AI 可以直接打開網站時：</strong>先把對話檔上傳到伴侶頁，再直接請 AI 讀取這個網頁，告訴它要整理哪位伴侶的「記憶」或哪一類「事件」。它會讀取已上傳的對話檔，整理後直接寫進記憶匣；不用複製指令，也不用把 AI 回覆貼回來。</p>
-        <p><strong>AI 只能在對話裡回覆文字時：</strong>按「複製指令」，連同對話檔一起交給 AI；它回覆後，按「貼上回覆」把整段回覆貼回記憶匣。</p>
-        <p class="hint">事件會先讓妳確認分類，再自動編號並接在對應的事件欄後面；放不下時，頁面會先問妳要改短還是開新欄。</p></div></li>
-      <li><div><b>在電腦下載備份</b><p>打開左側「備份與搬移」，設定一組至少 4 個字元、內容不限的備份密碼，再按「下載備份」。檔名會是「memory_box-backup-YYYY-MM-DD.memorybox」，日期是下載當天。密碼只在這台裝置上用來加密或復原，不會被記住、上傳或寫進備份檔。</p></div></li>
+      <li><div><b>新增一位伴侶</b><p>按左側「＋ 新增伴侶」，輸入對方的名字，再按「新增」。畫面會自動開啟這位伴侶的頁面。</p></div></li>
+      <li><div><b>填妳在這段關係中的名字</b><p>在伴侶頁面最上方，填入妳在這段關係中的名字。</p></div></li>
+      <li><div><b>設定整理格式，或直接使用預設</b><p>打開左側「記憶體格式與規則」，用上方的「記憶體／事件」切換要調整的設定。想調整就直接修改；不想改就保留預設。想先確認整理出來的感覺，可以勾選「先試整理一則給我確認」。</p></div></li>
+      <li><div><b>選擇「記憶體」或「事件」</b><p>回到伴侶頁，依這次想整理的內容切換。想整理記憶體時選「記憶體」；想整理特定重點時選「事件」，再設定日期範圍。AI 會替每段內文建議類別，匯入前可以逐段改正。</p></div></li>
+      <li><div><b>把對話檔交給 AI 整理</b>
+        <p>依 AI 能不能直接打開網站，選一種方式：</p>
+        <div class="guide-choices">
+          <div class="guide-choice"><strong>AI 可以直接打開網站時</strong><p>先把對話檔上傳到伴侶頁，再請 AI 讀取這個網頁，告訴它要整理哪位伴侶的「記憶體」或「事件」。它會整理後直接寫進記憶匣。</p><p>妳不用複製指令，也不用把 AI 回覆貼回來。</p></div>
+          <div class="guide-choice"><strong>AI 只能在對話裡回覆文字時</strong><p>不用把檔案上傳到記憶匣。按「複製指令」，把指令和對話檔一起交給 AI。它回覆後，按「貼上回覆」把整段貼回記憶匣。</p></div>
+        </div>
+        <p class="hint">事件匯入後，頁面會開啟分類確認畫面。妳可以逐段檢查或修改分類；按下確認後，頁面才會自動編號並接到對應事件的內文。</p></div></li>
+      <li><div><b>在電腦下載備份</b>
+        <p>打開左側「備份與搬移」，依序完成：</p>
+        <ul class="guide-substeps">
+          <li><strong>設定密碼</strong>至少 4 個字元，內容不限。</li>
+          <li><strong>下載檔案</strong>按「下載備份」。</li>
+          <li><strong>確認檔名</strong>會是「memory_box-backup-YYYY-MM-DD.memorybox」，日期是下載當天。</li>
+        </ul>
+        <p class="hint">密碼只在這台裝置上用來加密或復原，不會被記住、上傳或寫進備份檔。</p></div></li>
       <li><div><b>把備份傳到手機並復原</b><p>用自己信任的方式把檔案傳到手機。手機打開同一個正式網址，到「備份與搬移」選擇備份檔，輸入同一組密碼後復原。電腦有新內容時，再重新下載和搬一次。</p></div></li>
-      <li><div><b>在手機複製，貼進「卿卿我我」</b><p>按「複製整則」；事件則分別複製大標、小標和內文，自己貼進「卿卿我我」。貼完後，在記憶匣標記「已轉移」。</p></div></li>
+      <li><div><b>在手機複製，貼進「卿卿我我」</b><p>記憶體按「複製整則」；事件則分別複製大標、小標和內文，自己貼進「卿卿我我」。貼完後，在記憶匣標記「已轉移」。</p></div></li>
       <li><div><b>把手機進度帶回電腦</b><p>完成手機操作後，在手機的「備份與搬移」下載一份新備份，傳回電腦並復原。下次整理前先完成這一步，電腦就會接著手機最新的「已轉移」狀態繼續。</p></div></li>
     </ol>
     <div class="step">
-      <div class="step-title">記憶卡片長這樣</div>
+      <div class="step-title">記憶體卡片長這樣</div>
       <p class="hint">這只是示意，不會存進妳的記憶匣。</p>
       <div id="guideSample"></div>
     </div>
     <div class="step">
       <div class="step-title">小提醒</div>
       <ul class="tips">
-        <li>不調整任何設定也能使用。想換記憶格式、事件類別或字數，再到「記憶格式與規則」。</li>
-        <li>「記憶」適合依順序保存長對話；「事件」適合挑出關係進展、劇情或人物設定等重要事情。</li>
+        <li>不調整任何設定也能使用。想換記憶體格式、事件類別或字數，再到「記憶體格式與規則」。</li>
+        <li>「記憶體」適合依順序整理對話；「事件」適合挑出關係進展、劇情或人物設定等重要事情。</li>
         <li>每次都匯出完整對話就選「用輪數」接續；每次只匯出新的一段就選「用日期」。</li>
-        <li>事件欄快滿時，頁面會留下醒目的提醒，直到妳選擇要改短還是開新欄，不會自己決定或咻一下消失。</li>
-        <li>記憶只存在目前使用的瀏覽器。定期到「備份與搬移」下載一份加密備份；原始對話檔不會包含在備份裡。</li>
+        <li>記憶體、事件和設定會儲存在妳目前使用的這個瀏覽器裡，不會自動出現在其他瀏覽器或裝置。換裝置前請先下載加密備份；原始對話檔不會放進備份。</li>
       </ul>
     </div>
   </div>
@@ -751,7 +763,7 @@ if (window.claude) {
     </div>
     <div class="step">
       <div class="step-title">選一套喜歡的顏色</div>
-      <p class="hint">只換頁面的樣子，記憶不會變。電腦和手機各自記得自己選的配色。</p>
+      <p class="hint">只換頁面的樣子，記憶體內容不會變。電腦和手機各自記得自己選的配色。</p>
       <div class="palettes">
         <button class="pal" type="button" data-p="berry" aria-pressed="false"><span class="dots"><i style="background:#E8B1C3"></i><i style="background:#F8CEDE"></i><i style="background:#FAF2DC"></i><i style="background:#E2EEF0"></i></span><span class="name"><span>草莓氣泡</span><span class="latin">Strawberry</span></span><span class="on">使用中</span></button>
         <button class="pal" type="button" data-p="peach" aria-pressed="false"><span class="dots"><i style="background:#E9F5FC"></i><i style="background:#FFFFFF"></i><i style="background:#74C3EE"></i><i style="background:#E0407A"></i></span><span class="name"><span>法式桃紅</span><span class="latin">Tricolore</span></span><span class="on">使用中</span></button>
@@ -772,7 +784,7 @@ if (window.claude) {
     <div class="step">
       <div class="step-title"><span class="latin">01</span>在這台裝置下載備份</div>
       <p class="hint">把電腦進度帶到手機、或把手機進度帶回電腦，都在目前資料最新的裝置下載備份，再到另一台裝置復原。</p>
-      <p class="hint">記憶只存在目前這個瀏覽器。備份包含全部記憶、事件、事件欄、伴侶設定、格式和 AI 指令修改；不含上傳的原始對話檔。</p>
+      <p class="hint">記憶體、事件和設定會儲存在目前這個瀏覽器裡。備份包含全部記憶體、事件內文、伴侶設定、格式和 AI 指令修改；不含上傳的原始對話檔。</p>
       <p class="hint"><strong>備份會先在這台裝置加密，再下載成檔案。</strong>主要是防止檔案不小心傳錯聊天室或群組時，沒有密碼的人直接看到內容。密碼只在這台裝置上使用，不會被記住、上傳或寫進備份檔；網站不會把密碼傳給作者、GitHub 或傳送備份檔的服務。忘記密碼時，只要這台裝置裡的原始資料還在，就能重新下載一份；如果只剩備份檔，沒有密碼就無法復原。</p>
       <div class="row">
         <label for="backupPassword">設定備份密碼（至少 4 個字元，內容不限）
@@ -789,7 +801,7 @@ if (window.claude) {
     </div>
     <div class="step">
       <div class="step-title"><span class="latin">02</span>在另一台裝置復原</div>
-      <p class="hint">先選擇從原本裝置傳來的備份檔，再輸入下載時設定的密碼。復原會用備份內容<strong>取代目前這台裝置的全部記憶、事件和設定</strong>。</p>
+      <p class="hint">先選擇從原本裝置傳來的備份檔，再輸入下載時設定的密碼。復原會用備份內容<strong>取代目前這台裝置的全部記憶體、事件和設定</strong>。</p>
       <div class="row-actions">
         <span class="btn file-btn">選擇備份檔<input type="file" id="restoreFile" accept=".memorybox,application/json,text/plain" aria-label="選擇備份檔"></span>
         <span class="hint" id="restoreFileName">尚未選擇檔案</span>
@@ -806,7 +818,7 @@ if (window.claude) {
     <div class="step">
       <div class="step-title"><span class="latin">03</span>清除</div>
       <div class="row-actions">
-        <button class="btn danger" id="clearAll">清除全部記憶與事件</button>
+        <button class="btn danger" id="clearAll">清除全部記憶體與事件</button>
       </div>
       <p class="result" id="backupResult" role="status"></p>
     </div>
@@ -982,7 +994,7 @@ function progressRules(ctx, n) {
   if (ctx.mode === "date") {
     if (ctx.lastDate) rules.push(`之前已經整理到 ${ctx.lastDate} 的對話。這次只整理 ${ctx.lastDate} 之後的對話，前面的不要重複整理${R ? `；rounds 從第 ${start} 輪接續編號` : ""}。`);
     else if (R) rules.push(`之前已經整理到第 ${R} 輪。這次從第 ${start} 輪開始，rounds 也從 ${start} 接續編號。`);
-    rules.push("每則記憶加上 until 欄位，填這段記憶最後一則對話的日期（YYYY-MM-DD）；對話檔沒有日期就留空。");
+    rules.push("每則記憶體加上 until 欄位，填這段記憶體最後一則對話的日期（YYYY-MM-DD）；對話檔沒有日期就留空。");
   } else if (R) {
     rules.push(`之前已經整理到第 ${R} 輪。這次從第 ${start} 輪開始，前面的不要重複整理；rounds 的編號也從 ${start} 接續。`);
   }
@@ -999,35 +1011,41 @@ function buildPrompt(settings, ctx) {
   const keyOf = label => comp || me ? nameLabel(label, comp || NAME_TOKEN, me || USER_TOKEN) : label;
   const exampleFields = {};
   for (const f of fields) exampleFields[keyOf(f.label)] = f.kind === "tags" ? ["詞語1", "詞語2"] : (f.kind === "quote" ? `${comp || "名字"}：「……」\n${me || "名字"}：「……」` : "……");
-  const sample = [{ companion: comp || "伴侶名字", rounds: `${start}-${start + n - 1}`, title: "這段記憶的標題", fields: exampleFields }];
+  const sample = [{ companion: comp || "伴侶名字", rounds: `${start}-${start + n - 1}`, title: "這段記憶體的標題", fields: exampleFields }];
   if (ctx.mode === "date") sample[0].until = "YYYY-MM-DD";
   const rules = [
     `${compWord}的一則回覆加上${me ? meWord : "我"}的一則回覆，算作一輪。`,
-    `每 ${n} 輪整理成一則記憶，照時間順序編排。最後不足 ${n} 輪的部分，照實際剩下的輪數整理成一則，不要硬湊。`,
+    `每 ${n} 輪整理成一則記憶體，照時間順序編排。最後不足 ${n} 輪的部分，照實際剩下的輪數整理成一則，不要硬湊。`,
     comp ? `伴侶的名字是「${comp}」。` : "伴侶的名字請看檔名或對話內容。",
     ...(me ? [`我的名字是「${me}」，對話裡的「${me}」就是我。`] : []),
     ...progressRules(ctx, n),
     "只根據對話內容整理，不要自己補充或編造沒發生的事。",
-    `每則記憶整則（包含標題、欄位名稱、標點符號）不可超過 ${limitOf(settings)} 字；超過就精簡內容，不要拆成兩則。`
+    `每則記憶體整則（包含標題、欄位名稱、標點符號）不可超過 ${limitOf(settings)} 字；超過就精簡內容，不要拆成兩則。`
   ];
-  if (fields.some(f => f.kind === "tags")) rules.push("標籤類欄位（例如關鍵詞）要挑對話裡真的出現、之後能觸發這段記憶的字詞，用陣列列出。");
+  if (fields.some(f => f.kind === "tags")) rules.push("標籤類欄位（例如關鍵詞）要挑對話裡真的出現、之後能觸發這則記憶體的字詞，用陣列列出。");
   if (fields.some(f => f.kind === "quote")) rules.push("對話類欄位要保留說話者的名字，格式是「名字：「內容」」，一句一行（用 \\n 換行）。");
   const hasRange = !!(settings.rangeNote && settings.rangeNote.trim());
   if (hasRange) rules.push(`整理範圍：${settings.rangeNote.trim()}。範圍外的對話不要整理。`);
   if (settings.extraNote && settings.extraNote.trim()) rules.push(settings.extraNote.trim());
+  const preview = settings.previewFirst ? [
+    "【先確認整理方式】",
+    "先只整理第一則作為預覽，暫時不要匯入記憶匣，也不要繼續整理剩下的對話。等我確認內容密度與寫法後，再依我的調整從頭整理完整內容。",
+    ""
+  ] : [];
   return [
-    `請幫我把附件中${me ? `我（${me}）` : "我"}和${comp ? comp : "伴侶"}的對話，整理成一則一則的記憶。`,
+    `請幫我把附件中${me ? `我（${me}）` : "我"}和${comp ? comp : "伴侶"}的對話，整理成一則一則的記憶體。`,
     "",
     "【規則】",
     ...rules.map((r, i) => `${i + 1}. ${r}`),
     "",
-    "【每則記憶的欄位】",
+    "【每則記憶體的欄位】",
     "- 標題",
     ...fields.map(f => `- ${keyOf(f.label)}`),
     ...(fields.some(f => keyOf(f.label).includes(NAME_TOKEN) || keyOf(f.label).includes(USER_TOKEN))
       ? [`（欄位名稱裡的 ${NAME_TOKEN} 是伴侶名字、${USER_TOKEN} 是我的名字的位置；JSON 的欄位名稱請照抄。）`]
       : ["（JSON 的欄位名稱請照抄上面的寫法。）"]),
     "",
+    ...preview,
     "【輸出格式】",
     hasRange ? "先用一行文字寫出範圍內共有幾輪，接著輸出一個 JSON 陣列，其他說明都不要加。JSON 格式如下：" : "請只輸出一個 JSON 陣列，不要加任何說明文字，格式如下：",
     JSON.stringify(sample, null, 2)
@@ -1094,7 +1112,7 @@ const EXAMPLES = [
 let state = {
   memories: [],
   events: [],
-  settings: { format: DEFAULT_FORMAT, companionName: "", userName: "", roundsPer: 10, charLimit: 500, rangeNote: "", extraNote: "", customPrompt: null, promptEdits: [] },
+  settings: { format: DEFAULT_FORMAT, companionName: "", userName: "", roundsPer: 10, charLimit: 500, rangeNote: "", extraNote: "", previewFirst: false, customPrompt: null, promptEdits: [] },
   companions: [],
   /* companions: [{ name, userName, mode, lastRound, lastDate, promptEdits, files: [{ id, name, size, uploadedAt }] }] */
   meta: { updatedAt: 0, clearedAt: 0 },
@@ -1115,6 +1133,7 @@ function migrate(settings) {
     settings.customPrompt = null; delete settings._promptBase;
   }
   if (!Array.isArray(settings.promptEdits)) settings.promptEdits = [];
+  if (typeof settings.previewFirst !== "boolean") settings.previewFirst = false;
   return settings;
 }
 function load() {
@@ -1200,8 +1219,8 @@ function renderPendingBar() {
   bar.hidden = !p;
   $("evPendingGo").textContent = here ? "查看並處理" : "前往處理";
   if (p) $("evPendingText").textContent = p.reason === "item"
-    ? `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」超過每則字數上限，改短後才能繼續匯入。`
-    : `${p.companion} 的「${catByCode(p.cat).name}」還有一則「${p.queue[0].keywords || "事件"}」在等妳決定（擠進 ${slotTitle(p.cat, { no: p.slotNo })} 或開新欄），處理完才能再匯入事件。`;
+    ? `${p.companion} 的「${catByCode(p.cat).name}」還有一段「${p.queue[0].keywords || "事件"}」超過每段內文的字數上限，改短後才能繼續匯入。`
+    : `${p.companion} 的「${catByCode(p.cat).name}」還有一段「${p.queue[0].keywords || "事件"}」在等妳決定（放進 ${slotDisplayTitle(p.cat, { no: p.slotNo })} 的內文，或新增一篇事件），處理完才能再匯入。`;
 }
 function render() {
   renderPendingBar();
@@ -1220,7 +1239,7 @@ function render() {
 
   const cur = list.find(c => c.name === state.current);
   $("who").textContent = cur ? (cur.name || "未命名") : "伴侶記憶匣";
-  $("stats").textContent = cur ? `待轉移 ${cur.todo} · 已轉移 ${cur.done}` + (state.saveOk ? "" : " · 這個瀏覽器無法儲存，關掉頁面後記憶會消失") : "";
+  $("stats").textContent = cur ? `待轉移 ${cur.todo} · 已轉移 ${cur.done}` + (state.saveOk ? "" : " · 這個瀏覽器無法儲存，關掉頁面後記憶體內容會消失") : "";
   $("showTodo").setAttribute("aria-pressed", String(state.view === "todo"));
   $("showDone").setAttribute("aria-pressed", String(state.view === "done"));
   renderCompanionPanel(cur);
@@ -1230,7 +1249,7 @@ function render() {
   if (!cur) {
     const w = el("div", "welcome panel");
     w.append(el("span", "latin", "Welcome"), el("h2", null, "伴侶記憶匣"),
-      el("p", null, "把和伴侶的對話交給 AI，整理成一則一則的記憶卡片，複製就能貼到妳的平台。先新增第一位伴侶吧。"));
+      el("p", null, "把和伴侶的對話交給 AI，整理成一則一則的記憶體卡片，複製就能貼到妳的平台。先新增第一位伴侶吧。"));
     const acts = el("div", "row-actions");
     const add = el("button", "btn primary", "＋ 新增第一位伴侶");
     add.onclick = () => { $("addCompanionBtn").hidden = true; $("addCompanionForm").hidden = false; $("newCompanion").focus(); };
@@ -1244,9 +1263,9 @@ function render() {
   if (!items.length) {
     const e = el("div", "empty panel");
     const has = state.memories.some(m => m.companion === cur.name);
-    if (state.view === "todo" && !has) e.append(el("strong", null, `${cur.name} 還沒有記憶`), document.createTextNode("照上面 1、2、3 走完，記憶就會出現在這裡。"));
-    else if (state.view === "todo") e.append(el("strong", null, "全部轉移完了"), document.createTextNode(`${cur.name} 的記憶都搬過去囉。`));
-    else e.append(el("strong", null, "還沒有轉移過的記憶"), document.createTextNode("按下卡片上的「已轉移」，它就會收到這裡。"));
+    if (state.view === "todo" && !has) e.append(el("strong", null, `${cur.name} 還沒有記憶體`), document.createTextNode("照上面 1、2、3 走完，記憶體就會出現在這裡。"));
+    else if (state.view === "todo") e.append(el("strong", null, "全部轉移完了"), document.createTextNode(`${cur.name} 的記憶體都搬過去囉。`));
+    else e.append(el("strong", null, "還沒有轉移過的記憶體"), document.createTextNode("按下卡片上的「已轉移」，它就會收到這裡。"));
     box.append(e); return;
   }
   const fs = fields();
@@ -1329,7 +1348,7 @@ function importCore(text, fallbackCompanion) {
   const { entries, error } = parseImport(typeof text === "string" ? text : JSON.stringify(text), fs, fb, userOf(fb));
   if (error) return { ok: false, error };
   const valid = entries.filter(e => e.title || Object.keys(e.fields).length);
-  if (!valid.length) return { ok: false, error: "找不到記憶。JSON 請確認是陣列；文字請確認每則用 # 開頭。" };
+  if (!valid.length) return { ok: false, error: "找不到記憶體。JSON 請確認是陣列；文字請確認每則用 # 開頭。" };
   const noName = valid.filter(e => !e.companion).length;
   if (noName) return { ok: false, error: `有 ${noName} 則沒有伴侶名字，請填入伴侶名字再匯入一次。`, needsCompanion: true };
   let added = 0, replaced = 0;
@@ -1348,7 +1367,7 @@ function importCore(text, fallbackCompanion) {
   save();
   state.current = valid[valid.length - 1].companion; state.view = "todo";
   render();
-  toast(`匯入 ${added + replaced} 則記憶`);
+  toast(`匯入 ${added + replaced} 則記憶體`);
   return { ok: true, added, replaced, companion: state.current, lastRound: companionRecord(state.current).lastRound };
 }
 function importText(text) {
@@ -1359,7 +1378,7 @@ function importText(text) {
     if (r.needsReview) { $("importText").value = ""; closeSheets(); openSheet("eventReviewSheet"); return; }
     $("importText").value = "";
     if (r.pending) { closeSheets(); return; }
-    $("importResult").textContent = `匯入 ${r.added} 則。` + ((r.notes || []).length ? r.notes.join("；") + "。" : "");
+    $("importResult").textContent = `匯入 ${r.added} 段內文。` + ((r.notes || []).length ? r.notes.join("；") + "。" : "");
     return;
   }
   const r = importCore(text, $("importCompanion").value.trim() || state.current || "");
@@ -1408,6 +1427,7 @@ function syncFormatSheet() {
   $("charLimit").value = limitOf(state.settings);
   $("rangeNote").value = state.settings.rangeNote || "";
   $("extraNote").value = state.settings.extraNote || "";
+  $("memPreviewFirst").checked = !!state.settings.previewFirst;
   updatePrompt();
 }
 function setFormatPanelTab(tab) {
@@ -1431,7 +1451,7 @@ function updatePromptSheet() {
     $("promptTitle").textContent = `${state.current} 的事件整理指令`;
     $("promptText").value = buildEventPrompt(state.current);
     $("customBadge").hidden = true;
-    $("promptHint").textContent = "依照事件格式、類別、日期範圍自動產生，直接複製就能用。想調整，到「記憶格式與規則」切到「事件」，或寫在「其他給 AI 的提醒」。";
+  $("promptHint").textContent = "依照事件格式、類別、日期範圍自動產生，直接複製就能用。想調整，到「記憶體格式與規則」切到「事件」，或寫在「其他給 AI 的提醒」。";
     $("promptText").readOnly = true; $("editPrompt").hidden = true; $("regenPrompt").hidden = true;
     return;
   }
@@ -1441,7 +1461,7 @@ function updatePromptSheet() {
   $("promptTitle").textContent = state.current ? `${state.current} 的 AI 整理指令` : "AI 整理指令";
   if (document.activeElement !== $("promptText")) $("promptText").value = result.text;
   $("customBadge").hidden = !edited;
-  $("promptHint").textContent = "會依照記憶格式、規則、這位的名字和整理進度自動產生，直接複製就能用。想調整措辭可以手動修改，改過的地方之後換名字、改設定都會保留。"
+  $("promptHint").textContent = "會依照記憶體格式、規則、這位的名字和整理進度自動產生，直接複製就能用。想調整措辭可以手動修改，改過的地方之後換名字、改設定都會保留。"
     + (result.missed ? `（有 ${result.missed} 處手動修改對不上目前的內容，暫時沒有套用。）` : "");
   $("promptText").readOnly = !state.editingPrompt;
   $("editPrompt").hidden = !!state.editingPrompt;
@@ -1474,6 +1494,7 @@ function onSettingsInput() {
   state.settings.charLimit = Math.max(50, parseInt($("charLimit").value, 10) || 500);
   state.settings.rangeNote = $("rangeNote").value;
   state.settings.extraNote = $("extraNote").value;
+  state.settings.previewFirst = $("memPreviewFirst").checked;
   updatePrompt();
   clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); }, 400);
 }
@@ -1599,8 +1620,8 @@ const DEFAULT_EVENT_CATS = [
   "STORY｜人物故事｜{我}的過去和背景故事，以及和{伴侶}預設的過去關係",
   EST_EVENT_CAT
 ].join("\n");
-const EV_DEFAULTS = { formatMode: "default", useCodes: true, format: CODE_FORMAT, title: CODE_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE,
-  itemLimit: 500, slotLimit: 2000, timeSource: "real", extraNote: "" };
+const EV_DEFAULTS = { format: CODE_FORMAT, title: CODE_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE, cats: DEFAULT_EVENT_CATS,
+  itemLimit: "", slotLimit: "", timeSource: "real", extraNote: "", previewFirst: false, unifiedFormat: true };
 const LIST_FIELD = /細節|經過|內容|對話|紀錄|描述|過程/;
 const EVENT_TOKENS = /\{(?:代號|名稱|欄號|則號|關鍵字|開始|結束)\}/g;
 
@@ -1645,68 +1666,44 @@ function eventBodyFromEditor(text) {
 function evSet() {
   const s = state.settings;
   if (!s.events || typeof s.events !== "object") s.events = {};
-  /* Keep edits from the short-lived single-form layout, then settle on default or custom. */
-  if (s.events.formatMode === "unified") {
-    const standard = [CODE_FORMAT, LEGACY_CODE_FORMAT].includes(s.events.format) && [CODE_TITLE, LEGACY_CODE_TITLE].includes(s.events.title)
-      && s.events.subtitle === DEFAULT_EVENT_SUBTITLE && String(s.events.cats || "").trim() === DEFAULT_EVENT_CATS.trim();
-    if (standard) s.events.formatMode = "default";
-    else {
-      s.events.customFormat = s.events.format || "";
-      s.events.customTitle = s.events.title || "";
-      s.events.customSubtitle = s.events.subtitle || "";
-      s.events.customCats = /\{代號\}/.test((s.events.format || "") + "\n" + (s.events.title || "")) ? (s.events.cats || "") : "";
-      s.events.formatMode = "custom";
+  const e = s.events, has = key => Object.prototype.hasOwnProperty.call(e, key);
+  /* Old versions kept separate preset/custom copies. Move whichever one was active into the
+     single editable form without changing existing users' chosen limits. */
+  if (!e.unifiedFormat) {
+    const mode = e.formatMode;
+    if (mode === "custom") {
+      e.format = has("customFormat") ? e.customFormat : (e.format || "");
+      e.title = has("customTitle") ? e.customTitle : (e.title || "");
+      e.subtitle = has("customSubtitle") ? e.customSubtitle : (e.subtitle || "");
+      e.cats = has("customCats") ? e.customCats : (e.cats || "");
+    } else if (mode === "plain") {
+      e.format = has("plainFormat") ? e.plainFormat : (e.format || PLAIN_FORMAT);
+      e.title = has("plainTitle") ? e.plainTitle : (e.title || PLAIN_TITLE);
+      e.subtitle = has("plainSubtitle") ? e.plainSubtitle : (e.subtitle || DEFAULT_EVENT_SUBTITLE);
+      e.cats = "";
+    } else if (mode !== "unified") {
+      const direct = ["format", "title", "subtitle", "cats"].some(has);
+      if (direct) {
+        e.format = has("format") ? e.format : (e.useCodes === false ? PLAIN_FORMAT : CODE_FORMAT);
+        e.title = has("title") ? e.title : (e.useCodes === false ? PLAIN_TITLE : CODE_TITLE);
+        e.subtitle = has("subtitle") ? e.subtitle : DEFAULT_EVENT_SUBTITLE;
+        e.cats = e.useCodes === false ? "" : (has("cats") ? e.cats : DEFAULT_EVENT_CATS);
+      } else {
+        e.format = CODE_FORMAT; e.title = CODE_TITLE; e.subtitle = DEFAULT_EVENT_SUBTITLE; e.cats = DEFAULT_EVENT_CATS;
+      }
     }
+    e.unifiedFormat = true;
   }
-  /* Keep formats from both the old switch and the retired three-choice layout. */
-  if (!["default", "custom", "plain"].includes(s.events.formatMode)) {
-    const coded = s.events.useCodes !== false;
-    const format = s.events.format || (coded ? CODE_FORMAT : PLAIN_FORMAT);
-    const title = s.events.title || (coded ? CODE_TITLE : PLAIN_TITLE);
-    const subtitle = s.events.subtitle || DEFAULT_EVENT_SUBTITLE;
-    const standard = coded && [CODE_FORMAT, LEGACY_CODE_FORMAT].includes(format) && [CODE_TITLE, LEGACY_CODE_TITLE].includes(title) && subtitle === DEFAULT_EVENT_SUBTITLE;
-    const plain = !coded && format === PLAIN_FORMAT && title === PLAIN_TITLE && subtitle === DEFAULT_EVENT_SUBTITLE;
-    s.events.formatMode = standard ? "default" : (plain ? "plain" : "custom");
-  }
-  for (const k of Object.keys(EV_DEFAULTS)) if (s.events[k] == null || s.events[k] === "") s.events[k] = EV_DEFAULTS[k];
-  const has = key => Object.prototype.hasOwnProperty.call(s.events, key);
-  const edited = ![CODE_FORMAT, LEGACY_CODE_FORMAT, PLAIN_FORMAT].includes(s.events.format) ||
-    ![CODE_TITLE, LEGACY_CODE_TITLE, PLAIN_TITLE].includes(s.events.title) || s.events.subtitle !== DEFAULT_EVENT_SUBTITLE;
-  if (!has("customFormat")) s.events.customFormat = edited ? s.events.format : "";
-  if (!has("customTitle")) s.events.customTitle = edited ? s.events.title : "";
-  if (!has("customSubtitle")) s.events.customSubtitle = edited ? s.events.subtitle : "";
-  if (!has("plainFormat")) s.events.plainFormat = "";
-  if (!has("plainTitle")) s.events.plainTitle = "";
-  if (!has("plainSubtitle")) s.events.plainSubtitle = "";
-  if (!has("customCombined")) s.events.customCombined = joinEventFormat(s.events.customTitle, s.events.customSubtitle, s.events.customFormat);
-  if (!has("plainCombined")) s.events.plainCombined = joinEventFormat(s.events.plainTitle, s.events.plainSubtitle, s.events.plainFormat);
-  if (s.events.customCombined && ![s.events.customTitle, s.events.customSubtitle, s.events.customFormat].some(x => String(x || "").trim())) {
-    Object.assign(s.events, { customTitle: splitEventFormat(s.events.customCombined).title,
-      customSubtitle: splitEventFormat(s.events.customCombined).subtitle, customFormat: splitEventFormat(s.events.customCombined).format });
-  }
-  if (s.events.plainCombined && ![s.events.plainTitle, s.events.plainSubtitle, s.events.plainFormat].some(x => String(x || "").trim())) {
-    Object.assign(s.events, { plainTitle: splitEventFormat(s.events.plainCombined).title,
-      plainSubtitle: splitEventFormat(s.events.plainCombined).subtitle, plainFormat: splitEventFormat(s.events.plainCombined).format });
-  }
-  if (!has("customCats")) {
-    const legacyCats = String(s.events.cats || "").trim();
-    s.events.customCats = legacyCats && !presetCategoryList(legacyCats) ? legacyCats : "";
-  }
-  if (!has("cats")) s.events.cats = DEFAULT_EVENT_CATS;
-  if (s.events.formatMode === "plain") {
-    Object.assign(s.events, { formatMode: "custom", customFormat: s.events.plainFormat, customTitle: s.events.plainTitle,
-      customSubtitle: s.events.plainSubtitle, customCats: "" });
-  }
-  return s.events;
+  for (const [k, v] of Object.entries(EV_DEFAULTS)) if (!has(k) || e[k] == null) e[k] = v;
+  return e;
 }
-const eventFormatMode = () => evSet().formatMode;
-const eventFormatText = () => eventFormatMode() === "default" ? CODE_FORMAT : evSet().customFormat;
-const eventTitleTemplate = () => eventFormatMode() === "default" ? CODE_TITLE : evSet().customTitle;
-const eventSubtitleTemplate = () => eventFormatMode() === "default" ? DEFAULT_EVENT_SUBTITLE : evSet().customSubtitle;
-const useCodes = () => eventFormatMode() === "default" || !!String(evSet().customCats || "").trim();
-const effectiveEventFormatText = () => eventFormatText().trim() || (useCodes() ? CODE_FORMAT : PLAIN_FORMAT);
-const effectiveEventTitleTemplate = () => eventTitleTemplate().trim() || (useCodes() ? CODE_TITLE : PLAIN_TITLE);
-const effectiveEventSubtitleTemplate = () => eventSubtitleTemplate().trim() || DEFAULT_EVENT_SUBTITLE;
+const eventFormatText = () => String(evSet().format || "");
+const eventTitleTemplate = () => String(evSet().title || "");
+const eventSubtitleTemplate = () => String(evSet().subtitle || "");
+const useCodes = () => !!String(evSet().cats || "").trim();
+const effectiveEventFormatText = eventFormatText;
+const effectiveEventTitleTemplate = eventTitleTemplate;
+const effectiveEventSubtitleTemplate = eventSubtitleTemplate;
 const pad2 = n => String(Math.max(0, parseInt(n, 10) || 0)).padStart(2, "0");
 function isoDate(s) {
   const m = String(s || "").match(/(\d{4})\s*[\/\-.年]\s*(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})/);
@@ -1747,14 +1744,13 @@ function parseCats(text, useDefault) {
   }
   return out.length ? out : (useDefault === false ? [] : parseCats(DEFAULT_EVENT_CATS, false));
 }
-const eventCats = () => eventFormatMode() === "default" ? parseCats(DEFAULT_EVENT_CATS, false)
-  : useCodes() ? parseCats(evSet().customCats, false) : [{ code: "EVENT", name: "事件", hint: "" }];
+const eventCats = () => useCodes() ? parseCats(evSet().cats, false) : [{ code: "EVENT", name: "事件", hint: "" }];
 const catLabel = c => useCodes() ? `${c.code}｜${c.name}` : c.name;
 function parseEventFormat(text) {
   const lines = String(text || "").split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   let head = lines.find(l => /\{(代號|欄號|則號|關鍵字|名稱)\}/.test(l)) || "";
   if (!head && lines[0] && !/[：:]\s*$/.test(lines[0])) head = lines[0];
-  if (!head) head = useCodes() ? "[{代號}-{欄號}-{則號}] {關鍵字}" : "【{關鍵字}】";
+  if (!head) head = "";
   const fields = [];
   for (const l of lines) {
     if (l === head) continue;
@@ -1766,7 +1762,7 @@ function parseEventFormat(text) {
 const evFormat = () => parseEventFormat(effectiveEventFormatText());
 function catByCode(code) {
   return eventCats().find(c => c.code === code)
-    || parseCats(evSet().customCats, false).find(c => c.code === code)
+    || parseCats(evSet().cats, false).find(c => c.code === code)
     || parseCats(DEFAULT_EVENT_CATS, false).find(c => c.code === code)
     || { code, name: code, hint: "", orphan: true };
 }
@@ -1792,7 +1788,8 @@ const evCode = e => useCodes() ? `[${e.cat}-${pad2(e.slot)}-${pad2(e.idx)}]` : (
 /* Turn one stored small event into the text the user pastes. */
 function eventText(ev) {
   const comp = ev.companion, me = userOf(comp);
-  const lines = [nameLabel(fillHead(evFormat().head, ev), comp, me).trim()];
+  const lines = [], head = nameLabel(fillHead(evFormat().head, ev), comp, me).trim();
+  if (head) lines.push(head);
   for (const f of evLabels(ev)) {
     const items = evItems((ev.fields || {})[f.label]), name = nameLabel(f.label, comp, me);
     if (f.list) { lines.push(name + "："); items.forEach(x => lines.push("- " + x)); }
@@ -1898,15 +1895,23 @@ function repairSlots(name, code) {
 function slotTitle(code, slot) {
   return effectiveEventTitleTemplate().replace(/\{代號\}/g, code).replace(/\{名稱\}/g, catByCode(code).name).replace(/\{欄號\}/g, pad2(slot.no));
 }
+function slotDisplayTitle(code, slot) {
+  return slotTitle(code, slot).trim() || `${catByCode(code).name}第 ${pad2(slot.no)} 篇`;
+}
 function slotSubtitle(slot) {
   return effectiveEventSubtitleTemplate().replace(/\{開始\}/g, slashDate(slot.start) || "YYYY/MM/DD").replace(/\{結束\}/g, slot.closed ? (slashDate(slot.end) || "YYYY/MM/DD") : "現在");
 }
-const slotLimit = () => Math.max(100, parseInt(evSet().slotLimit, 10) || 2000);
-const itemLimit = () => Math.max(50, parseInt(evSet().itemLimit, 10) || 500);
+function optionalLimit(value) {
+  if (value === "" || value == null) return null;
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+const slotLimit = () => optionalLimit(evSet().slotLimit);
+const itemLimit = () => optionalLimit(evSet().itemLimit);
 function catOf(name) {
   const cats = visibleCats(name), rec = state.companions.find(x => x.name === name) || {};
   return cats.find(c => c.code === rec.evCat) || cats[0]
-    || { code: "EVENT", name: "尚未設定事件類別", hint: "請先到「記憶格式與規則」填寫事件類別。", empty: true };
+    || { code: "EVENT", name: "尚未設定事件類別", hint: "請先到「記憶體格式與規則」填寫事件類別。", empty: true };
 }
 function closeSlot(name, code, slot) { slot.closed = true; slot.end = slotLastDate(name, code, slot) || todayIso(); slot.updatedAt = Date.now(); }
 function openSlot(name, code) { const r = evRec(name, code); return r.slots.find(s => !s.closed) || newSlot(r); }
@@ -1976,7 +1981,7 @@ function advanceEventRanges(ctx) {
 /* Place small events one by one. Stops and asks when the next one would overflow the column,
    including when a single event is longer than a whole column. */
 function placeQueue(queue, ctx) {
-  const lim = slotLimit();
+  const lim = slotLimit(), perItem = itemLimit();
   while (queue.length) {
     const e = queue[0], comp = e.companion, cat = e.cat, r = evRec(comp, cat);
     const canonical = evCanonical(e), twin = state.events.find(x => evCanonical(x) === canonical);
@@ -1986,9 +1991,9 @@ function placeQueue(queue, ctx) {
     const slot = openSlot(comp, cat);
     const probe = { ...e, slot: slot.no, idx: nextIdx(comp, cat, slot) };
     const used = charCount(slotBody(comp, cat, slot)), need = charCount(eventText(probe));
-    const room = used ? Math.max(0, lim - used - charCount(EVENT_SEPARATOR)) : lim;
-    if (need > itemLimit()) return { reason: "item", companion: comp, cat, slotNo: slot.no, room, max: itemLimit(), need, empty: !used, queue, groups: ctx.groups, range: ctx.range, dateCheck: ctx.dateCheck, globalRange: ctx.globalRange };
-    if (need > room) return { reason: "slot", companion: comp, cat, slotNo: slot.no, room, max: room, need, empty: !used, queue, groups: ctx.groups, range: ctx.range, dateCheck: ctx.dateCheck, globalRange: ctx.globalRange };
+    const room = lim == null ? null : (used ? Math.max(0, lim - used - charCount(EVENT_SEPARATOR)) : lim);
+    if (perItem != null && need > perItem) return { reason: "item", companion: comp, cat, slotNo: slot.no, room, max: perItem, need, empty: !used, queue, groups: ctx.groups, range: ctx.range, dateCheck: ctx.dateCheck, globalRange: ctx.globalRange };
+    if (room != null && need > room) return { reason: "slot", companion: comp, cat, slotNo: slot.no, room, max: room, need, empty: !used, queue, groups: ctx.groups, range: ctx.range, dateCheck: ctx.dateCheck, globalRange: ctx.globalRange };
     if (!slot.start) slot.start = e.date || todayIso();
     const ne = { id, companion: comp, cat, slot: slot.no, idx: probe.idx, keywords: e.keywords, date: e.date || "", fields: e.fields,
       transferred: !!e.transferred, updatedAt: Date.now() };
@@ -2017,23 +2022,24 @@ function finishPlacing(ctx, pending) {
   if (dc.mismatch) notes.push(`${dc.mismatch} 則 date 和「時間」欄的日期不一致，整理進度沒有往後移`);
   if (ctx.moved) notes.push(ctx.moved);
   ctx.notes = notes;
-  if (pending) toast(`${n ? `匯入 ${n} 則，` : ""}下一則放不下，請選擇怎麼處理`);
-  else toast(`匯入 ${n} 則事件` + (notes.length ? "（" + notes.join("；") + "）" : ""));
+  if (pending) toast(`${n ? `匯入 ${n} 段，` : ""}下一段內文放不下，請選擇怎麼處理`);
+  else toast(`匯入 ${n} 段內文` + (notes.length ? "（" + notes.join("；") + "）" : ""));
 }
-const pendingInfo = p => p ? { companion: p.companion, category: p.cat, column: p.slotNo ? slotTitle(p.cat, { no: p.slotNo }) : "", room: p.reason === "item" ? p.max : p.room, need: p.need,
+const pendingInfo = p => p ? { companion: p.companion, category: p.cat, column: p.slotNo ? slotDisplayTitle(p.cat, { no: p.slotNo }) : "", room: p.reason === "item" ? p.max : p.room, need: p.need,
   keywords: p.queue[0].keywords, waiting: p.queue.length - 1, canOpenNew: p.reason !== "item" && !p.empty,
   ask: p.reason === "item"
-    ? `「${p.queue[0].keywords}」有 ${p.need} 字，超過每則上限 ${p.max} 字，只能先改短。請先問使用者要怎麼精簡，再呼叫 resolveEventOverflow("fit", 改短的文字)。`
+    ? `「${p.queue[0].keywords}」有 ${p.need} 字，超過每段內文的字數上限 ${p.max} 字，只能先改短。請先問使用者要怎麼精簡，再呼叫 resolveEventOverflow("fit", 改短的文字)。`
     : p.empty
-    ? `「${p.queue[0].keywords}」有 ${p.need} 字，比一整欄的上限 ${p.room} 字還長，只能改短。請先問使用者要怎麼精簡，再呼叫 resolveEventOverflow("fit", 改短的文字)。`
-    : `「${p.queue[0].keywords}」有 ${p.need} 字，但 ${slotTitle(p.cat, { no: p.slotNo })} 只剩 ${p.room} 字。請先問使用者：要改短一點擠進這欄（resolveEventOverflow("fit", 改短的文字)），還是開新的一欄（resolveEventOverflow("new")）？` } : null;
+    ? `「${p.queue[0].keywords}」有 ${p.need} 字，比一篇事件的總字數上限 ${p.room} 字還長，只能改短。請先問使用者要怎麼精簡，再呼叫 resolveEventOverflow("fit", 改短的文字)。`
+    : `「${p.queue[0].keywords}」有 ${p.need} 字，但 ${slotDisplayTitle(p.cat, { no: p.slotNo })} 的內文只剩 ${p.room} 字。請先問使用者：要改短一點放進這篇（resolveEventOverflow("fit", 改短的文字)），還是新增一篇事件（resolveEventOverflow("new")）？` } : null;
 
 function reviewEventText(e) {
   const comp = e.companion, me = userOf(comp), fmt = evFormat();
   const head = nameLabel(fmt.head, comp, me)
     .replace(/\{代號\}/g, e.cat || "代號").replace(/\{名稱\}/g, catByCode(e.cat).name)
     .replace(/\{欄號\}/g, "第幾篇").replace(/\{則號\}/g, "之幾").replace(/\{關鍵字\}/g, e.keywords || "關鍵字");
-  const lines = [head];
+  const lines = [];
+  if (head.trim()) lines.push(head);
   for (const f of evLabels(e)) {
     const items = evItems((e.fields || {})[f.label]), label = nameLabel(f.label, comp, me);
     if (f.list) { lines.push(label + "："); items.forEach(x => lines.push("- " + x)); }
@@ -2045,7 +2051,7 @@ function stageEventReview(text, companion) {
   const name = String(companion || state.current || "").trim();
   if (!name) return { ok: false, error: "請先選一位伴侶。" };
   const cats = visibleCats(name);
-  if (!cats.length) return { ok: false, error: "請先到「記憶格式與規則」設定事件類別。" };
+  if (!cats.length) return { ok: false, error: "請先到「記憶體格式與規則」設定事件類別。" };
   const { items, error } = parseEventImport(text, cats[0].code);
   if (error) return { ok: false, error };
   const valid = items.filter(e => e.keywords || Object.values(e.fields || {}).some(Boolean)).map(e => ({ ...e,
@@ -2082,7 +2088,7 @@ function confirmEventReview() {
   const r = importEventsCore(JSON.stringify(payload), data.companion, undefined, { allowMixed: true, confirmed: true, globalRange: true });
   if (!r.ok) { state.evr = review; save(); renderEventReview(); $("eventReviewResult").textContent = r.error; return; }
   closeSheets();
-  if (!r.pending) toast(`已確認並匯入 ${r.added} 則事件`);
+  if (!r.pending) toast(`已確認並匯入 ${r.added} 段內文`);
 }
 
 /* Shared by the paste box and by agents (window.memoryShelf.importEvents). A mixed-category
@@ -2092,7 +2098,7 @@ function importEventsCore(text, companion, code, opts) {
   const name = String(companion || state.current || "").trim();
   if (!name) return { ok: false, error: "請先選一位伴侶。" };
   const pend = getPending();
-  if (pend) return { ok: false, error: `還有一則「${pend.queue[0].keywords || "事件"}」在等妳決定要擠進 ${pend.companion} 的 ${slotTitle(pend.cat, { no: pend.slotNo })}，還是開新的一欄。先處理完再匯入。`, pending: pendingInfo(pend) };
+  if (pend) return { ok: false, error: `還有一段「${pend.queue[0].keywords || "事件"}」在等妳決定要放進 ${pend.companion} 的 ${slotDisplayTitle(pend.cat, { no: pend.slotNo })} 內文，還是新增一篇事件。先處理完再匯入。`, pending: pendingInfo(pend) };
   if (!code && useCodes() && !opts.confirmed) return stageEventReview(text, name);
   if (code && !knownCat(name, code)) return { ok: false, error: `沒有「${code}」這個事件類別，請先在「事件格式」的清單加上它。` };
   const target = code || catOf(name).code;
@@ -2156,15 +2162,15 @@ function resolveEventOverflow(choice, text) {
     if (need > max) return { ok: false, error: `還是太長：${need} 字，這次最多 ${max} 字。原本的內容沒有變。`, need, room: max };
     e.keywords = cand.keywords; e.fields = cand.fields;
   } else if (choice === "new") {
-    if (p.reason === "item") return { ok: false, error: "這一則超過每則字數上限，開新欄也不能解決，只能先改短。" };
-    if (p.empty) return { ok: false, error: "這一則比一整欄還長，開新欄也放不下，只能改短。" };
+    if (p.reason === "item") return { ok: false, error: "這段超過每段內文的字數上限，新增一篇事件也不能解決，只能先改短。" };
+    if (p.empty) return { ok: false, error: "這段比一篇事件的總字數上限還長，新增一篇也放不下，只能改短。" };
     const r = evRec(p.companion, p.cat), slot = r.slots.find(s => s.no === p.slotNo && !s.closed);
     if (slot) closeSlot(p.companion, p.cat, slot);
     const ns = newSlot(r);
     ns.start = e.date || todayIso();
   } else return { ok: false, error: "choice 要是 \"fit\" 或 \"new\"。" };
   const ctx = { touched: [], added: 0, dupes: 0, similar: 0, range: p.range || {}, dateCheck: p.dateCheck || { byGroup: {} }, groups: p.groups || [], globalRange: p.globalRange || "" };
-  const closed = choice === "new" ? slotTitle(p.cat, { no: p.slotNo }) : "";
+  const closed = choice === "new" ? slotDisplayTitle(p.cat, { no: p.slotNo }) : "";
   const next = placeQueue(p.queue, ctx);
   finishPlacing(ctx, next);
   if (closed && !next) toast(`開了新的一欄；記得把卿卿我我裡 ${closed} 的小標改成結束日期`);
@@ -2206,7 +2212,7 @@ function buildEventPrompt(name, code) {
     `挑我希望${compWord}之後記得的事：日後聊起時，${compWord}記得就接得上話的那些。`,
     "一件事寫成一則：同一件事的連續對話合成一則，不同事件各寫一則，依對話進行的順序排列。",
     "照對話裡提到的事和說過的話來寫。",
-    `每則控制在 ${itemLimit()} 字以內，標題行、欄位名稱和標點都算在內。`,
+    ...(itemLimit() == null ? [] : [`每段內文控制在 ${itemLimit()} 字以內，標題行、欄位名稱和標點都算在內。`]),
     ...(es.extraNote && es.extraNote.trim() ? [es.extraNote.trim()] : [])
   ];
   const isTimeField = f => !f.list && /時間|日期/.test(f.label);
@@ -2225,9 +2231,14 @@ function buildEventPrompt(name, code) {
   const sampleFields = {};
   for (const f of fmt.fields) sampleFields[fill(f.label)] = f.list ? ["……", "……"] : (isTimeField(f) ? "2026/02/13 晚上" : "……");
   const sample = [{ companion: comp || "伴侶名字", ...(categorized ? { category: allCats ? ((cats[0] || cat).code) : cat.code } : {}), date: "YYYY-MM-DD", keywords: "關鍵字1、關鍵字2", fields: sampleFields }];
+  const preview = es.previewFirst ? [
+    "【先確認整理方式】",
+    "先只整理第一段內文作為預覽，暫時不要匯入記憶匣，也不要繼續整理剩下的對話。等我確認內容密度與寫法後，再依我的調整從頭整理完整內容。",
+    ""
+  ] : [];
   return [
     allCats
-      ? `請幫我從附件中${me ? `我（${me}）` : "我"}和${comp || "伴侶"}的對話裡，整理出值得保留的事件，並替每則事件選擇類別。`
+      ? `請幫我從附件中${me ? `我（${me}）` : "我"}和${comp || "伴侶"}的對話裡，整理出值得保留的事件內文，並替每段內文選擇類別。`
       : categorized
       ? `請幫我從附件中${me ? `我（${me}）` : "我"}和${comp || "伴侶"}的對話裡，整理出「${cat.name}」的事件。`
       : `請幫我從附件中${me ? `我（${me}）` : "我"}和${comp || "伴侶"}的對話裡，整理出值得保留的事件。`,
@@ -2238,14 +2249,15 @@ function buildEventPrompt(name, code) {
     "【規則】",
     ...rules.map((x, i) => `${i + 1}. ${x}`),
     "",
-    "【每則事件的欄位】",
-    "- 關鍵字：挑 1～3 個對話裡真的出現、之後能觸發這段事件的字詞，用「、」分隔",
+    "【每段內文的欄位】",
+    "- 關鍵字：挑 1～3 個對話裡真的出現、之後能觸發這段內文的字詞，用「、」分隔",
     ...fmt.fields.map(f => `- ${fill(f.label)}${fieldGuide(f)}`),
     dateGuide,
     `- companion：固定填「${comp || "伴侶名字"}」`,
     ...(categorized ? [`- category：${allCats ? "從上方類別選最合適的一個，填代號" : `固定填「${cat.code}」`}`] : []),
     "",
     ...(existing.length ? ["【已經整理過的事件】（對話日期｜關鍵字｜開頭）", "以下事件已收錄；本次接續整理其他事件，以內容判斷是否為同一件事。", ...existing.map(x => "- " + x), ""] : []),
+    ...preview,
     "【輸出格式】",
     `請只輸出一個 JSON 陣列${useCodes() ? "，編號由頁面接續" : ""}；沒有符合的事件時輸出 []。格式如下：`,
     JSON.stringify(sample, null, 2)
@@ -2260,7 +2272,7 @@ function renderEventPanel(cur) {
   $("tabMem").setAttribute("aria-pressed", String(!ev));
   $("tabEv").setAttribute("aria-pressed", String(ev));
   $("flowStep2Title").textContent = ev ? "交給 AI 整理事件" : "交給 AI 整理";
-  $("flowStep3Note").textContent = ev ? "貼上後會接在目前的事件欄後面。" : "貼上後就會變成下面的記憶卡片。";
+  $("flowStep3Note").textContent = ev ? "貼上後會接在目前這篇事件的內文後面。" : "貼上後就會變成下面的記憶體卡片。";
   if (!ev) $("evSlotForm").hidden = true;
   $("viewCompanionPrompt").textContent = ev ? "查看指令" : "查看／修改";
   $("viewCompanionPrompt").disabled = false;
@@ -2287,7 +2299,7 @@ function renderEventPanel(cur) {
   parts.push(r.from ? `事件下次從 ${slashDate(r.from)} 開始` : "事件還沒整理過");
   $("progressText").textContent = parts.join(" · ");
   const latest = (companionRecord(cur.name).files || []).slice().sort((a, b) => a.uploadedAt < b.uploadedAt ? 1 : -1)[0];
-  $("promptNote").textContent = `複製事件指令，連同${latest ? ` ${latest.name} ` : "對話檔"}一起交給妳的 AI。匯入時可以逐則改正分類。`;
+  $("promptNote").textContent = `複製事件指令，連同${latest ? ` ${latest.name} ` : "對話檔"}一起交給妳的 AI。匯入時可以逐段改正分類。`;
 }
 
 function rangeBad(name) { const r = eventRange(name); return !!(r.from && r.to && r.from > r.to); }
@@ -2298,7 +2310,7 @@ function renderEventList(cur) {
     $("stats").textContent = "尚未設定事件類別";
     const box = $("cards"); box.replaceChildren();
     const e = el("div", "empty panel");
-    e.append(el("strong", null, "先設定妳的事件類別"), document.createTextNode("到「記憶格式與規則」切到「事件」，再填入妳慣用的事件代號與類別。"));
+    e.append(el("strong", null, "先設定妳的事件類別"), document.createTextNode("到「記憶體格式與規則」切到「事件」，再填入妳慣用的事件代號與類別。"));
     box.append(e);
     return;
   }
@@ -2338,25 +2350,25 @@ function overflowCard(p) {
   const slot = (peekEv(p.companion, p.cat).slots.find(s => s.no === p.slotNo)) || { no: p.slotNo };
   const text = eventText({ ...e, slot: p.slotNo, idx: nextIdx(p.companion, p.cat, slot) });
   const itemTooLong = p.reason === "item", mustShorten = itemTooLong || p.empty, max = itemTooLong ? p.max : p.room;
-  c.append(el("span", "latin", mustShorten ? "Too long" : "Almost full"), el("h2", null, itemTooLong ? "這一則超過每則字數上限" : (p.empty ? "這一則比一整欄還長" : `${slotTitle(p.cat, slot)} 快滿了`)),
+  c.append(el("span", "latin", mustShorten ? "Too long" : "Almost full"), el("h2", null, itemTooLong ? "這段超過每段內文的字數上限" : (p.empty ? "這段比一篇事件的總字數上限還長" : `${slotDisplayTitle(p.cat, slot)} 內文快滿了`)),
     el("p", "muted", itemTooLong
-      ? `「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，每則最多 ${p.max} 字，需要先改短。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 則等著。` : "")
+      ? `「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，每段內文最多 ${p.max} 字，需要先改短。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 段等著。` : "")
       : p.empty
-      ? `「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，一欄最多 ${p.room} 字，開新欄也放不下，需要改短。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 則等著。` : "")
-      : `下一則「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，這欄只剩 ${p.room} 字。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 則等著。` : "")));
+      ? `「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，一篇事件的總字數上限是 ${p.room} 字，新增一篇也放不下，需要改短。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 段等著。` : "")
+      : `下一段「${e.keywords || "（沒有關鍵字）"}」有 ${p.need} 字，這篇事件的內文只剩 ${p.room} 字。` + (p.queue.length > 1 ? `後面還有 ${p.queue.length - 1} 段等著。` : "")));
   const ta = el("textarea", "mono"); ta.rows = Math.min(14, text.split("\n").length + 1); ta.value = text; ta.hidden = true;
   const cnt = el("span", "count");
   const act = el("div", "row-actions");
-  const shorten = el("button", "btn primary", mustShorten ? "改短" : "改短一點，擠進這欄");
-  const neu = el("button", "btn", "開新的一欄");
-  const fit = el("button", "btn primary", mustShorten ? "使用改短版本" : "擠進這欄");
+  const shorten = el("button", "btn primary", mustShorten ? "改短" : "改短一點，放進這篇");
+  const neu = el("button", "btn", "新增一篇事件");
+  const fit = el("button", "btn primary", mustShorten ? "使用改短版本" : "放進這篇");
   const cancel = el("button", "btn", "取消");
   const ask = el("button", "btn", "複製精簡指令");
   const upd = () => { const n = charCount(ta.value); cnt.textContent = `${n} / ${max} 字`; cnt.classList.toggle("over", n > max); fit.disabled = n > max; };
   shorten.onclick = () => { act.replaceChildren(cnt, cancel, ask, fit); ta.hidden = false; upd(); ta.focus(); };
   cancel.onclick = () => { ta.hidden = true; act.replaceChildren(...(mustShorten ? [shorten] : [shorten, neu])); };
   ta.addEventListener("input", upd);
-  ask.onclick = () => copyText(`請把下面這則事件精簡到 ${max} 字以內（包含標題行、欄位名稱、標點），格式和欄位都不要變，重要的對話盡量保留，只回傳精簡後的內容：\n\n${ta.value}`, ask, "複製精簡指令");
+  ask.onclick = () => copyText(`請把下面這段內文精簡到 ${max} 字以內（包含標題行、欄位名稱、標點），格式和欄位都不要變，重要的對話盡量保留，只回傳精簡後的內容：\n\n${ta.value}`, ask, "複製精簡指令");
   fit.onclick = () => { const r = resolveEventOverflow("fit", ta.value); if (!r.ok) toast(r.error); };
   neu.onclick = () => { const r = resolveEventOverflow("new"); if (!r.ok) toast(r.error); };
   act.append(...(mustShorten ? [shorten] : [shorten, neu]));
@@ -2367,27 +2379,35 @@ function overflowCard(p) {
 function slotCard(name, code, slot, done) {
   const c = el("article", "card panel slot" + (slot.closed ? " closed" : ""));
   const lim = slotLimit(), body = slotBody(name, code, slot), used = charCount(body);
+  const outTitle = slotTitle(code, slot).trim(), outSubtitle = slotSubtitle(slot).trim();
   const head = el("div", "slot-head"), top = el("div", "card-top");
   const eb = el("div", "eyebrow");
-  eb.append(el("span", "latin", slot.closed ? "Full" : "In progress"), el("span", null, `內文 ${used} / ${lim} 字`));
-  top.append(eb, el("h2", null, slotTitle(code, slot)), el("div", "slot-sub", slotSubtitle(slot)));
+  eb.append(el("span", "latin", slot.closed ? "Closed" : "In progress"), el("span", null, lim == null ? `內文 ${used} 字` : `內文 ${used} / ${lim} 字`));
+  top.append(eb, el("h2", null, outTitle || slotDisplayTitle(code, slot)));
+  if (outSubtitle) top.append(el("div", "slot-sub", outSubtitle));
   const copy = el("div", "copy-row");
   const mk = (label, txt) => { const b = el("button", "btn sm", label); b.onclick = () => copyText(txt, b, label); return b; };
-  copy.append(el("span", "muted", "複製"), mk("大標", slotTitle(code, slot)), mk("小標", slotSubtitle(slot)), mk("內文", body));
-  head.append(top, copy);
-  const meter = el("div", "meter" + (used > lim ? " over" : "")), bar = el("i");
-  bar.style.width = Math.min(100, Math.round(used / lim * 100)) + "%"; meter.append(bar);
-  c.append(head, meter);
-  if (slot.closed) c.append(el("p", "slot-note", `這欄已滿，卿卿我我裡的小標要改成「${slotSubtitle(slot)}」。`));
+  const copyButtons = [];
+  if (outTitle) copyButtons.push(mk("大標", outTitle));
+  if (outSubtitle) copyButtons.push(mk("小標", outSubtitle));
+  if (body) copyButtons.push(mk("內文", body));
+  if (copyButtons.length) copy.append(el("span", "muted", "複製"), ...copyButtons);
+  head.append(top); if (copyButtons.length) head.append(copy);
+  c.append(head);
+  if (lim != null) {
+    const meter = el("div", "meter" + (used > lim ? " over" : "")), bar = el("i");
+    bar.style.width = Math.min(100, Math.round(used / lim * 100)) + "%"; meter.append(bar); c.append(meter);
+  }
+  if (slot.closed) c.append(el("p", "slot-note", outSubtitle ? `這篇事件已結束，卿卿我我裡的小標要改成「${outSubtitle}」。` : "這篇事件已結束，下一段會新增一篇。"));
   const list = el("div", "ev-items");
   for (const e of slotItems(name, code, slot.no)) if (!!e.transferred === done) list.append(eventItem(e));
   if (list.childNodes.length) c.append(list);
   if (!slot.closed && !done) {
     const foot = el("div", "slot-foot");
-    const end = el("button", "linkish", "這欄先結束，下一則開新欄");
-    armButton(end, "這欄先結束，下一則開新欄", "再按一次確認", () => {
+    const end = el("button", "linkish", "這篇先結束，下一段新增一篇");
+    armButton(end, "這篇先結束，下一段新增一篇", "再按一次確認", () => {
       closeSlot(name, code, slot); save(); render();
-      toast(`${slotTitle(code, slot)} 結束了，記得把小標改成結束日期`);
+      toast(`${slotDisplayTitle(code, slot)} 結束了，記得把小標改成結束日期`);
     });
     foot.append(end); c.append(foot);
   }
@@ -2413,12 +2433,13 @@ function eventItem(e) {
       const ul = el("ul", "ev-list"); items.forEach(x => ul.append(el("li", null, x))); w.append(ul);
     }
     const act = el("div", "ev-actions");
-    act.append(el("span", "count" + (n > lim ? " over" : ""), n > lim ? `${n} 字 · 超過 ${lim}` : `${n} 字`));
+    const over = lim != null && n > lim;
+    act.append(el("span", "count" + (over ? " over" : ""), over ? `${n} 字 · 超過 ${lim}` : `${n} 字`));
     const ed = el("button", "btn sm", "編輯"); ed.onclick = edit;
     const mv = el("button", "btn sm", e.transferred ? "移回待轉移" : "已轉移");
     mv.onclick = () => setEventTransferred(e, !e.transferred);
-    const cp = el("button", "btn sm primary", "複製這則"); cp.onclick = () => copyText(text, cp, "複製這則");
-    act.append(ed, mv, cp);
+    act.append(ed, mv);
+    if (text) { const cp = el("button", "btn sm primary", "複製這則"); cp.onclick = () => copyText(text, cp, "複製這則"); act.append(cp); }
     w.append(act);
   };
   const edit = () => {
@@ -2427,15 +2448,17 @@ function eventItem(e) {
     const act = el("div", "ev-actions");
     const del = el("button", "btn sm danger", "刪除");
     armButton(del, "刪除", "再按一次確認刪除", () => {
-      e.deleted = true; e.updatedAt = Date.now(); save(); render(); toast("刪除了一則事件");
+      e.deleted = true; e.updatedAt = Date.now(); save(); render(); toast("刪除一段內文");
     });
-    const cnt = el("span", "count"); const upd = () => { cnt.textContent = `${charCount(ta.value)} / ${lim} 字`; }; upd(); ta.addEventListener("input", upd);
+    const cnt = el("span", "count"); const upd = () => { const count = charCount(ta.value); cnt.textContent = lim == null ? `${count} 字` : `${count} / ${lim} 字`; }; upd(); ta.addEventListener("input", upd);
     const cancel = el("button", "btn sm", "取消"); cancel.onclick = view;
     const ok = el("button", "btn sm primary", "儲存");
     ok.onclick = () => {
-      const b = parseEventBlocks(ta.value, true)[0];
-      if (!b) { toast("第一行要保留事件的標題行"); return; }
-      e.keywords = b.keywords || e.keywords; e.fields = b.fields;
+      const hasHead = !!evFormat().head.trim();
+      const b = parseEventBlocks(hasHead ? ta.value : `【${e.keywords || "事件"}】\n${ta.value}`, true)[0];
+      if (!b) { toast(hasHead ? "第一行要保留事件的標題行" : "讀不到這段內文"); return; }
+      if (hasHead) e.keywords = b.keywords || e.keywords;
+      e.fields = b.fields;
       const d = isoDate(b.fields["時間"] || ""); if (d) e.date = d;
       e.updatedAt = Date.now(); save(); render(); toast("已儲存");
     };
@@ -2483,47 +2506,32 @@ function saveSlotSetup() {
   save();
   $("evSlotForm").hidden = true; $("evSlotBase").value = ""; $("evSlotResult").textContent = "";
   render();
-  toast(`接續 ${slotTitle(code, { no })}，已用 ${charCount(base)} 字`);
+  toast(`接續 ${slotDisplayTitle(code, { no })}，已用 ${charCount(base)} 字`);
 }
 
 function syncEventFormatSheet() {
-  const es = evSet(), mode = eventFormatMode();
+  const es = evSet();
   $("evTitleFormat").value = eventTextForEditor(eventTitleTemplate());
   $("evSubtitleFormat").value = eventTextForEditor(eventSubtitleTemplate());
   $("evBodyFormat").value = eventTextForEditor(eventFormatText());
-  ["evTitleFormat", "evSubtitleFormat", "evBodyFormat"].forEach(id => $(id).readOnly = mode === "default");
-  $("evItemLimit").value = itemLimit();
-  $("evSlotLimit").value = slotLimit();
-  $("evCatsConfig").hidden = false;
-  $("evCatsText").value = mode === "default" ? DEFAULT_EVENT_CATS : es.customCats;
-  $("evCatsText").readOnly = mode === "default";
+  $("evItemLimit").value = es.itemLimit == null ? "" : es.itemLimit;
+  $("evSlotLimit").value = es.slotLimit == null ? "" : es.slotLimit;
+  $("evCatsText").value = es.cats || "";
   $("evExtraNote").value = es.extraNote || "";
+  $("evPreviewFirst").checked = !!es.previewFirst;
   $("evTimeReal").setAttribute("aria-pressed", String(es.timeSource !== "status"));
   $("evTimeStatus").setAttribute("aria-pressed", String(es.timeSource === "status"));
-  $("evFormatDefault").setAttribute("aria-pressed", String(mode === "default"));
-  $("evFormatCustom").setAttribute("aria-pressed", String(mode === "custom"));
-  $("evFormatChoiceHint").textContent = mode === "default"
-    ? "使用內建代號、事件類別和填寫格式，直接使用就好。"
-    : "大標、小標和內文由妳自己填；事件代號與類別是選填，整欄留空就代表不用代號。";
-}
-function setEventFormatMode(mode) {
-  if (!["default", "custom"].includes(mode) || eventFormatMode() === mode) return;
-  evSet().formatMode = mode;
-  syncEventFormatSheet(); save(); render();
-  toast(mode === "default" ? "已套用預設代號" : "可以自訂事件格式了");
 }
 function onEventSettingsInput() {
-  const es = evSet(), mode = eventFormatMode();
-  if (mode === "custom") {
-    es.customTitle = eventTitleFromEditor($("evTitleFormat").value);
-    es.customSubtitle = eventSubtitleFromEditor($("evSubtitleFormat").value);
-    es.customFormat = eventBodyFromEditor($("evBodyFormat").value);
-    es.customCats = $("evCatsText").value;
-  }
-  es.useCodes = useCodes();
-  es.itemLimit = Math.max(50, parseInt($("evItemLimit").value, 10) || 500);
-  es.slotLimit = Math.max(100, parseInt($("evSlotLimit").value, 10) || 2000);
+  const es = evSet();
+  es.title = eventTitleFromEditor($("evTitleFormat").value);
+  es.subtitle = eventSubtitleFromEditor($("evSubtitleFormat").value);
+  es.format = eventBodyFromEditor($("evBodyFormat").value);
+  es.cats = $("evCatsText").value;
+  es.itemLimit = $("evItemLimit").value.trim();
+  es.slotLimit = $("evSlotLimit").value.trim();
   es.extraNote = $("evExtraNote").value;
+  es.previewFirst = $("evPreviewFirst").checked;
   clearTimeout(fmtTimer); fmtTimer = setTimeout(() => { save(); render(); }, 400);
 }
 
@@ -2536,14 +2544,14 @@ window.memoryShelf = {
       "list() → 伴侶、妳的名字、整理進度、對話檔清單",
       "prompt(companion) → 這位伴侶的整理指令（已含名字與進度）",
       "readFile(companion, fileId?) → 對話檔內容（不給 fileId 就讀最新上傳的）",
-      "importMemories(jsonOrText, companion?) → 寫入記憶，回傳新增/更新筆數與最新進度",
+      "importMemories(jsonOrText, companion?) → 寫入記憶體，回傳新增/更新筆數與最新進度",
       "addCompanion(name, userName?) → 新增伴侶",
       "eventPrompt(companion, category?) → 這位伴侶的事件整理與分類指令；指定 category 時只整理該類",
       "setEventRange(companion, category, from, to) → 設定事件的整理日期範圍（YYYY-MM-DD，to 可留空）",
       "pendingEvent() → 目前等使用者決定的那一則（沒有就是 null）",
-      "importEvents(jsonOrText, companion?, category?) → 未指定 category 時先讓使用者確認每則分類；指定時直接寫入該類。回傳 pending 代表下一則放不下，要先問使用者",
-      'resolveEventOverflow("fit", 改短的文字) 或 resolveEventOverflow("new") → 照使用者的選擇擠進這欄或開新欄',
-      "events(companion, category?) → 事件欄與每則事件的文字"
+      "importEvents(jsonOrText, companion?, category?) → 未指定 category 時先讓使用者確認每段內文的分類；指定時直接寫入該類。回傳 pending 代表下一段內文放不下，要先問使用者",
+      'resolveEventOverflow("fit", 改短的文字) 或 resolveEventOverflow("new") → 照使用者的選擇放進這篇或新增一篇事件',
+      "events(companion, category?) → 每篇事件與其中各段內文"
     ].join("\n");
   },
   list() {
@@ -2645,8 +2653,6 @@ $("tabEv").onclick = () => { if (state.tab === "event") return; state.tab = "eve
   r.from = $("evFrom").value || ""; r.to = $("evTo").value || ""; r.rangeAt = Date.now();
   save(); render();
 }));
-$("evFormatDefault").onclick = () => setEventFormatMode("default");
-$("evFormatCustom").onclick = () => setEventFormatMode("custom");
 $("evSlotSetup").onclick = () => {
   const f = $("evSlotForm"); f.hidden = !f.hidden;
   if (!f.hidden) { $("evSlotResult").textContent = ""; $("evSlotNo").value = ""; $("evSlotStart").value = ""; $("evSlotNo").focus(); }
@@ -2654,13 +2660,13 @@ $("evSlotSetup").onclick = () => {
 $("evSlotSave").onclick = saveSlotSetup;
 $("evSlotCancel").onclick = () => { $("evSlotForm").hidden = true; };
 ["evTitleFormat", "evSubtitleFormat", "evBodyFormat", "evItemLimit", "evSlotLimit", "evCatsText", "evExtraNote"].forEach(id => $(id).addEventListener("input", onEventSettingsInput));
+$("evPreviewFirst").addEventListener("change", onEventSettingsInput);
 $("evTimeReal").onclick = () => { evSet().timeSource = "real"; syncEventFormatSheet(); save(); };
 $("evTimeStatus").onclick = () => { evSet().timeSource = "status"; syncEventFormatSheet(); save(); };
 $("resetEventFormat").onclick = () => {
   const es = evSet();
-  Object.assign(es, { formatMode: "default", useCodes: true, format: CODE_FORMAT, title: CODE_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE,
-    customFormat: "", customTitle: "", customSubtitle: "", customCats: "",
-    itemLimit: 500, slotLimit: 2000, cats: DEFAULT_EVENT_CATS });
+  Object.assign(es, { format: CODE_FORMAT, title: CODE_TITLE, subtitle: DEFAULT_EVENT_SUBTITLE, cats: DEFAULT_EVENT_CATS,
+    itemLimit: "", slotLimit: "", previewFirst: false, unifiedFormat: true });
   syncEventFormatSheet(); save(); render(); toast("已恢復預設事件格式");
 };
 $("addCompanionBtn").onclick = () => { $("addCompanionBtn").hidden = true; $("addCompanionForm").hidden = false; $("newCompanion").focus(); };
@@ -2723,6 +2729,7 @@ $("regenPrompt").onclick = () => {
 };
 $("promptText").addEventListener("blur", () => { state.editingPrompt = false; updatePromptSheet(); });
 ["formatText", "roundsPer", "charLimit", "rangeNote", "extraNote"].forEach(id => $(id).addEventListener("input", onSettingsInput));
+$("memPreviewFirst").addEventListener("change", onSettingsInput);
 $("resetFormat").onclick = () => { $("formatText").value = DEFAULT_FORMAT; onSettingsInput(); toast("已恢復預設格式"); };
 
 const backupJSON = () => JSON.stringify({ app: "companion-memory-shelf", version: 2, exportedAt: new Date().toISOString(),
@@ -2746,7 +2753,7 @@ async function restoreBackup(text) {
   state.evp = { at: now, data: data.evp && data.evp.data ? data.evp.data : null };
   state.evr = { at: now, data: data.evr && data.evr.data ? data.evr.data : null };
   save(); render();
-  return `已復原：${state.memories.length} 則記憶、${liveEvents().length} 則事件。`;
+  return `已復原：${state.memories.length} 則記憶體、${liveEvents().length} 段事件內文。`;
 }
 const ENCRYPTED_BACKUP_APP = "companion-memory-shelf-encrypted-backup";
 const BACKUP_AAD = "companion-memory-shelf-encrypted-backup:v1";
@@ -2839,11 +2846,11 @@ $("downloadBackup").onclick = async () => {
 };
 $("downloadPrompt").onclick = () => saveFile("AGENT.md", sheetPrompt() + "\n", "text/markdown");
 
-armButton($("clearAll"), "清除全部記憶與事件", "再按一次確認全部清除", async () => {
+armButton($("clearAll"), "清除全部記憶體與事件", "再按一次確認全部清除", async () => {
   state.meta.clearedAt = Date.now();
   state.memories = []; state.events = []; setPending(null); state.evr = { at: 0, data: null };
   state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; c.ev = {}; c.eventRange = { from: "", to: "", rangeAt: Date.now() }; }); save(); render();
-  $("backupResult").textContent = "已清除全部記憶和事件，整理進度也歸零了。";
+  $("backupResult").textContent = "已清除全部記憶體和事件，整理進度也歸零了。";
 });
 
 render();
