@@ -279,6 +279,43 @@ test.describe('事件', () => {
     expect(page.errors).toEqual([]);
     await context.close();
   });
+
+  test('舊自訂格式與首版空白代號都會找回原有代號', async ({ browser }) => {
+    const legacyCoded = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
+      memories: [],
+      events: [{ id: 'old-fir', companion: '王小明', cat: 'FIR', slot: 1, idx: 1, keywords: '舊事件', date: '2026-02-13', fields: { '細節': '內容還在' } }],
+      companions: [{ name: '王小明', userName: '張小美', ev: { FIR: { from: '', slots: [{ no: 1, start: '2026-02-13', end: '', closed: false }] } } }],
+      meta: {}, settings: { events: {
+        formatMode: 'custom', unifiedFormat: true,
+        title: '[{代號}-{欄號}] {名稱}', format: '[{代號}-{欄號}-{則號}] {關鍵字}\n細節：', subtitle: '{開始}-{結束}',
+        cats: '', customCats: ''
+      } }
+    }));
+    const { context, page } = await openDevice(browser, { init: legacyCoded });
+    await page.click('#tabEv');
+    await page.evaluate(() => openSheet('formatSheet'));
+    await page.click('#formatTabEv');
+    await expect(page.locator('#evCatsText')).toHaveValue(/FIR｜重大事件紀錄/);
+    expect(await page.evaluate(() => visibleCats('王小明').map(c => c.code))).toContain('FIR');
+    expect(await page.evaluate(() => memoryShelf.events('王小明', 'FIR')[0].items[0].text)).toContain('內容還在');
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
+
+  test('沒有代號欄位的空白類別仍維持不用代號', async ({ browser }) => {
+    const intentionalPlain = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
+      memories: [], events: [], companions: [], meta: {}, settings: { events: {
+        unifiedFormat: true, title: '事件第 {欄號} 篇', format: '【{關鍵字}】\n內容：', subtitle: '{開始}-{結束}', cats: ''
+      } }
+    }));
+    const { context, page } = await openDevice(browser, { init: intentionalPlain });
+    await page.evaluate(() => openSheet('formatSheet'));
+    await page.click('#formatTabEv');
+    await expect(page.locator('#evCatsText')).toHaveValue('');
+    expect(await page.evaluate(() => useCodes())).toBe(false);
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
 });
 
 test.describe('備份', () => {
