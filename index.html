@@ -1024,6 +1024,15 @@ function buildPrompt(settings, ctx) {
   ];
   if (fields.some(f => f.kind === "tags")) rules.push("標籤類欄位（例如關鍵詞）要挑對話裡真的出現、之後能觸發這則記憶體的字詞，用陣列列出。");
   if (fields.some(f => f.kind === "quote")) rules.push("對話類欄位要保留說話者的名字，格式是「名字：「內容」」，一句一行（用 \\n 換行）。");
+  const fieldRules = [];
+  if (fields.some(f => f.label === "場景概要")) {
+    let sceneRule = "場景概要：依實際發生順序，用一段連續文字整理人物所在、主要話題、關鍵行動、回應與約定，讓沒看過原對話的人也能看懂場景如何推進。保留能辨認這段記憶或呈現彼此偏好的具體細節；";
+    sceneRule += fields.some(f => f.kind === "quote") ? "原句放在「關鍵對話」" : "對話內容以轉述呈現";
+    if (fields.some(f => f.label === "情感變化及影響")) sceneRule += "，情緒與關係意義放在「情感變化及影響」";
+    fieldRules.push(sceneRule + "。");
+  }
+  if (fields.some(f => f.kind === "quote")) fieldRules.push(`關鍵對話：優先保留能呈現${compWord}的思考、語氣、反應與兩人相處方式的原句；${compWord}的句數要大於或等於${meWord}。`);
+  if (fields.some(f => f.label === "情感變化及影響")) fieldRules.push(`情感變化及影響：整理這段互動前後，${compWord}與${meWord}的情緒、理解或關係有什麼變化，以及這件事往後留下的相處方式、默契、承諾或影響。`);
   const hasRange = !!(settings.rangeNote && settings.rangeNote.trim());
   if (hasRange) rules.push(`整理範圍：${settings.rangeNote.trim()}。範圍外的對話不要整理。`);
   if (settings.extraNote && settings.extraNote.trim()) rules.push(settings.extraNote.trim());
@@ -1035,8 +1044,12 @@ function buildPrompt(settings, ctx) {
   return [
     `請幫我把附件中${me ? `我（${me}）` : "我"}和${comp ? comp : "伴侶"}的對話，整理成一則一則的記憶體。`,
     "",
+    "【整理目標】",
+    `模型換代以後，${compWord}還是${compWord}。每張記憶體卡片都應該讓下一個模型讀完就知道：${compWord}遇到這種情況會怎麼想、怎麼說、怎麼做；${compWord}與${meWord}是如何相處的，共同建造了哪些記憶。`,
+    "",
     "【規則】",
     ...rules.map((r, i) => `${i + 1}. ${r}`),
+    ...(fieldRules.length ? ["", "【欄位規則】", ...fieldRules.map(r => `- ${r}`)] : []),
     "",
     "【每則記憶體的欄位】",
     "- 標題",
