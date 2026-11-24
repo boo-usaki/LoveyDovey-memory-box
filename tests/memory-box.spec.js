@@ -404,17 +404,39 @@ test.describe('備份', () => {
 
   test('清除、復原，重新整理後資料還在', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
-    await page.evaluate(([mems, evs]) => {
+    await page.evaluate(([mems, evs, otherMems, otherEvs]) => {
       memoryShelf.addCompanion('王小明', '張小美');
       memoryShelf.importMemories(JSON.stringify(mems), '王小明');
       memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR');
-    }, [[MEM(1, '雨夜'), MEM(11, '晴天')], [EV('一', '2026-02-01'), EV('二', '2026-02-02')]]);
+      memoryShelf.addCompanion('李大華', '張小美');
+      memoryShelf.importMemories(JSON.stringify(otherMems.map(m => ({ ...m, companion: '李大華' }))), '李大華');
+      memoryShelf.importEvents(JSON.stringify(otherEvs), '李大華', 'FIR');
+    }, [
+      [MEM(1, '雨夜'), MEM(11, '晴天')],
+      [EV('一', '2026-02-01'), EV('二', '2026-02-02')],
+      [MEM(1, '晨光')],
+      [EV('三', '2026-02-03')],
+    ]);
     const backup = await page.evaluate(password => encryptBackup(password), BACKUP_PASSWORD);
     const count = () => page.evaluate(() => ({ m: state.memories.filter(m => !m.example).length, e: liveEvents().length }));
     const before = await count();
+    expect(before).toEqual({ m: 3, e: 3 });
 
     await page.evaluate(() => openSheet('backupSheet'));
-    await page.click('#clearAll'); await page.click('#clearAll');
+    await page.click('#clearAll');
+    await expect(page.locator('#clearConfirm')).toBeVisible();
+    await expect(page.locator('#clearConfirm [role="alertdialog"]')).toBeVisible();
+    await expect(page.locator('#clearConfirmText')).toContainText('所有伴侶的全部記憶體、事件與整理進度');
+    await expect(page.locator('#clearConfirmText')).toContainText('無法復原');
+    await expect(page.locator('#cancelClear')).toBeFocused();
+    expect(await count()).toEqual(before);
+
+    await page.click('#cancelClear');
+    await expect(page.locator('#clearConfirm')).toBeHidden();
+    expect(await count()).toEqual(before);
+
+    await page.click('#clearAll');
+    await page.click('#confirmClear');
     await expect(page.locator('#backupResult')).toContainText('已清除');
     expect(await count()).toEqual({ m: 0, e: 0 });
 

@@ -150,6 +150,19 @@ dd.quote { padding-left: 14px; border-left: 2px solid var(--pink); }
   width: min(760px, 100%); max-height: 100%; overflow-y: auto;
   padding: 26px; display: flex; flex-direction: column; gap: 22px;
 }
+.confirm-wrap {
+  position: fixed; inset: 0; z-index: 40; background: var(--scrim);
+  display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.confirm-dialog {
+  width: min(500px, 100%); padding: 26px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.confirm-dialog h3 { margin: 4px 0 0; font-size: 21px; font-weight: 500; letter-spacing: .06em; }
+.confirm-dialog p { margin: 0; line-height: 1.8; }
+.confirm-dialog .row-actions { justify-content: flex-end; }
+.confirm-dialog .btn.danger.primary { background: var(--pink); color: var(--ink); border-color: var(--pink); }
 .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .sheet-head h3 { margin: 4px 0 0; font-size: 21px; font-weight: 500; letter-spacing: .06em; }
 .x { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 5px 9px; color: var(--muted); border-radius: 8px; }
@@ -274,6 +287,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 6px 11px; font-size:
   .flow { grid-template-columns: minmax(0, 1fr); }
   .card { padding: 16px 16px 12px; }
   .sheet { padding: 18px 16px; }
+  .confirm-dialog { padding: 22px 18px; }
   dl.fields { grid-template-columns: minmax(0, 1fr); gap: 0; }
   dl.fields dt { margin-top: 6px; }
 }
@@ -823,6 +837,21 @@ if (window.claude) {
       <p class="result" id="backupResult" role="status"></p>
     </div>
   </div>
+</div>
+
+<div class="confirm-wrap" id="clearConfirm" hidden>
+  <section class="confirm-dialog panel" role="alertdialog" aria-modal="true" aria-labelledby="clearConfirmTitle" aria-describedby="clearConfirmText">
+    <div>
+      <span class="dash"></span>
+      <div class="latin">Warning</div>
+      <h3 id="clearConfirmTitle">確定要全部清除嗎？</h3>
+    </div>
+    <p id="clearConfirmText">這會刪除目前瀏覽器裡所有伴侶的全部記憶體、事件與整理進度，而且無法復原。伴侶設定、格式和 AI 指令修改會保留。</p>
+    <div class="row-actions">
+      <button class="btn" id="cancelClear">取消</button>
+      <button class="btn danger primary" id="confirmClear">確認全部清除</button>
+    </div>
+  </section>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" hidden>復原</button></div>
@@ -1402,6 +1431,7 @@ function importText(text) {
 
 /* ---------- Sheets ---------- */
 let lastFocus = null;
+let clearConfirmLastFocus = null;
 function openSheet(id) {
   lastFocus = document.activeElement;
   document.querySelectorAll(".sheet-wrap").forEach(s => s.hidden = s.id !== id);
@@ -1430,8 +1460,20 @@ function openSheet(id) {
 }
 function closeSheets() {
   document.querySelectorAll(".sheet-wrap").forEach(s => s.hidden = true);
+  $("clearConfirm").hidden = true;
+  clearConfirmLastFocus = null;
   document.body.classList.remove("locked");
   if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+function openClearConfirm() {
+  clearConfirmLastFocus = document.activeElement;
+  $("clearConfirm").hidden = false;
+  $("cancelClear").focus();
+}
+function closeClearConfirm() {
+  $("clearConfirm").hidden = true;
+  if (clearConfirmLastFocus && clearConfirmLastFocus.focus) clearConfirmLastFocus.focus();
+  clearConfirmLastFocus = null;
 }
 function syncFormatSheet() {
   syncEventFormatSheet();
@@ -2757,7 +2799,12 @@ $("panelUserName").addEventListener("input", () => {
 });
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = closeSheets);
 document.querySelectorAll(".sheet-wrap").forEach(w => w.addEventListener("click", e => { if (e.target === w) closeSheets(); }));
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheets(); });
+$("clearConfirm").addEventListener("click", e => { if (e.target === $("clearConfirm")) closeClearConfirm(); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (!$("clearConfirm").hidden) { closeClearConfirm(); return; }
+  closeSheets();
+});
 
 $("doImport").onclick = () => importText($("importText").value);
 $("confirmEventReview").onclick = confirmEventReview;
@@ -2964,12 +3011,15 @@ $("downloadBackup").onclick = async () => {
 };
 $("downloadPrompt").onclick = () => saveFile("AGENT.md", sheetPrompt() + "\n", "text/markdown");
 
-armButton($("clearAll"), "清除全部記憶體與事件", "再按一次確認全部清除", async () => {
+$("clearAll").onclick = openClearConfirm;
+$("cancelClear").onclick = closeClearConfirm;
+$("confirmClear").onclick = async () => {
+  closeClearConfirm();
   state.meta.clearedAt = Date.now();
   state.memories = []; state.events = []; setPending(null); state.evr = { at: 0, data: null };
   state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; c.ev = {}; c.eventRange = { from: "", to: "", rangeAt: Date.now() }; }); save(); render();
   $("backupResult").textContent = "已清除全部記憶體和事件，整理進度也歸零了。";
-});
+};
 
 render();
 /* Inside a Claude Artifact the page is only a pointer to the official site: no agent API either. */
