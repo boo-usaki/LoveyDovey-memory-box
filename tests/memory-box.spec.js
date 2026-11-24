@@ -10,8 +10,8 @@ const OLD_SYNC_KEY = 'companion-memory-shelf.sync';
 const BACKUP_PASSWORD = '只給自己的密碼123';
 
 const MEM = (from, title) => ({
-  companion: '王小明', rounds: `${from}-${from + 9}`, title,
-  fields: { '地點': '家', '場景概要': '概要' + title, '關鍵詞': ['詞'], '關鍵對話': '王小明：「嗨」', '情感變化及影響': '平穩' },
+  companion: '測試伴侶A', rounds: `${from}-${from + 9}`, title,
+  fields: { '地點': '家', '場景概要': '概要' + title, '關鍵詞': ['詞'], '關鍵對話': '測試伴侶A：「嗨」', '情感變化及影響': '平穩' },
 });
 const EV = (kw, date, len = 2) => ({
   category: 'FIR', date, keywords: kw,
@@ -35,31 +35,45 @@ test.describe('記憶體', () => {
   test('整理指令會交代模型承接目標與欄位規則', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     const prompt = await page.evaluate(() => {
-      memoryShelf.addCompanion('洛尉然', '林雨晨');
-      return memoryShelf.prompt('洛尉然');
+      memoryShelf.addCompanion('測試伴侶A', '測試使用者A');
+      return memoryShelf.prompt('測試伴侶A');
     });
-    expect(prompt).toContain('模型換代以後，洛尉然還是洛尉然');
-    expect(prompt).toContain('洛尉然遇到這種情況會怎麼想、怎麼說、怎麼做');
-    expect(prompt).toContain('洛尉然與林雨晨是如何相處的，共同建造了哪些記憶');
+    expect(prompt).toContain('模型換代以後，測試伴侶A還是測試伴侶A');
+    expect(prompt).toContain('測試伴侶A遇到這種情況會怎麼想、怎麼說、怎麼做');
+    expect(prompt).toContain('測試伴侶A與測試使用者A是如何相處的，共同建造了哪些記憶');
     expect(prompt).toContain('依實際發生順序，用一段連續文字整理人物所在、主要話題、關鍵行動、回應與約定');
     expect(prompt).toContain('保留能辨認這段記憶或呈現彼此偏好的具體細節');
     expect(prompt).toContain('原句放在「關鍵對話」，情緒與關係意義放在「情感變化及影響」');
-    expect(prompt).toContain('洛尉然的句數要大於或等於林雨晨');
-    expect(prompt).toContain('洛尉然與林雨晨的情緒、理解或關係有什麼變化');
+    expect(prompt).toContain('照原文寫清楚主詞');
+    expect(prompt).toContain('不要合併成「兩人都說了」');
+    expect(prompt).toContain('這是上限，不是要填滿，也不必為了保險預留大片空間');
+    expect(prompt).toContain('測試伴侶A的句數要大於或等於測試使用者A');
+    expect(prompt).toContain('總句數依這段對話的內容決定，不固定條數');
+    expect(prompt).toContain('「場景概要」或「情感變化及影響」寫到的承諾、關係定義或相處習慣，要附上直接說出它的原句');
+    expect(prompt).toContain('測試伴侶A與測試使用者A的情緒、理解或關係有什麼變化');
+    expect(prompt).not.toContain('充分使用');
 
     const sceneOnlyPrompt = await page.evaluate(() => {
       state.settings.format = ['# [標題]', '', '- 場景概要：'].join('\n');
       save();
-      return memoryShelf.prompt('洛尉然');
+      return memoryShelf.prompt('測試伴侶A');
     });
     expect(sceneOnlyPrompt).toContain('對話內容以轉述呈現。');
     expect(sceneOnlyPrompt).not.toContain('原句放在「關鍵對話」');
     expect(sceneOnlyPrompt).not.toContain('情緒與關係意義放在「情感變化及影響」');
 
+    const quoteOnlyPrompt = await page.evaluate(() => {
+      state.settings.format = ['# [標題]', '', '- 關鍵對話：'].join('\n');
+      save();
+      return memoryShelf.prompt('測試伴侶A');
+    });
+    expect(quoteOnlyPrompt).toContain('總句數依這段對話的內容決定，不固定條數');
+    expect(quoteOnlyPrompt).not.toContain('要附上直接說出它的原句');
+
     const noScenePrompt = await page.evaluate(() => {
       state.settings.format = ['# [標題]', '', '- 地點：', '- 關鍵詞：'].join('\n');
       save();
-      return memoryShelf.prompt('洛尉然');
+      return memoryShelf.prompt('測試伴侶A');
     });
     expect(noScenePrompt).not.toContain('場景概要：依實際發生順序');
     expect(noScenePrompt).not.toContain('- 場景概要');
@@ -68,26 +82,61 @@ test.describe('記憶體', () => {
     await context.close();
   });
 
+  test('使用說明分清楚內建瀏覽器與純文字流程，伴侶頁不重複塞說明', async ({ browser }) => {
+    const { context, page } = await openDevice(browser);
+    await page.evaluate(() => {
+      memoryShelf.addCompanion('測試伴侶A', '測試使用者A');
+      state.current = '測試伴侶A';
+      state.tab = 'memory';
+      render();
+    });
+    await expect(page.locator('#promptNote')).toBeHidden();
+    await expect(page.locator('#promptNote')).toHaveText('');
+    await expect(page.locator('#flowStep3Note')).toContainText('AI 直接寫進記憶匣時可以略過這一步');
+
+    const guide = page.locator('#guideSheet');
+    await expect(guide).toContainText('使用 Agent 桌面版程式時，可選擇以下兩種操作方式');
+    await expect(guide).toContainText('再請 AI 讀取這個網頁，告訴它要整理哪位伴侶的「記憶體」或「事件」');
+    await expect(guide).toContainText('切換「記憶體」或「事件」膠囊');
+    await expect(guide).toContainText('點擊【交給 AI 整理】的「複製指令」');
+    await expect(guide).toContainText('AI 只能在聊天視窗回覆文字時');
+    await expect(guide).not.toContainText('妳不用複製指令');
+
+    await page.evaluate(() => {
+      companionRecord('測試伴侶A').files = [{ id: 'test-file', name: '測試伴侶A對話.txt', size: 1234, uploadedAt: new Date().toISOString() }];
+      render();
+    });
+    await expect(page.locator('#promptNote')).toBeHidden();
+    await expect(page.locator('#promptNote')).toHaveText('');
+
+    await page.evaluate(() => { state.tab = 'event'; render(); });
+    await expect(page.locator('#promptNote')).toBeHidden();
+    await expect(page.locator('#promptNote')).toHaveText('');
+    await expect(page.locator('#flowStep3Note')).toContainText('匯入後可以逐段確認分類');
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
+
   test('agent 匯入、重複匯入會更新、貼上回覆、標記已轉移', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
-    const r = await page.evaluate(list => { memoryShelf.addCompanion('王小明', '張小美'); return memoryShelf.importMemories(JSON.stringify(list), '王小明'); }, [MEM(1, '雨夜'), MEM(11, '晴天')]);
+    const r = await page.evaluate(list => { memoryShelf.addCompanion('測試伴侶A', '測試使用者A'); return memoryShelf.importMemories(JSON.stringify(list), '測試伴侶A'); }, [MEM(1, '雨夜'), MEM(11, '晴天')]);
     expect(r.ok).toBe(true);
     expect(r.added).toBe(2);
     expect(await page.evaluate(() => memoryShelf.list()[0].lastRound)).toBe(20);
 
-    await page.evaluate(m => memoryShelf.importMemories(JSON.stringify([m]), '王小明'), MEM(11, '晴天改'));
+    await page.evaluate(m => memoryShelf.importMemories(JSON.stringify([m]), '測試伴侶A'), MEM(11, '晴天改'));
     const titles = await page.evaluate(() => state.memories.filter(m => !m.example).map(m => m.title).sort());
     expect(titles).toEqual(['晴天改', '雨夜']);
 
     await page.evaluate(() => { state.settings.previewFirst = true; save(); });
-    expect(await page.evaluate(() => memoryShelf.prompt('王小明'))).toContain('先只整理第一則作為預覽');
+    expect(await page.evaluate(() => memoryShelf.prompt('測試伴侶A'))).toContain('先只整理第一則作為預覽');
 
     await page.click('#importHere');
     await page.fill('#importText', JSON.stringify([MEM(21, '貼上的')]));
     await page.click('#doImport');
     await expect.poll(() => realMemories(page)).toBe(3);
 
-    await page.evaluate(() => { closeSheets(); state.current = '王小明'; state.tab = 'memory'; state.view = 'todo'; render(); });
+    await page.evaluate(() => { closeSheets(); state.current = '測試伴侶A'; state.tab = 'memory'; state.view = 'todo'; render(); });
     await page.locator('#cards button', { hasText: '已轉移' }).first().click();
     await expect.poll(() => page.evaluate(() => state.memories.filter(m => m.transferred).length)).toBe(1);
     expect(page.errors).toEqual([]);
@@ -103,7 +152,7 @@ test.describe('記憶體', () => {
     const { context, page } = await openDevice(browser, { init: legacyDefault });
     await page.evaluate(() => openSheet('formatSheet'));
     expect(await page.locator('#formatText').inputValue()).not.toContain('{伴侶}覺得重要的事');
-    expect(await page.evaluate(() => buildPrompt(state.settings, promptCtx('王小明')))).not.toContain('覺得重要的事');
+    expect(await page.evaluate(() => buildPrompt(state.settings, promptCtx('測試伴侶A')))).not.toContain('覺得重要的事');
     expect(page.errors).toEqual([]);
     await context.close();
   });
@@ -113,18 +162,18 @@ test.describe('事件', () => {
   test('自動編號、日期進度、新增一篇事件與改短', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     await page.evaluate(() => {
-      memoryShelf.addCompanion('王小明', '張小美');
+      memoryShelf.addCompanion('測試伴侶A', '測試使用者A');
       Object.assign(evSet(), { itemLimit: '500', slotLimit: '2000' });
     });
-    const codes = () => page.evaluate(() => memoryShelf.events('王小明', 'FIR').flatMap(s => s.items.map(i => i.code)));
+    const codes = () => page.evaluate(() => memoryShelf.events('測試伴侶A', 'FIR').flatMap(s => s.items.map(i => i.code)));
 
-    let r = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR'), [EV('一', '2026-02-01'), EV('二', '2026-02-02'), EV('三', '2026-02-03')]);
+    let r = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '測試伴侶A', 'FIR'), [EV('一', '2026-02-01'), EV('二', '2026-02-02'), EV('三', '2026-02-03')]);
     expect(r.ok).toBe(true);
     expect(await codes()).toEqual(['FIR-01-01', 'FIR-01-02', 'FIR-01-03']);
-    expect(await page.evaluate(() => evRec('王小明', 'FIR').from)).toBe('2026-02-04');
+    expect(await page.evaluate(() => evRec('測試伴侶A', 'FIR').from)).toBe('2026-02-04');
 
     // 這篇事件的內文放不下：先停下來問，選「新增一篇事件」後接到 [FIR-02]
-    r = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR'),
+    r = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '測試伴侶A', 'FIR'),
       ['長一', '長二', '長三', '長四', '長五'].map((kw, i) => EV(kw, `2026-02-0${5 + i}`, 80)));
     expect(r.pending).toBeTruthy();
     expect((await codes()).some(c => c === 'FIR-01-04')).toBe(true);
@@ -140,12 +189,12 @@ test.describe('事件', () => {
     expect((await codes()).some(c => c.startsWith('FIR-02-01'))).toBe(true);
 
     // 單則超過上限：只能改短
-    r = await page.evaluate(ev => memoryShelf.importEvents(JSON.stringify([ev]), '王小明', 'FIR'), EV('超長', '2026-02-20', 120));
+    r = await page.evaluate(ev => memoryShelf.importEvents(JSON.stringify([ev]), '測試伴侶A', 'FIR'), EV('超長', '2026-02-20', 120));
     expect(r.pending.canOpenNew).toBe(false);
     r = await page.evaluate(() => memoryShelf.resolveEventOverflow('fit', '[FIR-02-99] 超長\n時間：2026/02/20 晚上\n地點：家裡\n細節：\n- 改短後的內容'));
     expect(r.ok).toBe(true);
     expect(r.pending).toBeFalsy();
-    const last = await page.evaluate(() => { const s = memoryShelf.events('王小明', 'FIR'); const it = s[s.length - 1].items; return it[it.length - 1]; });
+    const last = await page.evaluate(() => { const s = memoryShelf.events('測試伴侶A', 'FIR'); const it = s[s.length - 1].items; return it[it.length - 1]; });
     expect(last.text).toContain('改短後的內容');
     expect(page.errors).toEqual([]);
     await context.close();
@@ -153,7 +202,7 @@ test.describe('事件', () => {
 
   test('事件格式直接編輯、限制可留空、代號可留空', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
-    await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
+    await page.evaluate(() => memoryShelf.addCompanion('測試伴侶A', '測試使用者A'));
     await page.click('#tabEv');
     await expect(page.locator('#evCatRow')).toHaveCount(0);
     await expect(page.locator('#progressText')).toContainText('事件還沒整理過');
@@ -192,7 +241,7 @@ test.describe('事件', () => {
     await expect(page.locator('#evCatsText')).toBeEditable();
     await expect(page.locator('#evItemLimit')).toHaveValue('');
     await expect(page.locator('#evSlotLimit')).toHaveValue('');
-    const unlimited = await page.evaluate(ev => memoryShelf.importEvents(JSON.stringify([ev]), '王小明', 'FIR'), EV('不限制長度', '2026-03-01', 520));
+    const unlimited = await page.evaluate(ev => memoryShelf.importEvents(JSON.stringify([ev]), '測試伴侶A', 'FIR'), EV('不限制長度', '2026-03-01', 520));
     expect(unlimited.pending).toBeNull();
     await expect(page.locator('#evTitleTpl')).toHaveCount(0);
     await expect(page.locator('#evSubtitleTpl')).toHaveCount(0);
@@ -202,7 +251,7 @@ test.describe('事件', () => {
     await page.fill('#evTitleFormat', '[第幾篇]');
     await page.fill('#evBodyFormat', '[第幾篇-之幾] 關鍵字\n內容：');
     await page.waitForTimeout(450);
-    const plainPrompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    const plainPrompt = await page.evaluate(() => memoryShelf.eventPrompt('測試伴侶A'));
     expect(plainPrompt).not.toContain('category 固定寫');
     expect(plainPrompt).not.toContain('這次只整理「事件」這一類');
     expect(plainPrompt).not.toContain('使用對話的現實時間');
@@ -212,7 +261,7 @@ test.describe('事件', () => {
     await page.fill('#evItemLimit', '650');
     await page.check('#evPreviewFirst');
     await page.waitForTimeout(450);
-    const previewPrompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    const previewPrompt = await page.evaluate(() => memoryShelf.eventPrompt('測試伴侶A'));
     expect(previewPrompt).toContain('每段內文控制在 650 字以內');
     expect(previewPrompt).toContain('先只整理第一段內文作為預覽');
 
@@ -220,7 +269,7 @@ test.describe('事件', () => {
     await page.fill('#evBodyFormat', '[代號-第幾篇-之幾] 關鍵字\n內容：');
     await page.fill('#evCatsText', 'MY｜我的類別｜照我的方式整理');
     await page.waitForTimeout(450);
-    expect(await page.evaluate(() => memoryShelf.eventPrompt('王小明'))).toContain('MY｜我的類別');
+    expect(await page.evaluate(() => memoryShelf.eventPrompt('測試伴侶A'))).toContain('MY｜我的類別');
     await page.click('#resetEventFormat');
     await expect(page.locator('#evTitleFormat')).toHaveValue('[代號-第幾篇] 類別名稱');
     await expect(page.locator('#evCatsText')).toHaveValue(/EST｜資產｜紀錄角色已公開資產/);
@@ -234,8 +283,8 @@ test.describe('事件', () => {
 
   test('匯入前可改分類，確認後才編號，內文用分隔線', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
-    await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
-    const prompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    await page.evaluate(() => memoryShelf.addCompanion('測試伴侶A', '測試使用者A'));
+    const prompt = await page.evaluate(() => memoryShelf.eventPrompt('測試伴侶A'));
     expect(prompt).toContain('【這次整理】');
     expect(prompt).toContain('對話裡真的出現、之後能觸發這段內文的字詞');
     expect(prompt).toContain('時間：使用對話的現實時間');
@@ -244,7 +293,7 @@ test.describe('事件', () => {
     expect(prompt).not.toContain('親密的內容');
     expect(prompt).not.toContain('不要自己補充或編造');
     expect(prompt.split('\n').filter(line => /^\d+\./.test(line))).toHaveLength(3);
-    const review = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '王小明'), [
+    const review = await page.evaluate(evs => memoryShelf.importEvents(JSON.stringify(evs), '測試伴侶A'), [
       EV('個體、附屬品', '2026-02-13'),
       { ...EV('送照片', '2026-02-14'), category: 'DIA' }
     ]);
@@ -255,31 +304,31 @@ test.describe('事件', () => {
     await page.locator('#eventReviewList select').first().selectOption('DIA');
     await page.click('#confirmEventReview');
     expect(await page.evaluate(() => liveEvents().map(e => e.cat))).toEqual(['DIA', 'DIA']);
-    const slot = await page.evaluate(() => memoryShelf.events('王小明', 'DIA')[0]);
+    const slot = await page.evaluate(() => memoryShelf.events('測試伴侶A', 'DIA')[0]);
     expect(slot.title).toBe('[DIA-01] 日常紀錄');
-    expect(await page.evaluate(() => slotBody('王小明', 'DIA', peekEv('王小明', 'DIA').slots[0]))).toContain('\n\n---\n\n');
+    expect(await page.evaluate(() => slotBody('測試伴侶A', 'DIA', peekEv('測試伴侶A', 'DIA').slots[0]))).toContain('\n\n---\n\n');
 
     const beyondTwenty = await page.evaluate(ev => {
-      state.events = []; const rec = companionRecord('王小明'); rec.ev = {};
-      const r = evRec('王小明', 'FIR');
+      state.events = []; const rec = companionRecord('測試伴侶A'); rec.ev = {};
+      const r = evRec('測試伴侶A', 'FIR');
       r.slots = Array.from({ length: 20 }, (_, i) => ({ no: i + 1, start: '2026-01-01', end: '2026-01-02', closed: true, base: '已有內容', baseIdx: 1, hw: 1, updatedAt: 1 }));
-      save(); return memoryShelf.importEvents(JSON.stringify([ev]), '王小明', 'FIR');
+      save(); return memoryShelf.importEvents(JSON.stringify([ev]), '測試伴侶A', 'FIR');
     }, EV('第21欄', '2026-03-01'));
     expect(beyondTwenty.pending).toBeNull();
-    expect(await page.evaluate(() => peekEv('王小明', 'FIR').slots.some(slot => slot.no === 21))).toBe(true);
+    expect(await page.evaluate(() => peekEv('測試伴侶A', 'FIR').slots.some(slot => slot.no === 21))).toBe(true);
     expect(page.errors).toEqual([]);
     await context.close();
   });
 
   test('事件時間依設定使用現實或狀態欄時間', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
-    await page.evaluate(() => memoryShelf.addCompanion('王小明', '張小美'));
-    const realPrompt = await page.evaluate(() => memoryShelf.eventPrompt('王小明'));
+    await page.evaluate(() => memoryShelf.addCompanion('測試伴侶A', '測試使用者A'));
+    const realPrompt = await page.evaluate(() => memoryShelf.eventPrompt('測試伴侶A'));
     expect(realPrompt).toContain('時間：使用對話的現實時間');
     expect(realPrompt).toContain('填同一段對話的現實日期');
     const statusPrompt = await page.evaluate(() => {
       evSet().timeSource = 'status'; save();
-      return memoryShelf.eventPrompt('王小明');
+      return memoryShelf.eventPrompt('測試伴侶A');
     });
     expect(statusPrompt).toContain('時間：使用對話狀態欄的時間；沒有狀態欄時間時，使用對話的現實時間');
     expect(statusPrompt).toContain('填同一段對話的狀態欄日期，沒有狀態欄日期時填現實日期');
@@ -319,8 +368,8 @@ test.describe('事件', () => {
   test('舊自訂格式與首版空白代號都會找回原有代號', async ({ browser }) => {
     const legacyCoded = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
       memories: [],
-      events: [{ id: 'old-fir', companion: '王小明', cat: 'FIR', slot: 1, idx: 1, keywords: '舊事件', date: '2026-02-13', fields: { '細節': '內容還在' } }],
-      companions: [{ name: '王小明', userName: '張小美', ev: { FIR: { from: '', slots: [{ no: 1, start: '2026-02-13', end: '', closed: false }] } } }],
+      events: [{ id: 'old-fir', companion: '測試伴侶A', cat: 'FIR', slot: 1, idx: 1, keywords: '舊事件', date: '2026-02-13', fields: { '細節': '內容還在' } }],
+      companions: [{ name: '測試伴侶A', userName: '測試使用者A', ev: { FIR: { from: '', slots: [{ no: 1, start: '2026-02-13', end: '', closed: false }] } } }],
       meta: {}, settings: { events: {
         formatMode: 'custom', unifiedFormat: true,
         title: '[{代號}-{欄號}] {名稱}', format: '[{代號}-{欄號}-{則號}] {關鍵字}\n細節：', subtitle: '{開始}-{結束}',
@@ -332,8 +381,8 @@ test.describe('事件', () => {
     await page.evaluate(() => openSheet('formatSheet'));
     await page.click('#formatTabEv');
     await expect(page.locator('#evCatsText')).toHaveValue(/FIR｜重大事件紀錄/);
-    expect(await page.evaluate(() => visibleCats('王小明').map(c => c.code))).toContain('FIR');
-    expect(await page.evaluate(() => memoryShelf.events('王小明', 'FIR')[0].items[0].text)).toContain('內容還在');
+    expect(await page.evaluate(() => visibleCats('測試伴侶A').map(c => c.code))).toContain('FIR');
+    expect(await page.evaluate(() => memoryShelf.events('測試伴侶A', 'FIR')[0].items[0].text)).toContain('內容還在');
     expect(page.errors).toEqual([]);
     await context.close();
   });
@@ -341,28 +390,28 @@ test.describe('事件', () => {
   test('STY 會接回 STORY 並保留使用者改過的分類說明與內容', async ({ browser }) => {
     const shortLivedSty = () => localStorage.setItem('companion-memory-shelf.v1', JSON.stringify({
       memories: [],
-      events: [{ id: 'short-sty', companion: '王小明', cat: 'STY', slot: 1, idx: 1, keywords: '中山區的大小姐', date: '2026-02-13', fields: { '細節': '這是原本的故事內容' } }],
-      companions: [{ name: '王小明', userName: '張小美', evCat: 'STY', ev: {
+      events: [{ id: 'short-sty', companion: '測試伴侶A', cat: 'STY', slot: 1, idx: 1, keywords: '中山區的大小姐', date: '2026-02-13', fields: { '細節': '這是原本的故事內容' } }],
+      companions: [{ name: '測試伴侶A', userName: '測試使用者A', evCat: 'STY', ev: {
         STY: { from: '', slots: [{ no: 1, start: '2026-02-13', end: '', closed: false, base: '[STY-01-01] 舊內文' }] }
       } }],
       meta: {}, settings: { events: {
         unifiedFormat: true, formatVersion: 3,
         title: '[{代號}-{欄號}] {名稱}', format: '[{代號}-{欄號}-{則號}] {關鍵字}\n細節：', subtitle: '{開始}-{結束}',
-        cats: 'STY｜人物故事｜洛夫人剛剛改過的要記什麼'
+        cats: 'STY｜人物故事｜測試使用者A剛剛改過的要記什麼'
       } }
     }));
     const { context, page } = await openDevice(browser, { init: shortLivedSty });
     await page.evaluate(() => openSheet('formatSheet'));
     await page.click('#formatTabEv');
-    await expect(page.locator('#evCatsText')).toHaveValue('STORY｜人物故事｜洛夫人剛剛改過的要記什麼');
+    await expect(page.locator('#evCatsText')).toHaveValue('STORY｜人物故事｜測試使用者A剛剛改過的要記什麼');
     expect(await page.evaluate(() => Object.keys(state.companions[0].ev))).toEqual(['STORY']);
     expect(await page.evaluate(() => state.companions[0].evCat)).toBe('STORY');
     expect(await page.evaluate(() => state.companions[0].ev.STORY.slots[0].base)).toContain('[STORY-01-01]');
-    const story = await page.evaluate(() => memoryShelf.events('王小明', 'STORY'));
+    const story = await page.evaluate(() => memoryShelf.events('測試伴侶A', 'STORY'));
     expect(story[0].title).toBe('[STORY-01] 人物故事');
     expect(story[0].items[0].text).toContain('這是原本的故事內容');
-    expect(await page.evaluate(() => memoryShelf.events('王小明', 'STY')[0].items[0].code)).toBe('STORY-01-01');
-    expect(await page.evaluate(() => memoryShelf.eventPrompt('王小明'))).toContain('洛夫人剛剛改過的要記什麼');
+    expect(await page.evaluate(() => memoryShelf.events('測試伴侶A', 'STY')[0].items[0].code)).toBe('STORY-01-01');
+    expect(await page.evaluate(() => memoryShelf.eventPrompt('測試伴侶A'))).toContain('測試使用者A剛剛改過的要記什麼');
     expect(page.errors).toEqual([]);
     await context.close();
   });
@@ -405,12 +454,12 @@ test.describe('備份', () => {
   test('清除、復原，重新整理後資料還在', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     await page.evaluate(([mems, evs, otherMems, otherEvs]) => {
-      memoryShelf.addCompanion('王小明', '張小美');
-      memoryShelf.importMemories(JSON.stringify(mems), '王小明');
-      memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR');
-      memoryShelf.addCompanion('李大華', '張小美');
-      memoryShelf.importMemories(JSON.stringify(otherMems.map(m => ({ ...m, companion: '李大華' }))), '李大華');
-      memoryShelf.importEvents(JSON.stringify(otherEvs), '李大華', 'FIR');
+      memoryShelf.addCompanion('測試伴侶A', '測試使用者A');
+      memoryShelf.importMemories(JSON.stringify(mems), '測試伴侶A');
+      memoryShelf.importEvents(JSON.stringify(evs), '測試伴侶A', 'FIR');
+      memoryShelf.addCompanion('測試伴侶B', '測試使用者A');
+      memoryShelf.importMemories(JSON.stringify(otherMems.map(m => ({ ...m, companion: '測試伴侶B' }))), '測試伴侶B');
+      memoryShelf.importEvents(JSON.stringify(otherEvs), '測試伴侶B', 'FIR');
     }, [
       [MEM(1, '雨夜'), MEM(11, '晴天')],
       [EV('一', '2026-02-01'), EV('二', '2026-02-02')],
@@ -456,10 +505,10 @@ test.describe('加密備份與搬移', () => {
     const pc = await openDevice(browser);
     const A = pc.page;
     await A.evaluate(([mems, evs]) => {
-      memoryShelf.addCompanion('王小明', '張小美');
-      memoryShelf.importMemories(JSON.stringify(mems), '王小明');
-      memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR');
-      companionRecord('王小明').files.push({ id: 'f-local-only', name: '原始對話.txt', size: 123, uploadedAt: new Date().toISOString() });
+      memoryShelf.addCompanion('測試伴侶A', '測試使用者A');
+      memoryShelf.importMemories(JSON.stringify(mems), '測試伴侶A');
+      memoryShelf.importEvents(JSON.stringify(evs), '測試伴侶A', 'FIR');
+      companionRecord('測試伴侶A').files.push({ id: 'f-local-only', name: '原始對話.txt', size: 123, uploadedAt: new Date().toISOString() });
       save();
     }, [[MEM(1, '雨夜'), MEM(11, '晴天')], [EV('一', '2026-02-01')]]);
 
@@ -488,7 +537,7 @@ test.describe('加密備份與搬移', () => {
     await expect(A.evaluate(([text, password]) => decryptBackup(text, password), [encrypted, '錯的密碼'])).rejects.toThrow('密碼不對');
     const plain = JSON.parse(await A.evaluate(([text, password]) => decryptBackup(text, password), [encrypted, BACKUP_PASSWORD]));
     expect(plain.memories.filter(m => !m.example)).toHaveLength(2);
-    expect(plain.companions.find(c => c.name === '王小明').files).toEqual([]); // 原始對話檔不進備份
+    expect(plain.companions.find(c => c.name === '測試伴侶A').files).toEqual([]); // 原始對話檔不進備份
 
     const phone = await openDevice(browser, { viewport: { width: 375, height: 812 }, mobile: true });
     const P = phone.page;
@@ -501,7 +550,7 @@ test.describe('加密備份與搬移', () => {
     expect(await P.evaluate(() => liveEvents().length)).toBe(1);
 
     // 手機版面：沒有左右溢出，可以複製整則、標記已轉移；電腦不會跟著改變
-    await P.evaluate(() => { closeSheets(); state.current = '王小明'; state.tab = 'memory'; state.view = 'todo'; render(); });
+    await P.evaluate(() => { closeSheets(); state.current = '測試伴侶A'; state.tab = 'memory'; state.view = 'todo'; render(); });
     expect(await P.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     const copyBtn = P.locator('#cards button', { hasText: '複製整則' }).first();
     await copyBtn.scrollIntoViewIfNeeded(); await copyBtn.click();
@@ -527,8 +576,10 @@ test.describe('使用說明', () => {
     await expect(page.locator('#flowMain')).toContainText('填妳在這段關係中的名字');
     await expect(page.locator('#flowMain')).toContainText('設定整理格式，或直接使用預設');
     await expect(page.locator('#flowMain')).toContainText('選擇「記憶體」或「事件」');
-    await expect(page.locator('#flowMain')).toContainText('再請 AI 讀取這個網頁');
-    await expect(page.locator('#flowMain')).toContainText('AI 只能在對話裡回覆文字時');
+    await expect(page.locator('#flowMain')).toContainText('使用 Agent 桌面版程式時，可選擇以下兩種操作方式');
+    await expect(page.locator('#flowMain')).toContainText('再請 AI 讀取這個網頁，告訴它要整理哪位伴侶的「記憶體」或「事件」');
+    await expect(page.locator('#flowMain')).toContainText('點擊【交給 AI 整理】的「複製指令」');
+    await expect(page.locator('#flowMain')).toContainText('AI 只能在聊天視窗回覆文字時');
     await expect(page.locator('#flowMain')).toContainText('不用把檔案上傳到記憶匣');
     await expect(page.locator('#guideSheet')).toContainText('頁面會開啟分類確認畫面');
     await expect(page.locator('#guideSheet')).not.toContainText('上限預設為 2000 字');
