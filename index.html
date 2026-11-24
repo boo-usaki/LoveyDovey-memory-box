@@ -254,6 +254,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 6px 11px; font-size:
 .guide-choice { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
 .guide-choice strong { display: block; font-size: 15.5px; font-weight: 500; color: var(--ink); }
 .guide-choice p { margin-top: 5px; }
+.guide-choice p b { display: inline; margin-right: .25em; color: var(--ink); }
 .guide-substeps { margin: 9px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: 15px; color: var(--muted); }
 .guide .guide-substeps li { display: block; padding: 2px 0 2px 13px; border-left: 2px solid var(--pink); }
 .guide .guide-substeps li::before { content: none; }
@@ -543,7 +544,7 @@ if (window.claude) {
         </li>
         <li class="flow-step">
           <div class="flow-title" id="flowStep2Title">交給 AI 整理</div>
-          <p class="muted" id="promptNote">複製指令，連同對話檔一起交給妳的 AI。</p>
+          <p class="muted" id="promptNote" hidden></p>
           <div class="flow-actions">
             <button class="btn primary" id="copyCompanionPrompt">複製指令</button>
             <button class="btn" id="viewCompanionPrompt">查看／修改</button>
@@ -647,7 +648,7 @@ if (window.claude) {
         </div>
         <div class="set-row"><label class="inline"><input type="checkbox" id="memPreviewFirst"> 先試整理一則給我確認</label></div>
         <label for="extraNote" class="hint">其他給 AI 的提醒（選填）</label>
-        <textarea id="extraNote" rows="2" placeholder="例如：關鍵對話最多挑三句"></textarea>
+        <textarea id="extraNote" rows="2" placeholder="例如：地點只寫到城市"></textarea>
       </div>
       <div class="row-actions"><button class="btn" id="resetFormat">恢復預設格式</button></div>
     </div>
@@ -733,10 +734,10 @@ if (window.claude) {
       <li><div><b>設定整理格式，或直接使用預設</b><p>打開左側「記憶體格式與規則」，用上方的「記憶體／事件」切換要調整的設定。想調整就直接修改；不想改就保留預設。想先確認整理出來的感覺，可以勾選「先試整理一則給我確認」。</p></div></li>
       <li><div><b>選擇「記憶體」或「事件」</b><p>回到伴侶頁，依這次想整理的內容切換。想整理記憶體時選「記憶體」；想整理特定重點時選「事件」，再設定日期範圍。AI 會替每段內文建議類別，匯入前可以逐段改正。</p></div></li>
       <li><div><b>把對話檔交給 AI 整理</b>
-        <p>依 AI 能不能直接打開網站，選一種方式：</p>
+        <p>依妳使用的 AI 與操作方式，選一種流程：</p>
         <div class="guide-choices">
-          <div class="guide-choice"><strong>AI 可以直接打開網站時</strong><p>先把對話檔上傳到伴侶頁，再請 AI 讀取這個網頁，告訴它要整理哪位伴侶的「記憶體」或「事件」。它會整理後直接寫進記憶匣。</p><p>妳不用複製指令，也不用把 AI 回覆貼回來。</p></div>
-          <div class="guide-choice"><strong>AI 只能在對話裡回覆文字時</strong><p>不用把檔案上傳到記憶匣。按「複製指令」，把指令和對話檔一起交給 AI。它回覆後，按「貼上回覆」把整段貼回記憶匣。</p></div>
+          <div class="guide-choice"><strong>使用 Agent 桌面版程式時，可選擇以下兩種操作方式</strong><p><b>1.</b> 先在聊天視窗的內建瀏覽器打開記憶匣，把對話檔上傳到伴侶頁，再請 AI 讀取這個網頁，告訴它要整理哪位伴侶的「記憶體」或「事件」，它會在整理後直接寫進記憶匣。</p><p><b>2.</b> 先在聊天視窗的內建瀏覽器打開記憶匣，把對話檔上傳到伴侶頁，切換「記憶體」或「事件」膠囊來選擇今天要整理的東西。點擊【交給 AI 整理】的「複製指令」，並在聊天視窗內送出文字。AI 會從這個頁面讀取剛才上傳的對話檔，整理後直接寫進記憶匣。</p></div>
+          <div class="guide-choice"><strong>AI 只能在聊天視窗回覆文字時</strong><p>不用把檔案上傳到記憶匣。按「複製指令」，把指令貼到聊天視窗並附上對話檔。AI 回覆後，按「貼上回覆」把整段貼回記憶匣。</p></div>
         </div>
         <p class="hint">事件匯入後，頁面會開啟分類確認畫面。妳可以逐段檢查或修改分類；按下確認後，頁面才會自動編號並接到對應事件的內文。</p></div></li>
       <li><div><b>在電腦下載備份</b>
@@ -1048,20 +1049,28 @@ function buildPrompt(settings, ctx) {
     comp ? `伴侶的名字是「${comp}」。` : "伴侶的名字請看檔名或對話內容。",
     ...(me ? [`我的名字是「${me}」，對話裡的「${me}」就是我。`] : []),
     ...progressRules(ctx, n),
-    "只根據對話內容整理，不要自己補充或編造沒發生的事。",
-    `每則記憶體整則（包含標題、欄位名稱、標點符號）不可超過 ${limitOf(settings)} 字；超過就精簡內容，不要拆成兩則。`
+    "只根據對話內容整理，不要自己補充或編造沒發生的事。誰說了什麼、誰做了什麼，都照原文寫清楚主詞；一方說出口、另一方用別的話或行動回應時，分別寫出兩人各自的表達，不要合併成「兩人都說了」。",
+    `每則記憶體整則（包含標題、欄位名稱、標點符號）不可超過 ${limitOf(settings)} 字；超過就精簡內容，不要拆成兩則。這是上限，不是要填滿，也不必為了保險預留大片空間；有多少能辨認這段記憶、呈現${compWord}怎麼想怎麼說的細節與原句，就保留多少，不重複、不補原文沒有的評語。`
   ];
   if (fields.some(f => f.kind === "tags")) rules.push("標籤類欄位（例如關鍵詞）要挑對話裡真的出現、之後能觸發這則記憶體的字詞，用陣列列出。");
   if (fields.some(f => f.kind === "quote")) rules.push("對話類欄位要保留說話者的名字，格式是「名字：「內容」」，一句一行（用 \\n 換行）。");
   const fieldRules = [];
-  if (fields.some(f => f.label === "場景概要")) {
+  const hasScene = fields.some(f => f.label === "場景概要");
+  const hasQuotes = fields.some(f => f.kind === "quote");
+  const hasImpact = fields.some(f => f.label === "情感變化及影響");
+  if (hasScene) {
     let sceneRule = "場景概要：依實際發生順序，用一段連續文字整理人物所在、主要話題、關鍵行動、回應與約定，讓沒看過原對話的人也能看懂場景如何推進。保留能辨認這段記憶或呈現彼此偏好的具體細節；";
-    sceneRule += fields.some(f => f.kind === "quote") ? "原句放在「關鍵對話」" : "對話內容以轉述呈現";
-    if (fields.some(f => f.label === "情感變化及影響")) sceneRule += "，情緒與關係意義放在「情感變化及影響」";
+    sceneRule += hasQuotes ? "原句放在「關鍵對話」" : "對話內容以轉述呈現";
+    if (hasImpact) sceneRule += "，情緒與關係意義放在「情感變化及影響」";
     fieldRules.push(sceneRule + "。");
   }
-  if (fields.some(f => f.kind === "quote")) fieldRules.push(`關鍵對話：優先保留能呈現${compWord}的思考、語氣、反應與兩人相處方式的原句；${compWord}的句數要大於或等於${meWord}。`);
-  if (fields.some(f => f.label === "情感變化及影響")) fieldRules.push(`情感變化及影響：整理這段互動前後，${compWord}與${meWord}的情緒、理解或關係有什麼變化，以及這件事往後留下的相處方式、默契、承諾或影響。`);
+  if (hasQuotes) {
+    let quoteRule = `關鍵對話：優先保留能呈現${compWord}的思考、語氣、反應與兩人相處方式的原句；${compWord}的句數要大於或等於${meWord}，總句數依這段對話的內容決定，不固定條數。`;
+    const supportFields = [hasScene && "「場景概要」", hasImpact && "「情感變化及影響」"].filter(Boolean);
+    if (supportFields.length) quoteRule += `${supportFields.join("或")}寫到的承諾、關係定義或相處習慣，要附上直接說出它的原句。`;
+    fieldRules.push(quoteRule);
+  }
+  if (hasImpact) fieldRules.push(`情感變化及影響：整理這段互動前後，${compWord}與${meWord}的情緒、理解或關係有什麼變化，以及這件事往後留下的相處方式、默契、承諾或影響。`);
   const hasRange = !!(settings.rangeNote && settings.rangeNote.trim());
   if (hasRange) rules.push(`整理範圍：${settings.rangeNote.trim()}。範圍外的對話不要整理。`);
   if (settings.extraNote && settings.extraNote.trim()) rules.push(settings.extraNote.trim());
@@ -1141,13 +1150,13 @@ const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
 const EXAMPLES = [
-  { id: "ex1", example: true, companion: "王小明", seq: 1, rounds: "1-10", title: "雨夜的便利商店", transferred: false, fields: {
+  { id: "ex1", example: true, companion: "伴侶", seq: 1, rounds: "1-10", title: "雨夜的便利商店", transferred: false, fields: {
     "地點": "巷口的便利商店", "場景概要": "下班遇到大雨，兩人躲進便利商店，一邊等雨停一邊挑宵夜。",
-    "關鍵詞": ["雨天", "便利商店", "關東煮"], "關鍵對話": "王小明：「妳每次都只拿白蘿蔔。」\n張小美：「因為它最吸湯啊。」",
+    "關鍵詞": ["雨天", "便利商店", "關東煮"], "關鍵對話": "伴侶：「妳每次都只拿白蘿蔔。」\n我：「因為它最吸湯啊。」",
     "情感變化及影響": "從疲憊到放鬆，第一次聊起彼此的小習慣，距離拉近。" } },
-  { id: "ex2", example: true, companion: "王小明", seq: 2, rounds: "11-17", title: "週末的散步", transferred: false, fields: {
+  { id: "ex2", example: true, companion: "伴侶", seq: 2, rounds: "11-17", title: "週末的散步", transferred: false, fields: {
     "地點": "河濱公園", "場景概要": "天氣放晴，帶著狗狗去河邊散步，聊到小時候的事。",
-    "關鍵詞": ["散步", "河濱", "狗狗"], "關鍵對話": "張小美：「下次換我牽繩。」\n王小明：「妳確定拉得住牠？」",
+    "關鍵詞": ["散步", "河濱", "狗狗"], "關鍵對話": "我：「下次換我牽繩。」\n伴侶：「妳確定拉得住牠？」",
     "情感變化及影響": "輕鬆愉快，互相開玩笑，多了一點默契。" } }
 ];
 
@@ -1629,8 +1638,8 @@ function renderCompanionPanel(cur) {
     li.append(rm); ul.append(li);
   }
   if (!files.length) ul.append(el("li", "muted", "還沒有上傳"));
-  const latest = files[0];
-  $("promptNote").textContent = latest ? `複製指令，連同 ${latest.name} 一起交給妳的 AI。` : "複製指令，連同對話檔一起交給妳的 AI。";
+  $("promptNote").hidden = true;
+  $("promptNote").textContent = "";
   renderEventPanel(cur);
 }
 
@@ -1649,7 +1658,7 @@ function renderGuideSample() {
   const box = $("guideSample"); box.replaceChildren();
   const fs = fields(), ex = JSON.parse(JSON.stringify(EXAMPLES[0]));
   delete ex.example; ex.seq = 1;
-  const c = card(ex, fs, { name: "張小美", preview: true });
+  const c = card(ex, fs, { name: "我", preview: true });
   box.append(c);
 }
 
@@ -2431,15 +2440,20 @@ function renderEventPanel(cur) {
   $("tabMem").setAttribute("aria-pressed", String(!ev));
   $("tabEv").setAttribute("aria-pressed", String(ev));
   $("flowStep2Title").textContent = ev ? "交給 AI 整理事件" : "交給 AI 整理";
-  $("flowStep3Note").textContent = ev ? "貼上後會接在目前這篇事件的內文後面。" : "貼上後就會變成下面的記憶體卡片。";
+  $("flowStep3Note").textContent = ev
+    ? "AI 直接寫進記憶匣時可以略過這一步；只有 AI 回覆文字時，才把整段貼上，匯入後可以逐段確認分類。"
+    : "AI 直接寫進記憶匣時可以略過這一步；只有 AI 回覆文字時，才把整段貼上，貼上後會變成下面的記憶體卡片。";
   if (!ev) $("evSlotForm").hidden = true;
   $("viewCompanionPrompt").textContent = ev ? "查看指令" : "查看／修改";
   $("viewCompanionPrompt").disabled = false;
   $("copyCompanionPrompt").disabled = false;
+  $("promptNote").hidden = true;
+  $("promptNote").textContent = "";
   if (!ev || !cur) return;
   const cats = visibleCats(cur.name);
   if (!cats.length) {
     $("progressText").textContent = "尚未設定事件類別";
+    $("promptNote").hidden = false;
     $("promptNote").textContent = "填好事件類別後，就能產生整理指令。";
     $("viewCompanionPrompt").disabled = true;
     $("copyCompanionPrompt").disabled = true;
@@ -2457,8 +2471,6 @@ function renderEventPanel(cur) {
   const parts = [userOf(cur.name) ? `妳是 ${userOf(cur.name)}` : "還沒填妳的名字"];
   parts.push(r.from ? `事件下次從 ${slashDate(r.from)} 開始` : "事件還沒整理過");
   $("progressText").textContent = parts.join(" · ");
-  const latest = (companionRecord(cur.name).files || []).slice().sort((a, b) => a.uploadedAt < b.uploadedAt ? 1 : -1)[0];
-  $("promptNote").textContent = `複製事件指令，連同${latest ? ` ${latest.name} ` : "對話檔"}一起交給妳的 AI。匯入時可以逐段改正分類。`;
 }
 
 function rangeBad(name) { const r = eventRange(name); return !!(r.from && r.to && r.from > r.to); }
