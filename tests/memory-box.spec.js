@@ -32,6 +32,42 @@ async function openDevice(browser, { viewport = { width: 1280, height: 1000 }, m
 }
 
 test.describe('記憶體', () => {
+  test('整理指令會交代模型承接目標與欄位規則', async ({ browser }) => {
+    const { context, page } = await openDevice(browser);
+    const prompt = await page.evaluate(() => {
+      memoryShelf.addCompanion('洛尉然', '林雨晨');
+      return memoryShelf.prompt('洛尉然');
+    });
+    expect(prompt).toContain('模型換代以後，洛尉然還是洛尉然');
+    expect(prompt).toContain('洛尉然遇到這種情況會怎麼想、怎麼說、怎麼做');
+    expect(prompt).toContain('洛尉然與林雨晨是如何相處的，共同建造了哪些記憶');
+    expect(prompt).toContain('依實際發生順序，用一段連續文字整理人物所在、主要話題、關鍵行動、回應與約定');
+    expect(prompt).toContain('保留能辨認這段記憶或呈現彼此偏好的具體細節');
+    expect(prompt).toContain('原句放在「關鍵對話」，情緒與關係意義放在「情感變化及影響」');
+    expect(prompt).toContain('洛尉然的句數要大於或等於林雨晨');
+    expect(prompt).toContain('洛尉然與林雨晨的情緒、理解或關係有什麼變化');
+
+    const sceneOnlyPrompt = await page.evaluate(() => {
+      state.settings.format = ['# [標題]', '', '- 場景概要：'].join('\n');
+      save();
+      return memoryShelf.prompt('洛尉然');
+    });
+    expect(sceneOnlyPrompt).toContain('對話內容以轉述呈現。');
+    expect(sceneOnlyPrompt).not.toContain('原句放在「關鍵對話」');
+    expect(sceneOnlyPrompt).not.toContain('情緒與關係意義放在「情感變化及影響」');
+
+    const noScenePrompt = await page.evaluate(() => {
+      state.settings.format = ['# [標題]', '', '- 地點：', '- 關鍵詞：'].join('\n');
+      save();
+      return memoryShelf.prompt('洛尉然');
+    });
+    expect(noScenePrompt).not.toContain('場景概要：依實際發生順序');
+    expect(noScenePrompt).not.toContain('- 場景概要');
+    expect(noScenePrompt).not.toContain('【欄位規則】');
+    expect(page.errors).toEqual([]);
+    await context.close();
+  });
+
   test('agent 匯入、重複匯入會更新、貼上回覆、標記已轉移', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
     const r = await page.evaluate(list => { memoryShelf.addCompanion('王小明', '張小美'); return memoryShelf.importMemories(JSON.stringify(list), '王小明'); }, [MEM(1, '雨夜'), MEM(11, '晴天')]);
@@ -368,17 +404,39 @@ test.describe('備份', () => {
 
   test('清除、復原，重新整理後資料還在', async ({ browser }) => {
     const { context, page } = await openDevice(browser);
-    await page.evaluate(([mems, evs]) => {
+    await page.evaluate(([mems, evs, otherMems, otherEvs]) => {
       memoryShelf.addCompanion('王小明', '張小美');
       memoryShelf.importMemories(JSON.stringify(mems), '王小明');
       memoryShelf.importEvents(JSON.stringify(evs), '王小明', 'FIR');
-    }, [[MEM(1, '雨夜'), MEM(11, '晴天')], [EV('一', '2026-02-01'), EV('二', '2026-02-02')]]);
+      memoryShelf.addCompanion('李大華', '張小美');
+      memoryShelf.importMemories(JSON.stringify(otherMems.map(m => ({ ...m, companion: '李大華' }))), '李大華');
+      memoryShelf.importEvents(JSON.stringify(otherEvs), '李大華', 'FIR');
+    }, [
+      [MEM(1, '雨夜'), MEM(11, '晴天')],
+      [EV('一', '2026-02-01'), EV('二', '2026-02-02')],
+      [MEM(1, '晨光')],
+      [EV('三', '2026-02-03')],
+    ]);
     const backup = await page.evaluate(password => encryptBackup(password), BACKUP_PASSWORD);
     const count = () => page.evaluate(() => ({ m: state.memories.filter(m => !m.example).length, e: liveEvents().length }));
     const before = await count();
+    expect(before).toEqual({ m: 3, e: 3 });
 
     await page.evaluate(() => openSheet('backupSheet'));
-    await page.click('#clearAll'); await page.click('#clearAll');
+    await page.click('#clearAll');
+    await expect(page.locator('#clearConfirm')).toBeVisible();
+    await expect(page.locator('#clearConfirm [role="alertdialog"]')).toBeVisible();
+    await expect(page.locator('#clearConfirmText')).toContainText('所有伴侶的全部記憶體、事件與整理進度');
+    await expect(page.locator('#clearConfirmText')).toContainText('無法復原');
+    await expect(page.locator('#cancelClear')).toBeFocused();
+    expect(await count()).toEqual(before);
+
+    await page.click('#cancelClear');
+    await expect(page.locator('#clearConfirm')).toBeHidden();
+    expect(await count()).toEqual(before);
+
+    await page.click('#clearAll');
+    await page.click('#confirmClear');
     await expect(page.locator('#backupResult')).toContainText('已清除');
     expect(await count()).toEqual({ m: 0, e: 0 });
 

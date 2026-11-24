@@ -150,6 +150,19 @@ dd.quote { padding-left: 14px; border-left: 2px solid var(--pink); }
   width: min(760px, 100%); max-height: 100%; overflow-y: auto;
   padding: 26px; display: flex; flex-direction: column; gap: 22px;
 }
+.confirm-wrap {
+  position: fixed; inset: 0; z-index: 40; background: var(--scrim);
+  display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.confirm-dialog {
+  width: min(500px, 100%); padding: 26px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.confirm-dialog h3 { margin: 4px 0 0; font-size: 21px; font-weight: 500; letter-spacing: .06em; }
+.confirm-dialog p { margin: 0; line-height: 1.8; }
+.confirm-dialog .row-actions { justify-content: flex-end; }
+.confirm-dialog .btn.danger.primary { background: var(--pink); color: var(--ink); border-color: var(--pink); }
 .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .sheet-head h3 { margin: 4px 0 0; font-size: 21px; font-weight: 500; letter-spacing: .06em; }
 .x { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 5px 9px; color: var(--muted); border-radius: 8px; }
@@ -274,6 +287,7 @@ input.inline-input { width: 12em; max-width: 100%; padding: 6px 11px; font-size:
   .flow { grid-template-columns: minmax(0, 1fr); }
   .card { padding: 16px 16px 12px; }
   .sheet { padding: 18px 16px; }
+  .confirm-dialog { padding: 22px 18px; }
   dl.fields { grid-template-columns: minmax(0, 1fr); gap: 0; }
   dl.fields dt { margin-top: 6px; }
 }
@@ -825,6 +839,21 @@ if (window.claude) {
   </div>
 </div>
 
+<div class="confirm-wrap" id="clearConfirm" hidden>
+  <section class="confirm-dialog panel" role="alertdialog" aria-modal="true" aria-labelledby="clearConfirmTitle" aria-describedby="clearConfirmText">
+    <div>
+      <span class="dash"></span>
+      <div class="latin">Warning</div>
+      <h3 id="clearConfirmTitle">確定要全部清除嗎？</h3>
+    </div>
+    <p id="clearConfirmText">這會刪除目前瀏覽器裡所有伴侶的全部記憶體、事件與整理進度，而且無法復原。伴侶設定、格式和 AI 指令修改會保留。</p>
+    <div class="row-actions">
+      <button class="btn" id="cancelClear">取消</button>
+      <button class="btn danger primary" id="confirmClear">確認全部清除</button>
+    </div>
+  </section>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" hidden>復原</button></div>
 <textarea id="copyArea" aria-hidden="true" tabindex="-1" style="position:fixed;left:-9999px;top:0;opacity:0"></textarea>
 
@@ -1024,6 +1053,15 @@ function buildPrompt(settings, ctx) {
   ];
   if (fields.some(f => f.kind === "tags")) rules.push("標籤類欄位（例如關鍵詞）要挑對話裡真的出現、之後能觸發這則記憶體的字詞，用陣列列出。");
   if (fields.some(f => f.kind === "quote")) rules.push("對話類欄位要保留說話者的名字，格式是「名字：「內容」」，一句一行（用 \\n 換行）。");
+  const fieldRules = [];
+  if (fields.some(f => f.label === "場景概要")) {
+    let sceneRule = "場景概要：依實際發生順序，用一段連續文字整理人物所在、主要話題、關鍵行動、回應與約定，讓沒看過原對話的人也能看懂場景如何推進。保留能辨認這段記憶或呈現彼此偏好的具體細節；";
+    sceneRule += fields.some(f => f.kind === "quote") ? "原句放在「關鍵對話」" : "對話內容以轉述呈現";
+    if (fields.some(f => f.label === "情感變化及影響")) sceneRule += "，情緒與關係意義放在「情感變化及影響」";
+    fieldRules.push(sceneRule + "。");
+  }
+  if (fields.some(f => f.kind === "quote")) fieldRules.push(`關鍵對話：優先保留能呈現${compWord}的思考、語氣、反應與兩人相處方式的原句；${compWord}的句數要大於或等於${meWord}。`);
+  if (fields.some(f => f.label === "情感變化及影響")) fieldRules.push(`情感變化及影響：整理這段互動前後，${compWord}與${meWord}的情緒、理解或關係有什麼變化，以及這件事往後留下的相處方式、默契、承諾或影響。`);
   const hasRange = !!(settings.rangeNote && settings.rangeNote.trim());
   if (hasRange) rules.push(`整理範圍：${settings.rangeNote.trim()}。範圍外的對話不要整理。`);
   if (settings.extraNote && settings.extraNote.trim()) rules.push(settings.extraNote.trim());
@@ -1035,8 +1073,12 @@ function buildPrompt(settings, ctx) {
   return [
     `請幫我把附件中${me ? `我（${me}）` : "我"}和${comp ? comp : "伴侶"}的對話，整理成一則一則的記憶體。`,
     "",
+    "【整理目標】",
+    `模型換代以後，${compWord}還是${compWord}。每張記憶體卡片都應該讓下一個模型讀完就知道：${compWord}遇到這種情況會怎麼想、怎麼說、怎麼做；${compWord}與${meWord}是如何相處的，共同建造了哪些記憶。`,
+    "",
     "【規則】",
     ...rules.map((r, i) => `${i + 1}. ${r}`),
+    ...(fieldRules.length ? ["", "【欄位規則】", ...fieldRules.map(r => `- ${r}`)] : []),
     "",
     "【每則記憶體的欄位】",
     "- 標題",
@@ -1389,6 +1431,7 @@ function importText(text) {
 
 /* ---------- Sheets ---------- */
 let lastFocus = null;
+let clearConfirmLastFocus = null;
 function openSheet(id) {
   lastFocus = document.activeElement;
   document.querySelectorAll(".sheet-wrap").forEach(s => s.hidden = s.id !== id);
@@ -1417,8 +1460,20 @@ function openSheet(id) {
 }
 function closeSheets() {
   document.querySelectorAll(".sheet-wrap").forEach(s => s.hidden = true);
+  $("clearConfirm").hidden = true;
+  clearConfirmLastFocus = null;
   document.body.classList.remove("locked");
   if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+function openClearConfirm() {
+  clearConfirmLastFocus = document.activeElement;
+  $("clearConfirm").hidden = false;
+  $("cancelClear").focus();
+}
+function closeClearConfirm() {
+  $("clearConfirm").hidden = true;
+  if (clearConfirmLastFocus && clearConfirmLastFocus.focus) clearConfirmLastFocus.focus();
+  clearConfirmLastFocus = null;
 }
 function syncFormatSheet() {
   syncEventFormatSheet();
@@ -2744,7 +2799,12 @@ $("panelUserName").addEventListener("input", () => {
 });
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = closeSheets);
 document.querySelectorAll(".sheet-wrap").forEach(w => w.addEventListener("click", e => { if (e.target === w) closeSheets(); }));
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheets(); });
+$("clearConfirm").addEventListener("click", e => { if (e.target === $("clearConfirm")) closeClearConfirm(); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (!$("clearConfirm").hidden) { closeClearConfirm(); return; }
+  closeSheets();
+});
 
 $("doImport").onclick = () => importText($("importText").value);
 $("confirmEventReview").onclick = confirmEventReview;
@@ -2951,12 +3011,15 @@ $("downloadBackup").onclick = async () => {
 };
 $("downloadPrompt").onclick = () => saveFile("AGENT.md", sheetPrompt() + "\n", "text/markdown");
 
-armButton($("clearAll"), "清除全部記憶體與事件", "再按一次確認全部清除", async () => {
+$("clearAll").onclick = openClearConfirm;
+$("cancelClear").onclick = closeClearConfirm;
+$("confirmClear").onclick = async () => {
+  closeClearConfirm();
   state.meta.clearedAt = Date.now();
   state.memories = []; state.events = []; setPending(null); state.evr = { at: 0, data: null };
   state.companions.forEach(c => { c.lastRound = 0; c.lastDate = ""; c.ev = {}; c.eventRange = { from: "", to: "", rangeAt: Date.now() }; }); save(); render();
   $("backupResult").textContent = "已清除全部記憶體和事件，整理進度也歸零了。";
-});
+};
 
 render();
 /* Inside a Claude Artifact the page is only a pointer to the official site: no agent API either. */
