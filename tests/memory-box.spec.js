@@ -41,12 +41,13 @@ test.describe('記憶體', () => {
     expect(prompt).toContain('模型換代以後，測試伴侶A還是測試伴侶A');
     expect(prompt).toContain('測試伴侶A遇到這種情況會怎麼想、怎麼說、怎麼做');
     expect(prompt).toContain('測試伴侶A與測試使用者A是如何相處的，共同建造了哪些記憶');
-    expect(prompt).toContain('依實際發生順序，用一段連續文字整理人物所在、主要話題、關鍵行動、回應與約定');
+    expect(prompt).toContain('依實際發生順序，整理推動這段場景的主要話題、關鍵行動、回應與約定');
     expect(prompt).toContain('保留能辨認這段記憶或呈現彼此偏好的具體細節');
     expect(prompt).toContain('原句放在「關鍵對話」，情緒與關係意義放在「情感變化及影響」');
-    expect(prompt).toContain('照原文寫清楚主詞');
-    expect(prompt).toContain('不要合併成「兩人都說了」');
-    expect(prompt).toContain('這是上限，不是要填滿，也不必為了保險預留大片空間');
+    expect(prompt).not.toContain('照原文寫清楚主詞');
+    expect(prompt).not.toContain('不要合併成「兩人都說了」');
+    expect(prompt).toContain('先依照整理目標與欄位規則完成每則記憶體；完成後，再以整則為單位檢查字數');
+    expect(prompt).toContain('每則記憶體的完整內容（包含標題、欄位名稱與標點符號）最多 500 字');
     expect(prompt).toContain('測試伴侶A的句數要大於或等於測試使用者A');
     expect(prompt).toContain('總句數依這段對話的內容決定，不固定條數');
     expect(prompt).toContain('「場景概要」或「情感變化及影響」寫到的承諾、關係定義或相處習慣，要附上直接說出它的原句');

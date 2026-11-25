@@ -1049,8 +1049,7 @@ function buildPrompt(settings, ctx) {
     comp ? `伴侶的名字是「${comp}」。` : "伴侶的名字請看檔名或對話內容。",
     ...(me ? [`我的名字是「${me}」，對話裡的「${me}」就是我。`] : []),
     ...progressRules(ctx, n),
-    "只根據對話內容整理，不要自己補充或編造沒發生的事。誰說了什麼、誰做了什麼，都照原文寫清楚主詞；一方說出口、另一方用別的話或行動回應時，分別寫出兩人各自的表達，不要合併成「兩人都說了」。",
-    `每則記憶體整則（包含標題、欄位名稱、標點符號）不可超過 ${limitOf(settings)} 字；超過就精簡內容，不要拆成兩則。這是上限，不是要填滿，也不必為了保險預留大片空間；有多少能辨認這段記憶、呈現${compWord}怎麼想怎麼說的細節與原句，就保留多少，不重複、不補原文沒有的評語。`
+    `先依照整理目標與欄位規則完成每則記憶體；完成後，再以整則為單位檢查字數。每則記憶體的完整內容（包含標題、欄位名稱與標點符號）最多 ${limitOf(settings)} 字。`
   ];
   if (fields.some(f => f.kind === "tags")) rules.push("標籤類欄位（例如關鍵詞）要挑對話裡真的出現、之後能觸發這則記憶體的字詞，用陣列列出。");
   if (fields.some(f => f.kind === "quote")) rules.push("對話類欄位要保留說話者的名字，格式是「名字：「內容」」，一句一行（用 \\n 換行）。");
@@ -1059,7 +1058,7 @@ function buildPrompt(settings, ctx) {
   const hasQuotes = fields.some(f => f.kind === "quote");
   const hasImpact = fields.some(f => f.label === "情感變化及影響");
   if (hasScene) {
-    let sceneRule = "場景概要：依實際發生順序，用一段連續文字整理人物所在、主要話題、關鍵行動、回應與約定，讓沒看過原對話的人也能看懂場景如何推進。保留能辨認這段記憶或呈現彼此偏好的具體細節；";
+    let sceneRule = "場景概要：依實際發生順序，整理推動這段場景的主要話題、關鍵行動、回應與約定，讓沒看過原對話的人也能看懂場景如何推進，並保留能辨認這段記憶或呈現彼此偏好的具體細節；";
     sceneRule += hasQuotes ? "原句放在「關鍵對話」" : "對話內容以轉述呈現";
     if (hasImpact) sceneRule += "，情緒與關係意義放在「情感變化及影響」";
     fieldRules.push(sceneRule + "。");
